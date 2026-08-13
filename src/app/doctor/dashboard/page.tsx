@@ -5,18 +5,12 @@ import { redirect } from "next/navigation";
 import {
   CalendarClock,
   Clock,
-  FileAudio,
   FileText,
-  ImageIcon,
   LayoutDashboard,
   LogOut,
-  Paperclip,
-  Phone,
   ShieldCheck,
   Stethoscope,
-  UserRound,
   UsersRound,
-  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +22,11 @@ import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
 import {
   cancelAvailabilitySlot,
   createAvailabilitySlot,
-  joinWaitingAppointment,
   signOut,
 } from "../actions";
 import { DoctorAvailabilityForm } from "./availability-form";
 import { DoctorDashboardMobileMenu, type DoctorMobileMenuItem } from "./mobile-menu";
+import { DoctorVideoQueue } from "./video-queue";
 
 type ProviderRow = {
   id: string;
@@ -66,18 +60,6 @@ type WaitingAppointment = {
   video_sessions: { room_name: string | null; status: string | null }[] | null;
   files: { id: string; original_filename: string | null; attachment_kind: string | null; storage_path: string }[] | null;
 };
-
-function urgencyClass(level: string) {
-  if (level === "emergency" || level === "high") return "bg-[#fdecec] text-[#b42318]";
-  if (level === "moderate") return "bg-[#fff6df] text-[#9a6500]";
-  return "bg-[#e8f7f4] text-[#087a7b]";
-}
-
-function AttachmentKindIcon({ kind }: { kind: string | null }) {
-  if (kind === "image") return <ImageIcon className="size-3.5" />;
-  if (kind === "audio") return <FileAudio className="size-3.5" />;
-  return <FileText className="size-3.5" />;
-}
 
 const navItems = [
   { label: "Overview", icon: LayoutDashboard, iconKey: "overview" },
@@ -224,6 +206,26 @@ export default async function DoctorDashboardPage() {
 
   const doctorName = provider?.full_name ?? user.email ?? "Doctor";
   const specialty = provider?.specialty ?? "Provider profile pending";
+  const initialVideoQueueItems = videoAppointments.map((appointment) => {
+    const summary = appointment.ai_summaries?.[0];
+    const patientOnline = patientOnlineByAppointmentId.get(appointment.id) ?? false;
+    return {
+      id: appointment.id,
+      scheduledAt: appointment.scheduled_at,
+      status: "waiting",
+      patientName: appointment.patients?.full_name ?? "Patient",
+      patientReference: appointment.patients?.hospital_reference_number ?? "",
+      urgencyLevel: summary?.urgency_level ?? "low",
+      summaryText: summary?.summary_text ?? "",
+      patientOnline,
+      files: (appointment.files ?? []).map((file) => ({
+        id: file.id,
+        name: file.original_filename ?? "File",
+        kind: file.attachment_kind ?? "file",
+        url: signedUrlByPath.get(file.storage_path) ?? null,
+      })),
+    };
+  });
 
   return (
     <main className="min-h-[100dvh] bg-[#edf3f6] px-3 py-3 text-[#101820] sm:px-5 lg:px-6">
@@ -460,108 +462,7 @@ export default async function DoctorDashboardPage() {
             </div>
 
             <aside className="grid h-fit gap-4">
-              <section id="patients" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-bold text-[#071923]">Patient queue</p>
-                    <p className="mt-1 text-sm text-[#64747c]">Patients waiting to connect with you.</p>
-                  </div>
-                  <UsersRound className="size-5 text-[#01b7bb]" />
-                </div>
-                <div className="mt-4 grid gap-3">
-                  {videoAppointments.length > 0 ? (
-                    videoAppointments.map((appointment) => {
-                      const summary = appointment.ai_summaries?.[0];
-                      const mode = appointment.consultation_orders?.[0]?.consultation_mode ?? "video";
-                      const patientOnline = patientOnlineByAppointmentId.get(appointment.id) ?? false;
-                      return (
-                        <div key={appointment.id} className="rounded-2xl bg-[#f8fbfd] p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <span className="flex size-10 items-center justify-center rounded-full bg-[#e8f7f4] text-sm font-bold text-[#087a7b]">
-                                <UserRound className="size-4" />
-                              </span>
-                              <div>
-                                <p className="text-sm font-bold text-[#071923]">
-                                  {appointment.patients?.full_name ?? "Patient"}
-                                </p>
-                                <p className="mt-0.5 text-xs text-[#64747c]">
-                                  {appointment.patients?.hospital_reference_number}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex shrink-0 items-center gap-1.5">
-                              {appointment.files && appointment.files.length > 0 ? (
-                                <span
-                                  className="flex items-center gap-1 rounded-full bg-[#eef4ff] px-2 py-1 text-[11px] font-bold text-[#083273]"
-                                  title={`${appointment.files.length} attachment${appointment.files.length > 1 ? "s" : ""}`}
-                                >
-                                  <Paperclip className="size-3" />
-                                  {appointment.files.length}
-                                </span>
-                              ) : null}
-                              {summary ? (
-                                <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${urgencyClass(summary.urgency_level)}`}>
-                                  {summary.urgency_level}
-                                </span>
-                              ) : null}
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                                  patientOnline
-                                    ? "bg-[#e8f7f4] text-[#087a7b]"
-                                    : "bg-[#fdecec] text-[#b42318]"
-                                }`}
-                              >
-                                {patientOnline ? "Patient online" : "Patient off"}
-                              </span>
-                            </div>
-                          </div>
-                          {summary ? (
-                            <p className="mt-2 line-clamp-2 text-xs text-[#64747c]">{summary.summary_text}</p>
-                          ) : null}
-                          {appointment.files && appointment.files.length > 0 ? (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {appointment.files.map((file) => {
-                                const url = signedUrlByPath.get(file.storage_path);
-                                return (
-                                  <a
-                                    key={file.id}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    title={file.original_filename ?? "Attachment"}
-                                    className="flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-[#087a7b] ring-1 ring-[#dfe8eb] hover:bg-[#e8f7f4]"
-                                  >
-                                    <AttachmentKindIcon kind={file.attachment_kind} />
-                                    <span className="max-w-24 truncate">{file.original_filename ?? "File"}</span>
-                                  </a>
-                                );
-                              })}
-                            </div>
-                          ) : null}
-                          <form action={joinWaitingAppointment} className="mt-3">
-                            <input type="hidden" name="appointmentId" value={appointment.id} />
-                            <input type="hidden" name="mode" value={mode} />
-                            <Button
-                              type="submit"
-                              size="sm"
-                              disabled={!patientOnline}
-                              className="w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2] disabled:bg-[#e5eef0] disabled:text-[#8a9aa2]"
-                            >
-                              <Video className="size-4" />
-                              Join call
-                            </Button>
-                          </form>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="px-1 py-6 text-center text-sm text-[#64747c]">
-                      No active video calls right now.
-                    </p>
-                  )}
-                </div>
-              </section>
+              <DoctorVideoQueue initialItems={initialVideoQueueItems} />
 
               <section id="notes" className="rounded-[1.35rem] bg-[#e8f7f4] p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]">
                 <p className="text-sm font-bold text-[#083273]">Doctor workspace</p>

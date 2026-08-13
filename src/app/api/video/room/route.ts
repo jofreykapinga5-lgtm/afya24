@@ -71,8 +71,9 @@ export async function POST(request: Request) {
   const room = await getOrCreateRoomForAppointment(appointment.id);
   const token = await createMeetingToken(room.name, userName, isProvider);
 
+  let videoSessionId: string | null = null;
   if (isPatient) {
-    await service.from("video_sessions").upsert(
+    const { data: session } = await service.from("video_sessions").upsert(
       {
         appointment_id: appointment.id,
         provider_id: appointment.provider_id,
@@ -84,7 +85,8 @@ export async function POST(request: Request) {
         started_at: new Date().toISOString(),
       },
       { onConflict: "appointment_id" }
-    );
+    ).select("id").single();
+    videoSessionId = session?.id ?? null;
   } else {
     const { data: existingSession } = await service
       .from("video_sessions")
@@ -93,7 +95,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!existingSession) {
-      await service.from("video_sessions").insert({
+      const { data: session } = await service.from("video_sessions").insert({
         appointment_id: appointment.id,
         provider_id: appointment.provider_id,
         patient_id: appointment.patient_id,
@@ -101,8 +103,18 @@ export async function POST(request: Request) {
         room_name: room.name,
         join_url: room.url,
         status: "connecting",
-      });
+      }).select("id").single();
+      videoSessionId = session?.id ?? null;
+    } else {
+      videoSessionId = existingSession.id as string;
     }
+  }
+
+  if (videoSessionId) {
+    await service
+      .from("appointments")
+      .update({ video_session_id: videoSessionId })
+      .eq("id", appointment.id);
   }
 
   return NextResponse.json({

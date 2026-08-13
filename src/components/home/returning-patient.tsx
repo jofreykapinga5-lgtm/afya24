@@ -81,7 +81,7 @@ export function ReturningPatient() {
           </form>
           <Link
             href="/account/sign-up"
-            className="text-center text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline lg:text-right"
+            className="text-center text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
           >
             {t("returning_patient_new_here", locale)}
           </Link>

@@ -33,19 +33,12 @@ export function DoctorsPreview() {
 
   return (
     <section id="doctors" className="scroll-mt-20">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div>
         <SectionHeading eyebrow={t("nav_doctors", locale)} body={t("doctors_preview_subtitle", locale)}>
           <span className="text-[#01b7bb]">
             {t("doctors_preview_title", locale)}
           </span>
         </SectionHeading>
-        <Link
-          href="/doctors"
-          className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-primary outline-none transition-colors hover:border-primary/30 hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
-        >
-          {t("doctors_preview_see_all", locale)}
-          <ArrowRight className="size-3.5" aria-hidden="true" />
-        </Link>
       </div>
 
       <div
@@ -90,13 +83,15 @@ export function DoctorsPreview() {
         </div>
       </div>
 
-      <Link
-        href="/doctors"
-        className="mt-4 flex items-center justify-center gap-1.5 rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-primary outline-none transition-colors hover:border-primary/30 hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
-      >
-        {t("doctors_preview_see_all", locale)}
-        <ArrowRight className="size-3.5" aria-hidden="true" />
-      </Link>
+      <div className="mt-5 flex justify-center">
+        <Link
+          href="/doctors"
+          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-primary outline-none transition-colors hover:border-primary/30 hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          {t("doctors_preview_see_all", locale)}
+          <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
+      </div>
     </section>
   );
 }

@@ -73,19 +73,21 @@ export function LabsPreview() {
               <span className="text-[#01b7bb]">{t("labs_find_closest_title", locale)}</span>
             </SectionHeading>
 
-            <button
-              type="button"
-              onClick={findNearMe}
-              disabled={locate.status === "locating"}
-              className="mt-5 inline-flex min-h-11 w-full max-w-[18rem] items-center justify-center gap-2.5 rounded-full bg-primary px-5 text-sm font-bold text-white outline-none transition-all hover:-translate-y-0.5 hover:bg-[#062960] focus-visible:ring-3 focus-visible:ring-primary/35 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <LocateFixed className="size-4" />
-              {locate.status === "locating"
-                ? t("labs_finding_you", locale)
-                : locate.status === "ready"
-                  ? t("labs_search_again", locale)
-                  : t("labs_find_near_me", locale)}
-            </button>
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
+                onClick={findNearMe}
+                disabled={locate.status === "locating"}
+                className="inline-flex min-h-11 w-full max-w-[18rem] items-center justify-center gap-2.5 rounded-full bg-primary px-5 text-sm font-bold text-white outline-none transition-all hover:-translate-y-0.5 hover:bg-[#062960] focus-visible:ring-3 focus-visible:ring-primary/35 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <LocateFixed className="size-4" />
+                {locate.status === "locating"
+                  ? t("labs_finding_you", locale)
+                  : locate.status === "ready"
+                    ? t("labs_search_again", locale)
+                    : t("labs_find_near_me", locale)}
+              </button>
+            </div>
 
             {locate.status === "error" ? (
               <p className="mt-4 rounded-xl bg-urgent-soft px-4 py-3 text-sm font-medium text-urgent">

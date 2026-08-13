@@ -32,14 +32,14 @@ function Hero() {
   }, [titleNumber, titles]);
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#f6f8f8]">
+    <div className="relative w-full overflow-hidden bg-[#e9f8f7]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(rgba(15,23,42,0.07)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]"
+        className="pointer-events-none absolute inset-0 opacity-35 [background-image:radial-gradient(rgba(8,50,115,0.06)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-20 left-1/2 size-96 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl"
+        className="pointer-events-none absolute -top-20 left-1/2 size-96 -translate-x-1/2 rounded-full bg-[#01b7bb]/14 blur-3xl"
       />
       <div className="container relative mx-auto px-4 sm:px-6">
         <div className="flex flex-col items-center justify-center gap-8 py-14 sm:py-16 lg:py-20">

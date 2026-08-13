@@ -1,39 +1,30 @@
 "use client";
 
 import Image from "next/image";
-import { SectionHeading } from "@/components/home/section-heading";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
 
 const steps: {
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
-  image: string;
-  alt: string;
 }[] = [
   {
     titleKey: "how_it_works_step1_title",
     bodyKey: "how_it_works_step1_body",
-    image: "/generated/how-step-explain.jpg",
-    alt: "Patient explaining a health concern on a phone",
   },
   {
     titleKey: "how_it_works_step2_title",
     bodyKey: "how_it_works_step2_body",
-    image: "/generated/how-step-match.jpg",
-    alt: "Doctor reviewing an online patient request",
   },
   {
     titleKey: "how_it_works_step3_title",
     bodyKey: "how_it_works_step3_body",
-    image: "/generated/how-step-video.jpg",
-    alt: "Patient speaking with a doctor by video call",
   },
   {
     titleKey: "how_it_works_step4_title",
     bodyKey: "how_it_works_step4_body",
-    image: "/generated/how-step-results.jpg",
-    alt: "Patient receiving a clear care outcome on a phone",
   },
 ];
 
@@ -42,48 +33,52 @@ export function HowItWorks() {
 
   return (
     <section id="how-it-works" className="scroll-mt-20">
-      <div className="relative overflow-hidden rounded-[1.75rem] bg-[#e9f8f7] px-4 py-7 sm:px-6 sm:py-8 lg:px-8">
-        <SectionHeading eyebrow={t("how_it_works_badge", locale)} body={t("how_it_works_body", locale)}>
-          {t("how_it_works_title", locale)}
-        </SectionHeading>
+      <div className="relative min-h-[420px] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_-52px_rgba(8,50,115,0.5)] sm:min-h-[430px]">
+        <Image
+          src="/images/process/telehealth-patient-phone-v2.png"
+          alt="Patient using a phone during a telehealth consultation"
+          fill
+          priority={false}
+          sizes="(min-width: 1024px) 1024px, 100vw"
+          className="object-cover object-[22%_center] sm:object-left"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-[#083273]/5" />
 
-        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, index) => {
-            return (
-              <article
-                key={step.titleKey}
-                className="animate-enter group relative flex min-h-[300px] flex-col overflow-hidden rounded-[1.25rem] bg-white p-3.5 shadow-[0_18px_48px_-42px_rgba(8,50,115,0.5)] transition duration-300 hover:-translate-y-1 lg:min-h-[315px]"
-                style={{ animationDelay: `${index * 90}ms` }}
-              >
-                <div className="flex items-start justify-between">
-                  <span className="inline-flex size-10 items-center justify-center rounded-full bg-[#087a7b] text-sm font-bold text-white shadow-[0_16px_35px_-20px_rgba(8,50,115,0.8)]">
-                    {String(index + 1).padStart(2, "0")}
+        <div className="relative z-10 flex min-h-[420px] items-center justify-end p-3 sm:min-h-[430px] sm:p-6 lg:p-10">
+          <div className="w-[51%] rounded-[1rem] bg-[#083273] p-3 text-white shadow-[0_22px_60px_-38px_rgba(8,50,115,0.75)] sm:w-full sm:rounded-[1.25rem] sm:p-6 lg:w-[44%] xl:w-[39%]">
+            <h2 className="text-[1rem] font-semibold leading-tight tracking-[-0.02em] text-white sm:text-[1.35rem]">
+              {t("nav_how_it_works", locale)}
+            </h2>
+
+            <div className="mt-3 flex flex-col gap-2 sm:mt-5 sm:gap-3">
+              {steps.map((step, index) => (
+                <div key={step.titleKey} className="flex items-start gap-2 sm:gap-3">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/18 text-xs font-bold text-white ring-1 ring-white/20 sm:size-8 sm:text-sm">
+                    {index + 1}
                   </span>
+                  <div>
+                    <h3 className="text-[0.8rem] font-semibold leading-tight text-white sm:text-base">
+                      {t(step.titleKey, locale)}
+                    </h3>
+                    <p className="mt-0.5 line-clamp-2 text-[0.68rem] leading-4 text-white/78 sm:mt-1 sm:text-xs sm:leading-5">
+                      {t(step.bodyKey, locale)}
+                    </p>
+                  </div>
                 </div>
-
-                <div className="relative mt-3 aspect-[16/8.6] overflow-hidden rounded-2xl bg-[#f8fbfa]">
-                  <Image
-                    src={step.image}
-                    alt={step.alt}
-                    fill
-                    sizes="(min-width: 1024px) 250px, (min-width: 640px) 42vw, 90vw"
-                    className="object-cover transition duration-700 group-hover:scale-[1.03]"
-                  />
-                </div>
-
-                <div className="mt-4 flex flex-1 flex-col">
-                  <h3 className="text-base font-bold leading-snug tracking-tight text-[#071923]">
-                    {t(step.titleKey, locale)}
-                  </h3>
-                  <p className="mt-2 line-clamp-3 text-xs leading-5 text-[#4f5b61]">
-                    {t(step.bodyKey, locale)}
-                  </p>
-                </div>
-              </article>
-            );
-          })}
+              ))}
+            </div>
+          </div>
         </div>
+      </div>
 
+      <div className="mt-6 flex justify-center">
+        <Link
+          href="/qualification"
+          className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full bg-[#083273] px-5 text-sm font-bold text-white outline-none transition-colors hover:bg-[#062960] focus-visible:ring-3 focus-visible:ring-[#083273]/30"
+        >
+          Start now
+          <ArrowRight className="size-4" />
+        </Link>
       </div>
     </section>
   );

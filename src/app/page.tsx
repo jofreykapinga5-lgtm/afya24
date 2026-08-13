@@ -21,8 +21,8 @@ export default function Home() {
 
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4 py-12 sm:gap-16 sm:px-6 sm:py-16">
           <HowItWorks />
-          <DoctorsPreview />
           <ServicesGrid />
+          <DoctorsPreview />
           <PharmacyPreview />
           <TrustSection />
           <LabsPreview />

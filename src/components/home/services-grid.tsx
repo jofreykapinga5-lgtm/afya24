@@ -1,82 +1,155 @@
 "use client";
 
-import { Brain, Camera, Lock, Pill, Stethoscope, Zap } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { SectionHeading } from "@/components/home/section-heading";
 import { serviceCategories } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 
-// One consistent icon-tile treatment for every category -- three of these
-// six never had real photography, which made the grid look half-broken
-// (three photo tiles, three blank gradients). Icons read as an intentional
-// design choice; a mix of real photos and empty placeholders doesn't.
-const serviceMedia: Record<
-  string,
-  {
-    icon: typeof Stethoscope;
-    tone: string;
-  }
-> = {
-  "cat-general": { icon: Stethoscope, tone: "bg-[#e8eff2]" },
-  "cat-urgent": { icon: Zap, tone: "bg-[#edf0f2]" },
-  "cat-mental-health": { icon: Brain, tone: "bg-[#edf1f6]" },
-  "cat-dermatology": { icon: Camera, tone: "bg-[#eaf2ee]" },
-  "cat-sexual-health": { icon: Lock, tone: "bg-[#f1eef4]" },
-  "cat-prescription": { icon: Pill, tone: "bg-[#eef0f2]" },
+type ServiceTile = {
+  categoryId: string;
+  label: string;
+  price?: string;
+  image: string;
+  alt: string;
 };
+
+const serviceTabs = ["Popular", "Ongoing care", "Urgent care", "Medications", "Labs & imaging"];
+
+const stitchServices: ServiceTile[] = [
+  {
+    categoryId: "cat-prescription",
+    label: "Prescription refills",
+    image: "/images/services/prescription-bottle.png",
+    alt: "Prescription medication bottle",
+  },
+  {
+    categoryId: "cat-general",
+    label: "General doctor",
+    price: "From TZS 15,000",
+    image: "/images/services/fertility-doctor.png",
+    alt: "Doctor providing online care",
+  },
+  {
+    categoryId: "cat-urgent",
+    label: "Urgent care",
+    price: "From TZS 20,000",
+    image: "/images/services/urgent-care-doctor.png",
+    alt: "Doctor ready for urgent care",
+  },
+  {
+    categoryId: "cat-mental-health",
+    label: "Mental health meds",
+    price: "From TZS 25,000",
+    image: "/images/services/mental-health-meds.png",
+    alt: "Mental health medication tablets",
+  },
+  {
+    categoryId: "cat-sexual-health",
+    label: "Sexual health",
+    price: "Private visit",
+    image: "/images/services/doctor-note.png",
+    alt: "Doctor preparing a confidential visit note",
+  },
+  {
+    categoryId: "cat-dermatology",
+    label: "Skin concerns",
+    price: "Photo review",
+    image: "/images/services/weight-loss-meds.png",
+    alt: "Clean medical product photography",
+  },
+];
 
 export function ServicesGrid() {
   const router = useRouter();
   const locale = useAppStore((state) => state.locale);
   const setQualificationComplaint = useAppStore((state) => state.setQualificationComplaint);
-  const featuredCategories = serviceCategories.slice(0, 6);
 
-  function openCategory(description: string) {
-    setQualificationComplaint(description);
+  function openCategory(categoryId: string, fallbackLabel: string) {
+    const category = serviceCategories.find((item) => item.id === categoryId);
+    setQualificationComplaint(category?.description ?? fallbackLabel);
     router.push("/qualification");
   }
 
   return (
-    <section id="services" className="scroll-mt-20 py-8">
-      <div className="rounded-[1.75rem] bg-[#f6f8f8] p-4 sm:p-6 lg:p-8">
+    <section id="services" className="scroll-mt-20 py-2">
+      <div className="mx-auto w-full max-w-4xl">
         <SectionHeading eyebrow={t("services_title", locale)} body={t("services_subtitle", locale)}>
           <span className="text-[#01b7bb]">{t("services_feature_title", locale)}</span>
         </SectionHeading>
 
-        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredCategories.map((category) => {
-              const media = serviceMedia[category.id] ?? {
-                icon: Stethoscope,
-                tone: "bg-[#eef1f3]",
-              };
-              const Icon = media.icon;
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => openCategory(category.description)}
-                  className="group grid min-h-[126px] overflow-hidden rounded-2xl bg-card text-left outline-none transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_-26px_rgba(8,50,115,0.42)] focus-visible:ring-3 focus-visible:ring-ring/40 sm:grid-cols-[96px_1fr]"
-                >
-                  <div
-                    className={`relative flex min-h-[104px] items-center justify-center overflow-hidden ${media.tone}`}
-                  >
-                    <Icon
-                      className="size-8 text-primary transition duration-300 group-hover:scale-110"
-                      strokeWidth={1.75}
-                    />
-                  </div>
+        <nav
+          aria-label="Service categories"
+          className="mt-4 flex gap-2 overflow-x-auto pb-1.5 [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden"
+        >
+          {serviceTabs.map((tab, index) => (
+            <button
+              key={tab}
+              type="button"
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-brand-teal/25 ${
+                index === 0
+                  ? "border-[#01b7bb] bg-[#e9f8f7] text-[#087a7b]"
+                  : "border-[#e4e9ec] bg-white text-[#4c5560] hover:border-[#d6dde2] hover:bg-[#f7f8f8]"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
 
-                  <div className="flex min-w-0 items-center p-4">
-                    <h3 className="text-2xl font-medium leading-tight tracking-tight text-foreground">
-                      {category.name}
-                    </h3>
-                  </div>
-                </button>
-              );
-            })}
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+          {stitchServices.map((service) => (
+            <button
+              key={service.categoryId}
+              type="button"
+              onClick={() => openCategory(service.categoryId, service.label)}
+              className="group relative flex min-h-[96px] items-center overflow-hidden rounded-[1.05rem] bg-[#f7f7f7] px-4 py-3 text-left outline-none transition-all duration-300 hover:bg-[#f0f0f0] hover:shadow-[0_12px_28px_-26px_rgba(8,50,115,0.45)] focus-visible:ring-3 focus-visible:ring-brand-teal/30 sm:min-h-[108px] sm:px-5"
+            >
+              <div className="relative z-10 max-w-[58%]">
+                <h3 className="text-[1rem] font-semibold leading-tight tracking-[-0.015em] text-[#171b20] sm:text-[1.05rem]">
+                  {service.label}
+                </h3>
+                {service.price ? (
+                  <p className="mt-1 text-xs leading-5 text-[#5c6670]">{service.price}</p>
+                ) : null}
+              </div>
+
+              <ServiceImage service={service} />
+
+              <span className="relative z-10 ml-auto inline-flex size-7 shrink-0 items-center justify-center rounded-full text-[#9aa2aa] transition-colors group-hover:text-[#4c5560]">
+                <ArrowRight className="size-4" />
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-5 text-center">
+          <button
+            type="button"
+            onClick={() => router.push("/qualification")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#087a7b] outline-none transition-colors hover:text-[#065f63] focus-visible:ring-3 focus-visible:ring-brand-teal/25"
+          >
+            Explore all services
+            <ArrowRight className="size-5" />
+          </button>
         </div>
       </div>
     </section>
+  );
+}
+
+function ServiceImage({ service }: { service: ServiceTile }) {
+  return (
+    <div className="absolute right-10 top-1/2 size-16 -translate-y-1/2 overflow-hidden rounded-full bg-white sm:size-20">
+      <Image
+        src={service.image}
+        alt={service.alt}
+        fill
+        sizes="96px"
+        className="object-cover"
+      />
+    </div>
   );
 }

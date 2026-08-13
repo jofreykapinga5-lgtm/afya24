@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { createLabLocation, updateLabLocationStatus } from "@/app/admin/actions";
 import {
   Table,
   TableBody,
@@ -104,7 +106,47 @@ export function LabsPanel({
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-semibold">{t("admin_lab_locations_title", locale)}</h3>
+        <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">{t("admin_lab_locations_title", locale)}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Add partner labs with Google Maps latitude and longitude. Patients are matched by live browser location.
+            </p>
+          </div>
+        </div>
+
+        <form
+          action={createLabLocation}
+          className="mb-4 grid gap-3 rounded-xl bg-[#f8fbfd] p-3 ring-1 ring-[#dfe8eb] lg:grid-cols-[1fr_1fr_0.7fr_0.75fr_0.75fr_auto] lg:items-end"
+        >
+          <LabField label="Lab name">
+            <Input name="name" placeholder="Mbeya Medical Lab" required />
+          </LabField>
+          <LabField label="Address">
+            <Input name="address" placeholder="Street, town" required />
+          </LabField>
+          <LabField label="Region">
+            <Input name="region" placeholder="Mbeya" />
+          </LabField>
+          <LabField label="Latitude">
+            <Input name="latitude" type="number" step="any" placeholder="-8.9000" required />
+          </LabField>
+          <LabField label="Longitude">
+            <Input name="longitude" type="number" step="any" placeholder="33.4500" required />
+          </LabField>
+          <Button type="submit" className="h-8 rounded-lg bg-[#01b7bb] text-white hover:bg-[#019ea2]">
+            Add lab
+          </Button>
+          <div className="grid gap-3 lg:col-span-6 lg:grid-cols-2">
+            <LabField label="Phone">
+              <Input name="phone" placeholder="+255..." />
+            </LabField>
+            <LabField label="Opening hours">
+              <Input name="openingHours" placeholder="Mon-Sat, 7:00 AM - 7:00 PM" />
+            </LabField>
+          </div>
+        </form>
+
         <div className="rounded-xl border border-border">
           <Table>
             <TableHeader>
@@ -130,21 +172,30 @@ export function LabsPanel({
                     </StatusPill>
                   </TableCell>
                   <TableCell className="pr-4 text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        onToggleLocation(
-                          location.id,
-                          location.name,
-                          location.status === "active" ? "inactive" : "active"
-                        )
-                      }
-                    >
-                      {location.status === "active"
-                        ? t("admin_action_deactivate", locale)
-                        : t("admin_action_activate", locale)}
-                    </Button>
+                    <form action={updateLabLocationStatus}>
+                      <input type="hidden" name="locationId" value={location.id} />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={location.status === "active" ? "inactive" : "active"}
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          onToggleLocation(
+                            location.id,
+                            location.name,
+                            location.status === "active" ? "inactive" : "active"
+                          )
+                        }
+                      >
+                        {location.status === "active"
+                          ? t("admin_action_deactivate", locale)
+                          : t("admin_action_activate", locale)}
+                      </Button>
+                    </form>
                   </TableCell>
                 </TableRow>
               ))}
@@ -153,5 +204,14 @@ export function LabsPanel({
         </div>
       </div>
     </div>
+  );
+}
+
+function LabField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="grid gap-1.5 text-xs font-semibold text-[#071923]">
+      {label}
+      {children}
+    </label>
   );
 }

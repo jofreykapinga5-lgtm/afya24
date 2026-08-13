@@ -24,7 +24,6 @@ import type { AppointmentPaymentRow } from "@/components/admin/payments-panel";
 import {
   appointments,
   auditLogs,
-  labLocations,
   labOrders,
   pharmacyItems,
   pharmacyOrders,
@@ -57,6 +56,19 @@ type PaymentAppointmentRow = {
   currency: string | null;
   patients: { full_name: string; hospital_reference_number: string } | null;
   providers: { full_name: string } | null;
+};
+
+type DbLabLocationRow = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string | null;
+  region: string | null;
+  latitude: number | string;
+  longitude: number | string;
+  map_url: string | null;
+  opening_hours: string | null;
+  status: string;
 };
 
 const navItems = [
@@ -124,6 +136,7 @@ export default async function AdminDashboardPage() {
   let adminDataWarning: string | null = null;
   let dbProviders: DbProviderRow[] | null = null;
   let paymentAppointments: PaymentAppointmentRow[] | null = null;
+  let dbLabLocations: DbLabLocationRow[] | null = null;
 
   if (profile) {
     try {
@@ -154,6 +167,18 @@ export default async function AdminDashboardPage() {
       }
 
       paymentAppointments = appointmentsResult.data as unknown as PaymentAppointmentRow[];
+
+      const labsResult = await service
+        .from("lab_locations")
+        .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
+        .order("region", { ascending: true })
+        .order("name", { ascending: true });
+
+      if (labsResult.error) {
+        throw labsResult.error;
+      }
+
+      dbLabLocations = labsResult.data as DbLabLocationRow[];
     } catch (error) {
       adminDataWarning =
         error instanceof Error
@@ -221,6 +246,24 @@ export default async function AdminDashboardPage() {
           }),
         }))
       : [];
+
+  const realLabLocations =
+    dbLabLocations?.map((location) => ({
+      id: location.id,
+      name: location.name,
+      address: location.address,
+      phone: location.phone ?? "",
+      region: location.region ?? "",
+      latitude: Number(location.latitude),
+      longitude: Number(location.longitude),
+      openingHours: location.opening_hours ?? "Hours not listed",
+      mapUrl:
+        location.map_url ??
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${location.latitude},${location.longitude}`
+        )}`,
+      status: location.status as "active" | "inactive",
+    })) ?? [];
 
   return (
     <main className="min-h-[100dvh] bg-[#edf3f6] px-3 py-3 text-[#101820] sm:px-5 lg:px-6">
@@ -367,7 +410,7 @@ export default async function AdminDashboardPage() {
                   pharmacyItems={pharmacyItems}
                   pharmacyOrders={pharmacyOrders}
                   labOrders={labOrders}
-                  labLocations={labLocations}
+                  labLocations={realLabLocations}
                   auditLogs={auditLogs}
                 />
               </div>

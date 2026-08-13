@@ -4,7 +4,7 @@ import { HealthTips } from "@/components/home/health-tips";
 import { DoctorsPreview } from "@/components/home/doctors-preview";
 import { ServicesGrid } from "@/components/home/services-grid";
 import { PharmacyPreview } from "@/components/home/pharmacy-preview";
-import { LabsPreview } from "@/components/home/labs-preview";
+import { LabsPreview, type PublicLabLocation } from "@/components/home/labs-preview";
 import { TrustSection } from "@/components/home/trust-section";
 import { ReturningPatient } from "@/components/home/returning-patient";
 import { PatientReviews } from "@/components/home/patient-reviews";
@@ -19,10 +19,11 @@ import type { Provider } from "@/lib/types";
 export default async function Home() {
   const locale = await getServerLocale();
   let doctors: Provider[] = [];
+  let labs: PublicLabLocation[] = [];
 
   try {
     const service = createServiceClient();
-    const [{ data: providerRows }, defaultService] = await Promise.all([
+    const [{ data: providerRows }, { data: labRows }, defaultService] = await Promise.all([
       service
         .from("providers")
         .select(
@@ -31,14 +32,33 @@ export default async function Home() {
         .eq("profile_status", "active")
         .order("available_now", { ascending: false })
         .limit(8),
+      service
+        .from("lab_locations")
+        .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
+        .eq("status", "active")
+        .order("region", { ascending: true })
+        .limit(100),
       getDefaultService(service).catch(() => null),
     ]);
 
     doctors = ((providerRows ?? []) as ProviderRow[]).map((row) =>
       mapProviderRow(row, defaultService?.basePrice ?? 0, locale)
     );
+    labs = (labRows ?? []).map((lab) => ({
+      id: lab.id,
+      name: lab.name,
+      address: lab.address,
+      phone: lab.phone ?? "",
+      region: lab.region ?? "",
+      latitude: Number(lab.latitude),
+      longitude: Number(lab.longitude),
+      openingHours: lab.opening_hours ?? "Hours not listed",
+      mapUrl: lab.map_url ?? "",
+      status: lab.status,
+    })) as PublicLabLocation[];
   } catch {
     doctors = [];
+    labs = [];
   }
 
   return (
@@ -52,7 +72,7 @@ export default async function Home() {
           <DoctorsPreview providers={doctors} />
           <PharmacyPreview />
           <TrustSection />
-          <LabsPreview />
+          <LabsPreview labs={labs} />
           <HealthTips />
           <ReturningPatient />
           <PatientReviews />

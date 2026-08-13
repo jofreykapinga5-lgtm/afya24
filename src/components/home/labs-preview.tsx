@@ -1,23 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, LocateFixed, Lock, MapPin, MessageCircle, Navigation } from "lucide-react";
-import { labLocations, labOrders } from "@/lib/mock-data";
+import { Clock, LocateFixed, Lock, MapPin, Navigation, Phone } from "lucide-react";
 import { distanceKm } from "@/lib/geo";
 import { SectionHeading } from "@/components/home/section-heading";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
-
-const commonTests: Record<string, string[]> = {
-  "lab-nairobi-central": ["Full blood count", "Malaria test", "Urinalysis"],
-  "lab-westlands": ["Full blood count", "Malaria test", "Pregnancy test"],
-  "lab-kilimani": ["Full blood count", "Diabetes panel", "Cholesterol test"],
-  "lab-karen": ["Full blood count", "Thyroid panel", "Vitamin D test"],
-  "lab-eastleigh": ["Full blood count", "Malaria test", "Typhoid test"],
-  "lab-mombasa-road": ["Full blood count", "Kidney function", "Liver function panel"],
-};
+import type { LabLocationStatus } from "@/lib/types";
 
 const NEAREST_COUNT = 3;
+
+export type PublicLabLocation = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  openingHours: string;
+  mapUrl: string;
+  status: LabLocationStatus;
+};
 
 type LocateState =
   | { status: "idle" }
@@ -25,7 +29,17 @@ type LocateState =
   | { status: "ready"; lat: number; lng: number }
   | { status: "error"; message: string };
 
-export function LabsPreview() {
+function directionsUrl(originLat: number, originLng: number, lab: PublicLabLocation) {
+  const params = new URLSearchParams({
+    api: "1",
+    origin: `${originLat},${originLng}`,
+    destination: `${lab.latitude},${lab.longitude}`,
+    travelmode: "driving",
+  });
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+export function LabsPreview({ labs }: { labs: PublicLabLocation[] }) {
   const locale = useAppStore((state) => state.locale);
   const [locate, setLocate] = useState<LocateState>({ status: "idle" });
 
@@ -53,7 +67,7 @@ export function LabsPreview() {
 
   const nearestLabs = useMemo(() => {
     if (locate.status !== "ready") return [];
-    return labLocations
+    return labs
       .filter((lab) => lab.status === "active")
       .map((lab) => ({
         lab,
@@ -61,7 +75,7 @@ export function LabsPreview() {
       }))
       .sort((a, b) => a.distance - b.distance)
       .slice(0, NEAREST_COUNT);
-  }, [locate]);
+  }, [labs, locate]);
 
   return (
     <section id="labs" className="scroll-mt-20">
@@ -104,11 +118,9 @@ export function LabsPreview() {
           </div>
 
           {locate.status === "ready" ? (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {nearestLabs.map(({ lab, distance }) => {
-                const relatedOrder = labOrders.find((order) => order.labLocationId === lab.id);
-
-                return (
+            nearestLabs.length > 0 ? (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {nearestLabs.map(({ lab, distance }) => (
                   <article
                     key={lab.id}
                     className="rounded-2xl bg-white p-4 ring-1 ring-[#dfe8eb]"
@@ -124,6 +136,12 @@ export function LabsPreview() {
                           <Clock className="size-3.5 shrink-0 text-brand-teal" />
                           {lab.openingHours}
                         </p>
+                        {lab.phone ? (
+                          <p className="mt-1 flex items-center gap-1.5 text-xs text-[#667079]">
+                            <Phone className="size-3.5 shrink-0 text-brand-teal" />
+                            {lab.phone}
+                          </p>
+                        ) : null}
                       </div>
                       <span className="w-fit shrink-0 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-white">
                         {distance < 1
@@ -132,30 +150,12 @@ export function LabsPreview() {
                       </span>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {(commonTests[lab.id] ?? []).slice(0, 3).map((test) => (
-                        <span
-                          key={test}
-                          className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-primary"
-                        >
-                          {test}
-                        </span>
-                      ))}
-                    </div>
-
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      {relatedOrder ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#075b63]">
-                          <MessageCircle className="size-3.5" />
-                          {t("labs_sent_whatsapp", locale)}
-                        </span>
-                      ) : (
-                        <span className="line-clamp-2 text-xs leading-5 text-[#68727a]">
-                          {t("labs_body", locale)}
-                        </span>
-                      )}
+                      <span className="line-clamp-2 text-xs leading-5 text-[#68727a]">
+                        {lab.region}
+                      </span>
                       <a
-                        href={lab.mapUrl}
+                        href={directionsUrl(locate.lat, locate.lng, lab)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex w-fit items-center gap-1 rounded-full bg-brand-teal px-3 py-1.5 text-xs font-bold text-white outline-none transition-colors hover:bg-brand-teal/85 focus-visible:ring-3 focus-visible:ring-brand-teal/40"
@@ -165,9 +165,13 @@ export function LabsPreview() {
                       </a>
                     </div>
                   </article>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mx-auto max-w-md rounded-2xl bg-white px-4 py-3 text-center text-sm text-muted-foreground ring-1 ring-[#dfe8eb]">
+                No active partner labs are configured yet.
+              </p>
+            )
           ) : null}
         </div>
       </div>

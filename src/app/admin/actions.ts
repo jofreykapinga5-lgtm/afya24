@@ -402,6 +402,95 @@ export async function markAppointmentPaymentFailed(formData: FormData) {
   await setAppointmentPaymentStatus(formData, "failed", "payment_marked_failed");
 }
 
+export async function createLabLocation(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const name = formString(formData, "name");
+  const address = formString(formData, "address");
+  const region = formString(formData, "region");
+  const phone = formString(formData, "phone");
+  const openingHours = formString(formData, "openingHours");
+  const latitude = Number(formData.get("latitude"));
+  const longitude = Number(formData.get("longitude"));
+
+  if (!name || !address || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error("Lab name, address, latitude, and longitude are required.");
+  }
+
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
+
+  const { data: lab, error } = await service
+    .from("lab_locations")
+    .insert({
+      name,
+      address,
+      region: region || null,
+      phone: phone || null,
+      opening_hours: openingHours || null,
+      latitude,
+      longitude,
+      map_url: mapUrl,
+      whatsapp_location_text: `${name} - ${address}`,
+      status: "active",
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "lab_location_updated",
+    entity_type: "lab_location",
+    entity_id: lab.id,
+    metadata_json: { name, created: true },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/dashboard");
+}
+
+export async function updateLabLocationStatus(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const locationId = formString(formData, "locationId");
+  const status = formString(formData, "status");
+
+  if (!locationId || !["active", "inactive"].includes(status)) {
+    throw new Error("Lab location and valid status are required.");
+  }
+
+  const { data: lab, error: fetchError } = await service
+    .from("lab_locations")
+    .select("id, name")
+    .eq("id", locationId)
+    .single();
+
+  if (fetchError || !lab) {
+    throw new Error(fetchError?.message ?? "Lab location not found.");
+  }
+
+  const { error } = await service
+    .from("lab_locations")
+    .update({ status })
+    .eq("id", locationId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "lab_location_updated",
+    entity_type: "lab_location",
+    entity_id: locationId,
+    metadata_json: { name: lab.name, status },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/dashboard");
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

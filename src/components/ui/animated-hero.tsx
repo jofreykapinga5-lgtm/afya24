@@ -25,21 +25,21 @@ function Hero() {
       <div className="absolute inset-x-0 bottom-0 -z-10 h-36 bg-gradient-to-t from-[#e9f8f7] to-transparent" />
 
       <div className="container relative mx-auto px-4 sm:px-6">
-        <div className="grid min-h-[560px] items-center gap-8 py-14 sm:py-16 lg:grid-cols-[0.9fr_0.7fr] lg:py-20">
-          <div className="max-w-2xl">
+        <div className="flex min-h-[560px] flex-col items-center justify-center gap-8 py-14 sm:py-16 lg:py-20">
+          <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
             <p className="inline-flex rounded-full bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white ring-1 ring-white/18 backdrop-blur-sm">
               Afya24
             </p>
-            <h1 className="mt-5 text-4xl font-bold leading-[1.02] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold leading-[1.02] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
               {t("hero_headline_prefix", locale)}{" "}
               <span className="text-[#7cf1ee]">{t("hero_title_simple", locale)}</span>
             </h1>
 
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/84 sm:text-lg">
+            <p className="max-w-xl text-base leading-relaxed text-white/84 sm:text-lg">
               {t("hero_body", locale)}
             </p>
 
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/doctors"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#083273] px-6 text-sm font-bold text-white shadow-[0_18px_44px_-24px_rgba(1,183,187,0.85)] ring-1 ring-white/20 transition-colors hover:bg-[#062960] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#01b7bb]/45"
@@ -50,7 +50,7 @@ function Hero() {
             </div>
           </div>
 
-          <div className="w-full max-w-xl lg:justify-self-end">
+          <div className="w-full max-w-xl">
             <AiChatHeroCard />
           </div>
         </div>

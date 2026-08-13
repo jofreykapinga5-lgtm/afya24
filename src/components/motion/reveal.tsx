@@ -14,10 +14,10 @@ type RevealProps = {
   children: ReactNode;
   className?: string;
   delay?: keyof typeof delayClass;
-  variant?: "up" | "fade" | "image";
+  variant?: "swipe" | "fade" | "image";
 };
 
-export function Reveal({ children, className, delay = 0, variant = "up" }: RevealProps) {
+export function Reveal({ children, className, delay = 0, variant = "swipe" }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -43,18 +43,18 @@ export function Reveal({ children, className, delay = 0, variant = "up" }: Revea
 
   const hidden =
     variant === "image"
-      ? "opacity-0 scale-[1.04] blur-[2px]"
+      ? "translate-x-5 scale-[1.015] opacity-0"
       : variant === "fade"
-        ? "opacity-0 blur-[2px]"
-        : "opacity-0 translate-y-6 blur-[2px]";
+        ? "opacity-0"
+        : "-translate-x-5 opacity-0";
 
   return (
     <div
       ref={ref}
       className={cn(
-        "will-change-transform motion-safe:transition-[opacity,transform,filter] motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:translate-y-0 motion-reduce:scale-100 motion-reduce:blur-0",
+        "will-change-transform motion-safe:transition-[opacity,transform] motion-safe:duration-[420ms] motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:translate-x-0 motion-reduce:scale-100",
         delayClass[delay],
-        visible ? "translate-y-0 scale-100 opacity-100 blur-0" : hidden,
+        visible ? "translate-x-0 scale-100 opacity-100" : hidden,
         className
       )}
     >

@@ -35,6 +35,29 @@ import {
 } from "@/lib/mock-data";
 import { signOut } from "../actions";
 
+type DbProviderRow = {
+  id: string;
+  full_name: string;
+  specialty: string;
+  credentials: string | null;
+  license_number: string | null;
+  bio: string | null;
+  profile_status: string;
+  languages: string[] | null;
+  created_at: string;
+  rating_summary: { rating?: number; reviewCount?: number } | null;
+};
+
+type PaymentAppointmentRow = {
+  id: string;
+  scheduled_at: string;
+  payment_status: string;
+  price: number | string | null;
+  currency: string | null;
+  patients: { full_name: string; hospital_reference_number: string } | null;
+  providers: { full_name: string } | null;
+};
+
 const navItems = [
   { label: "Overview", href: "#overview", icon: LayoutDashboard },
   { label: "Doctors", href: "#providers", icon: Stethoscope },
@@ -97,15 +120,46 @@ export default async function AdminDashboardPage() {
       : allowedTabs.includes(item.href.replace("#", "") as AdminTab)
   );
 
-  const service = createServiceClient();
-  const { data: dbProviders } = profile
-    ? await service
+  let adminDataWarning: string | null = null;
+  let dbProviders: DbProviderRow[] | null = null;
+  let paymentAppointments: PaymentAppointmentRow[] | null = null;
+
+  if (profile) {
+    try {
+      const service = createServiceClient();
+      const providersResult = await service
         .from("providers")
         .select(
           "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, created_at, rating_summary"
         )
-        .order("created_at", { ascending: false })
-    : { data: null };
+        .order("created_at", { ascending: false });
+
+      if (providersResult.error) {
+        throw providersResult.error;
+      }
+
+      dbProviders = providersResult.data as DbProviderRow[];
+
+      const appointmentsResult = await service
+        .from("appointments")
+        .select(
+          "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
+        )
+        .order("scheduled_at", { ascending: false })
+        .limit(50);
+
+      if (appointmentsResult.error) {
+        throw appointmentsResult.error;
+      }
+
+      paymentAppointments = appointmentsResult.data as unknown as PaymentAppointmentRow[];
+    } catch (error) {
+      adminDataWarning =
+        error instanceof Error
+          ? error.message
+          : "Admin data could not be loaded. Check Supabase configuration and migrations.";
+    }
+  }
 
   const mappedProviders =
     dbProviders && dbProviders.length > 0
@@ -131,16 +185,6 @@ export default async function AdminDashboardPage() {
           timeSlots: [],
         }))
       : providers;
-
-  const { data: paymentAppointments } = profile
-    ? await service
-        .from("appointments")
-        .select(
-          "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
-        )
-        .order("scheduled_at", { ascending: false })
-        .limit(50)
-    : { data: null };
 
   // Real, honest data -- no mock fallback. An admin needs to be able to
   // trust that "no payments" means no payments, not "the DB happened to be
@@ -293,6 +337,19 @@ export default async function AdminDashboardPage() {
           </header>
 
           <div className="p-4 sm:p-6">
+            {adminDataWarning ? (
+              <div className="mb-4 rounded-[1.1rem] bg-[#fff4f0] p-4 text-sm text-[#9b2c12] ring-1 ring-[#ffd4c6]">
+                <p className="font-bold">Admin data could not load.</p>
+                <p className="mt-1">
+                  {adminDataWarning}
+                </p>
+                <p className="mt-2 text-xs text-[#9b2c12]/80">
+                  Check Vercel Supabase environment variables and make sure the latest database
+                  migrations are applied.
+                </p>
+              </div>
+            ) : null}
+
             {profile ? (
               <div id="admin-tabs">
                 <AdminDashboard

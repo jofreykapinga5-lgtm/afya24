@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import {
   CalendarClock,
   Clock3,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
 import {
+  type AdminActionState,
   createProviderAccount,
   deleteProviderAccount,
   resetProviderPassword,
@@ -56,6 +57,11 @@ const localeLabel: Record<Locale, string> = Object.fromEntries(
   locales.map((entry) => [entry.value, entry.label])
 ) as Record<Locale, string>;
 
+const initialCreateProviderState: AdminActionState = {
+  status: "idle",
+  message: "",
+};
+
 export function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -74,6 +80,10 @@ export function ProvidersPanel({
   onStatusChange: (providerId: string, providerName: string, next: ProviderStatus) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [createState, createAction, createPending] = useActionState(
+    createProviderAccount,
+    initialCreateProviderState
+  );
   const [deletedProviderIds, setDeletedProviderIds] = useState<string[]>([]);
   const [availability, setAvailability] = useState<Record<string, { availableNow: boolean; note: string }>>(
     () =>
@@ -164,7 +174,18 @@ export function ProvidersPanel({
                 Admin creates provider access. The doctor signs in with the email and temporary password you set here.
               </DialogDescription>
             </DialogHeader>
-            <form action={createProviderAccount} className="grid gap-4">
+            <form action={createAction} className="grid gap-4">
+              {createState.status !== "idle" ? (
+                <div
+                  className={`rounded-xl px-3 py-2 text-sm ${
+                    createState.status === "success"
+                      ? "bg-[#e8f7f4] text-[#087a7b] ring-1 ring-[#b7ebe6]"
+                      : "bg-[#fff4f0] text-[#9b2c12] ring-1 ring-[#ffd4c6]"
+                  }`}
+                >
+                  {createState.message}
+                </div>
+              ) : null}
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Full name">
                   <Input name="fullName" placeholder="Dr. Jane Mwangi" required />
@@ -212,9 +233,9 @@ export function ProvidersPanel({
                   </div>
                 </fieldset>
               </div>
-              <Button type="submit" className="h-10 justify-self-start rounded-lg">
+              <Button type="submit" className="h-10 justify-self-start rounded-lg" disabled={createPending}>
                 <UserPlus className="size-4" />
-                Create pending doctor
+                {createPending ? "Creating..." : "Create pending doctor"}
               </Button>
             </form>
           </DialogContent>

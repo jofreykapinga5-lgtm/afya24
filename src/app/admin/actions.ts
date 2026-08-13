@@ -1,10 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { ProviderStatus } from "@/lib/types";
+
+export type AdminActionState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
+function actionErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+}
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -39,83 +48,103 @@ function formModes(formData: FormData) {
   return modes.length > 0 ? modes : ["chat", "voice", "video"];
 }
 
-export async function createProviderAccount(formData: FormData) {
-  const { adminUserId, service } = await requireAdmin();
-  const email = formString(formData, "email").toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  const fullName = formString(formData, "fullName");
-  const phone = formString(formData, "phone");
-  const specialty = formString(formData, "specialty");
-  const licenseNumber = formString(formData, "licenseNumber");
-  const credentials = formString(formData, "credentials");
-  const bio = formString(formData, "bio");
-  const languages = formData.getAll("languages").map(String);
-  const consultationModes = formModes(formData);
+export async function createProviderAccount(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
+  try {
+    const { adminUserId, service } = await requireAdmin();
+    const email = formString(formData, "email").toLowerCase();
+    const password = String(formData.get("password") ?? "");
+    const fullName = formString(formData, "fullName");
+    const phone = formString(formData, "phone");
+    const specialty = formString(formData, "specialty");
+    const licenseNumber = formString(formData, "licenseNumber");
+    const credentials = formString(formData, "credentials");
+    const bio = formString(formData, "bio");
+    const languages = formData.getAll("languages").map(String);
+    const consultationModes = formModes(formData);
 
-  if (!email || !password || !fullName || !specialty || !licenseNumber) {
-    throw new Error("Email, password, full name, specialty, and license number are required.");
-  }
+    if (!email || !password || !fullName || !specialty || !licenseNumber) {
+      return {
+        status: "error",
+        message: "Email, password, full name, specialty, and license number are required.",
+      };
+    }
 
-  const { data: created, error: createError } = await service.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: fullName,
+    const { data: created, error: createError } = await service.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+        role: "doctor",
+      },
+    });
+
+    if (createError || !created.user) {
+      throw new Error(createError?.message ?? "Could not create provider auth account.");
+    }
+
+    const { error: userError } = await service.from("users").insert({
+      id: created.user.id,
+      email,
+      phone: phone || null,
       role: "doctor",
-    },
-  });
+      status: "invited",
+    });
 
-  if (createError || !created.user) {
-    throw new Error(createError?.message ?? "Could not create provider auth account.");
+    if (userError) {
+      await service.auth.admin.deleteUser(created.user.id);
+      throw new Error(userError.message);
+    }
+
+    const { data: provider, error: providerError } = await service
+      .from("providers")
+      .insert({
+        user_id: created.user.id,
+        full_name: fullName,
+        specialty,
+        license_number: licenseNumber,
+        credentials: credentials || null,
+        bio: bio || null,
+        profile_status: "pending",
+        languages: languages.length > 0 ? languages : ["sw", "en"],
+        consultation_modes: consultationModes,
+        available_now: false,
+        availability_note: "Account created by admin. Waiting for approval.",
+      })
+      .select("id")
+      .single();
+
+    if (providerError) {
+      await service.from("users").delete().eq("id", created.user.id);
+      await service.auth.admin.deleteUser(created.user.id);
+      throw new Error(providerError.message);
+    }
+
+    await service.from("audit_logs").insert({
+      actor_user_id: adminUserId,
+      action: "provider_added",
+      entity_type: "provider",
+      entity_id: provider.id,
+      metadata_json: { fullName, email, specialty, licenseNumber },
+    });
+
+    revalidatePath("/admin/dashboard");
+
+    return {
+      status: "success",
+      message: `${fullName} was created as a pending doctor. Activate them when their details are verified.`,
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+
+    return {
+      status: "error",
+      message: actionErrorMessage(error),
+    };
   }
-
-  const { error: userError } = await service.from("users").insert({
-    id: created.user.id,
-    email,
-    phone: phone || null,
-    role: "doctor",
-    status: "invited",
-  });
-
-  if (userError) {
-    await service.auth.admin.deleteUser(created.user.id);
-    throw new Error(userError.message);
-  }
-
-  const { data: provider, error: providerError } = await service
-    .from("providers")
-    .insert({
-      user_id: created.user.id,
-      full_name: fullName,
-      specialty,
-      license_number: licenseNumber,
-      credentials: credentials || null,
-      bio: bio || null,
-      profile_status: "pending",
-      languages: languages.length > 0 ? languages : ["sw", "en"],
-      consultation_modes: consultationModes,
-      available_now: false,
-      availability_note: "Account created by admin. Waiting for approval.",
-    })
-    .select("id")
-    .single();
-
-  if (providerError) {
-    await service.from("users").delete().eq("id", created.user.id);
-    await service.auth.admin.deleteUser(created.user.id);
-    throw new Error(providerError.message);
-  }
-
-  await service.from("audit_logs").insert({
-    actor_user_id: adminUserId,
-    action: "provider_added",
-    entity_type: "provider",
-    entity_id: provider.id,
-    metadata_json: { fullName, email, specialty, licenseNumber },
-  });
-
-  revalidatePath("/admin/dashboard");
 }
 
 export async function updateProviderStatus(formData: FormData) {

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { DoctorCarouselCard } from "@/components/doctor-carousel-card";
 import { SectionHeading } from "@/components/home/section-heading";
+import { Reveal } from "@/components/motion/reveal";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import type { Provider } from "@/lib/types";
@@ -119,7 +120,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
             </p>
           </div>
 
-          <div className="relative min-h-64 overflow-hidden md:min-h-80">
+          <Reveal variant="image" className="relative min-h-64 overflow-hidden md:min-h-80">
             <Image
               src="/images/doctors/tanzanian-male-doctor.png"
               alt="Tanzanian male doctor in a white coat"
@@ -136,7 +137,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
                 <ArrowRight className="size-4" />
               </Link>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

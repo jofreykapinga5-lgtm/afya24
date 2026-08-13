@@ -10,6 +10,7 @@ import { ReturningPatient } from "@/components/home/returning-patient";
 import { PatientReviews } from "@/components/home/patient-reviews";
 import { EmailCapture } from "@/components/home/email-capture";
 import { SiteFooter } from "@/components/home/site-footer";
+import { Reveal } from "@/components/motion/reveal";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -67,16 +68,36 @@ export default async function Home() {
         <Hero />
 
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4 py-12 sm:gap-16 sm:px-6 sm:py-16">
-          <HowItWorks />
-          <ServicesGrid />
-          <DoctorsPreview providers={doctors} />
-          <PharmacyPreview />
-          <TrustSection />
-          <LabsPreview labs={labs} />
-          <HealthTips />
-          <ReturningPatient />
-          <PatientReviews />
-          <EmailCapture />
+          <Reveal>
+            <HowItWorks />
+          </Reveal>
+          <Reveal delay={60}>
+            <ServicesGrid />
+          </Reveal>
+          <Reveal>
+            <DoctorsPreview providers={doctors} />
+          </Reveal>
+          <Reveal delay={60}>
+            <PharmacyPreview />
+          </Reveal>
+          <Reveal>
+            <TrustSection />
+          </Reveal>
+          <Reveal delay={60}>
+            <LabsPreview labs={labs} />
+          </Reveal>
+          <Reveal>
+            <HealthTips />
+          </Reveal>
+          <Reveal delay={60}>
+            <ReturningPatient />
+          </Reveal>
+          <Reveal>
+            <PatientReviews />
+          </Reveal>
+          <Reveal delay={60}>
+            <EmailCapture />
+          </Reveal>
         </div>
       </main>
 

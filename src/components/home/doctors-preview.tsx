@@ -91,7 +91,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
         <div className="mt-6 rounded-[1.25rem] bg-[#f7fbfb] px-5 py-7 text-center ring-1 ring-[#dfe8eb]">
           <p className="text-sm font-semibold text-[#071923]">No doctors are published yet.</p>
           <p className="mt-1 text-sm text-[#60717a]">
-            Add and activate the first doctor in the admin dashboard to show them here.
+            Our first listed doctors will appear here soon.
           </p>
         </div>
       )}
@@ -116,7 +116,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
               Are you a doctor?
             </h3>
             <p className="mt-2 text-sm leading-6 text-[#4d5960]">
-              Join Afya24, set your availability, and receive matched patients after admin verification.
+              Join Afya24, set your availability, and receive matched patients after credential review.
             </p>
           </div>
 

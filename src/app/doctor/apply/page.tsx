@@ -56,12 +56,12 @@ export default function DoctorApplicationPage() {
                 Join Afya24 as a trusted online doctor
               </h1>
               <p className="mt-4 max-w-md text-sm leading-6 text-[#4d5960]">
-                Apply to join our verified provider network. Admin reviews your license details before any patient routing is enabled.
+                Apply to join our trusted provider network. We review your license details before matching you with patients.
               </p>
 
               <div className="mt-6 grid gap-3 text-sm text-[#4d5960]">
                 <div className="rounded-2xl bg-white/70 p-4 ring-1 ring-white/80">
-                  <p className="font-bold text-[#071923]">Admin verified</p>
+                  <p className="font-bold text-[#071923]">Credential reviewed</p>
                   <p className="mt-1 leading-6">We review credentials before creating your doctor account.</p>
                 </div>
                 <div className="rounded-2xl bg-white/70 p-4 ring-1 ring-white/80">
@@ -80,7 +80,7 @@ export default function DoctorApplicationPage() {
                   <CheckCircle2 className="mx-auto size-12 text-[#01b7bb]" />
                   <h2 className="mt-4 text-2xl font-bold">Application submitted</h2>
                   <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#60717a]">
-                    Afya24 admin will review your details and contact you before creating a doctor account.
+                    The Afya24 team will review your details and contact you with the next step.
                   </p>
                   <Button className="mt-5 rounded-full" nativeButton={false} render={<Link href="/" />}>
                     Back home
@@ -91,7 +91,7 @@ export default function DoctorApplicationPage() {
               <form onSubmit={submitApplication} className="grid gap-4">
                 <div>
                   <h2 className="text-xl font-bold">Doctor application</h2>
-                  <p className="mt-1 text-sm text-[#60717a]">Your documents are only visible to Afya24 admins.</p>
+                  <p className="mt-1 text-sm text-[#60717a]">Your documents are handled privately by the Afya24 team.</p>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -165,7 +165,7 @@ export default function DoctorApplicationPage() {
 
                 <p className="flex items-start gap-2 text-xs leading-5 text-[#60717a]">
                   <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#01b7bb]" />
-                  Submission does not create a doctor account automatically. Admin approval is required.
+                  Submission starts a credential review before provider access is opened.
                 </p>
               </form>
             )}

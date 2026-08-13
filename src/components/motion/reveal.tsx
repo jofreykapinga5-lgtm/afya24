@@ -34,7 +34,7 @@ export function Reveal({ children, className, delay = 0, variant = "swipe" }: Re
       ([entry]) => {
         setVisible(entry.isIntersecting);
       },
-      { rootMargin: "-10% 0px -10% 0px", threshold: 0.12 }
+      { rootMargin: "-6% 0px -6% 0px", threshold: 0.1 }
     );
 
     observer.observe(node);
@@ -43,16 +43,16 @@ export function Reveal({ children, className, delay = 0, variant = "swipe" }: Re
 
   const hidden =
     variant === "image"
-      ? "translate-x-5 scale-[1.015] opacity-0"
+      ? "translate-x-2 scale-[1.005] opacity-0"
       : variant === "fade"
         ? "opacity-0"
-        : "-translate-x-5 opacity-0";
+        : "-translate-x-2 opacity-0";
 
   return (
     <div
       ref={ref}
       className={cn(
-        "will-change-transform motion-safe:transition-[opacity,transform] motion-safe:duration-[420ms] motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:translate-x-0 motion-reduce:scale-100",
+        "motion-safe:transition-[opacity,transform] motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:translate-x-0 motion-reduce:scale-100",
         delayClass[delay],
         visible ? "translate-x-0 scale-100 opacity-100" : hidden,
         className

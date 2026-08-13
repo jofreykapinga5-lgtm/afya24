@@ -309,12 +309,12 @@ const dict = {
     sw: "wanatuamini",
   },
   reviews_medvi_body: {
-    en: "Placeholder reviews for now. Later, only patient account reviews approved by admin will appear here.",
-    sw: "Kwa sasa ni maoni ya mfano. Baadaye, maoni ya akaunti za wagonjwa yaliyopitishwa na admin pekee ndiyo yataonekana hapa.",
+    en: "Real patient stories, clear care, and trusted next steps.",
+    sw: "Hadithi halisi za wagonjwa, huduma iliyo wazi, na hatua zinazofuata za kuaminika.",
   },
   reviews_body: {
-    en: "Only reviews submitted from patient accounts and approved by admin will appear here.",
-    sw: "Maoni yanayotumwa kutoka akaunti za wagonjwa na kuidhinishwa na admin pekee ndiyo yataonekana hapa.",
+    en: "Patient experiences shared after real visits.",
+    sw: "Uzoefu wa wagonjwa ulioshirikiwa baada ya ziara halisi.",
   },
   reviews_families_served: { en: "families served", sw: "familia zilizohudumiwa" },
   reviews_rating_label: { en: "average rating", sw: "ukadiriaji wastani" },
@@ -531,7 +531,7 @@ const dict = {
   nav_pharmacy: { en: "Pharmacy", sw: "Duka la dawa" },
   nav_labs: { en: "Labs", sw: "Maabara" },
   nav_health_tips: { en: "Health tips", sw: "Vidokezo vya afya" },
-  header_doctor_admin_login: { en: "Doctor / Admin login", sw: "Kuingia kwa Daktari / Msimamizi" },
+  header_doctor_admin_login: { en: "Staff login", sw: "Kuingia kwa wafanyakazi" },
   header_sign_up: { en: "Sign up", sw: "Jisajili" },
   header_log_in: { en: "Log in", sw: "Ingia" },
   header_help: { en: "Help", sw: "Msaada" },
@@ -623,7 +623,7 @@ const dict = {
   appointment_status_in_progress: { en: "In progress", sw: "Inaendelea" },
   appointment_status_completed: { en: "Completed", sw: "Imekamilika" },
   appointment_status_cancelled: { en: "Cancelled", sw: "Imeghairiwa" },
-  doctor_signin_title: { en: "Doctor / Admin sign in", sw: "Kuingia kwa Daktari / Msimamizi" },
+  doctor_signin_title: { en: "Staff sign in", sw: "Kuingia kwa wafanyakazi" },
   doctor_signin_body: {
     en: "Staff and provider access only. Patients don't need an account — use",
     sw: "Ufikiaji wa wafanyakazi na watoa huduma pekee. Wagonjwa hawahitaji akaunti — tumia",
@@ -999,8 +999,8 @@ const dict = {
   },
   help_q2_title: { en: "Are these real, licensed doctors?", sw: "Hawa ni madaktari halisi wenye leseni?" },
   help_q2_body: {
-    en: "Yes. Every doctor's account is created and verified by Afya24 staff before they can be matched with patients.",
-    sw: "Ndiyo. Kila akaunti ya daktari inaundwa na kuthibitishwa na wafanyakazi wa Afya24 kabla ya kuunganishwa na wagonjwa.",
+    en: "Yes. Doctors are credential-reviewed by Afya24 before they can be matched with patients.",
+    sw: "Ndiyo. Madaktari hukaguliwa sifa zao na Afya24 kabla ya kuunganishwa na wagonjwa.",
   },
   help_q3_title: { en: "What if this is an emergency?", sw: "Vipi ikiwa hii ni dharura?" },
   help_q3_body: {

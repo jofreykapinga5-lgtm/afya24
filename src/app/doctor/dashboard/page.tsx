@@ -480,7 +480,7 @@ export default async function DoctorDashboardPage() {
               <section id="notes" className="rounded-[1.35rem] bg-[#e8f7f4] p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]">
                 <p className="text-sm font-bold text-[#083273]">Doctor workspace</p>
                 <p className="mt-3 text-sm leading-6 text-[#4d5960]">
-                  Patient summaries, related cases, prescriptions, lab orders, and signed visit summaries will appear here as the backend workflow is connected.
+                  Patient summaries, related cases, prescriptions, lab orders, and signed visit summaries are organized here for each visit.
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#087a7b]">
                   <ShieldCheck className="size-4" />

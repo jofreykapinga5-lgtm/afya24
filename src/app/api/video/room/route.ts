@@ -71,18 +71,39 @@ export async function POST(request: Request) {
   const room = await getOrCreateRoomForAppointment(appointment.id);
   const token = await createMeetingToken(room.name, userName, isProvider);
 
-  await service.from("video_sessions").upsert(
-    {
-      appointment_id: appointment.id,
-      provider_id: appointment.provider_id,
-      patient_id: appointment.patient_id,
-      room_provider: "livekit",
-      room_name: room.name,
-      join_url: room.url,
-      status: "connecting",
-    },
-    { onConflict: "appointment_id" }
-  );
+  if (isPatient) {
+    await service.from("video_sessions").upsert(
+      {
+        appointment_id: appointment.id,
+        provider_id: appointment.provider_id,
+        patient_id: appointment.patient_id,
+        room_provider: "livekit",
+        room_name: room.name,
+        join_url: room.url,
+        status: "active",
+        started_at: new Date().toISOString(),
+      },
+      { onConflict: "appointment_id" }
+    );
+  } else {
+    const { data: existingSession } = await service
+      .from("video_sessions")
+      .select("id")
+      .eq("appointment_id", appointment.id)
+      .maybeSingle();
+
+    if (!existingSession) {
+      await service.from("video_sessions").insert({
+        appointment_id: appointment.id,
+        provider_id: appointment.provider_id,
+        patient_id: appointment.patient_id,
+        room_provider: "livekit",
+        room_name: room.name,
+        join_url: room.url,
+        status: "connecting",
+      });
+    }
+  }
 
   return NextResponse.json({
     serverUrl: room.url,

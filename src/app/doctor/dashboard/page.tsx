@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { listRoomParticipantIdentities } from "@/lib/video/livekit";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
 import {
@@ -62,6 +63,7 @@ type WaitingAppointment = {
   patients: { full_name: string; hospital_reference_number: string } | null;
   ai_summaries: { summary_text: string; urgency_level: string }[] | null;
   consultation_orders: { consultation_mode: string }[] | null;
+  video_sessions: { room_name: string | null; status: string | null }[] | null;
   files: { id: string; original_filename: string | null; attachment_kind: string | null; storage_path: string }[] | null;
 };
 
@@ -146,13 +148,36 @@ export default async function DoctorDashboardPage() {
     ? await service
         .from("appointments")
         .select(
-          "id, scheduled_at, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), files(id, original_filename, attachment_kind, storage_path)"
+          "id, scheduled_at, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
         )
         .eq("provider_id", provider.id)
-        .eq("status", "waiting")
+        .in("status", ["waiting", "in_progress"])
         .order("scheduled_at", { ascending: true })
         .returns<WaitingAppointment[]>()
     : { data: [] };
+
+  const videoAppointments = (waitingAppointments ?? []).filter(
+    (appointment) =>
+      appointment.consultation_orders?.[0]?.consultation_mode === "video" &&
+      Boolean(appointment.video_sessions?.[0]?.room_name)
+  );
+
+  const patientOnlineByAppointmentId = new Map<string, boolean>();
+  await Promise.all(
+    videoAppointments.map(async (appointment) => {
+      const roomName = appointment.video_sessions?.[0]?.room_name;
+      if (!roomName) {
+        patientOnlineByAppointmentId.set(appointment.id, false);
+        return;
+      }
+
+      const participantIds = await listRoomParticipantIdentities(roomName);
+      patientOnlineByAppointmentId.set(
+        appointment.id,
+        participantIds.some((identity) => identity.startsWith("patient-"))
+      );
+    })
+  );
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -172,7 +197,7 @@ export default async function DoctorDashboardPage() {
   // Attachments live in a private bucket -- generate short-lived signed URLs
   // for whatever's in the queue right now rather than making the bucket
   // public. One batch call covers every file across every waiting appointment.
-  const allStoragePaths = (waitingAppointments ?? []).flatMap(
+  const allStoragePaths = videoAppointments.flatMap(
     (appointment) => appointment.files?.map((file) => file.storage_path) ?? []
   );
   const signedUrlByPath = new Map<string, string>();
@@ -310,7 +335,7 @@ export default async function DoctorDashboardPage() {
                     </p>
                   </div>
                   <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                    <MiniStat label="Queue" value={String(waitingAppointments?.length ?? 0)} />
+                    <MiniStat label="Queue" value={String(videoAppointments.length)} />
                     <MiniStat label="Done" value={String(completedToday ?? 0)} />
                     <MiniStat label="Slots" value={String(slots?.length ?? 0)} />
                   </div>
@@ -458,11 +483,11 @@ export default async function DoctorDashboardPage() {
                   <UsersRound className="size-5 text-[#01b7bb]" />
                 </div>
                 <div className="mt-4 grid gap-3">
-                  {waitingAppointments && waitingAppointments.length > 0 ? (
-                    waitingAppointments.map((appointment) => {
+                  {videoAppointments.length > 0 ? (
+                    videoAppointments.map((appointment) => {
                       const summary = appointment.ai_summaries?.[0];
                       const mode = appointment.consultation_orders?.[0]?.consultation_mode ?? "video";
-                      const ModeIcon = mode === "voice" ? Phone : Video;
+                      const patientOnline = patientOnlineByAppointmentId.get(appointment.id) ?? false;
                       return (
                         <div key={appointment.id} className="rounded-2xl bg-[#f8fbfd] p-3">
                           <div className="flex items-start justify-between gap-3">
@@ -494,6 +519,15 @@ export default async function DoctorDashboardPage() {
                                   {summary.urgency_level}
                                 </span>
                               ) : null}
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                  patientOnline
+                                    ? "bg-[#e8f7f4] text-[#087a7b]"
+                                    : "bg-[#fdecec] text-[#b42318]"
+                                }`}
+                              >
+                                {patientOnline ? "Patient online" : "Patient off"}
+                              </span>
                             </div>
                           </div>
                           {summary ? (
@@ -522,8 +556,13 @@ export default async function DoctorDashboardPage() {
                           <form action={joinWaitingAppointment} className="mt-3">
                             <input type="hidden" name="appointmentId" value={appointment.id} />
                             <input type="hidden" name="mode" value={mode} />
-                            <Button type="submit" size="sm" className="w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]">
-                              <ModeIcon className="size-4" />
+                            <Button
+                              type="submit"
+                              size="sm"
+                              disabled={!patientOnline}
+                              className="w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2] disabled:bg-[#e5eef0] disabled:text-[#8a9aa2]"
+                            >
+                              <Video className="size-4" />
                               Join call
                             </Button>
                           </form>
@@ -532,7 +571,7 @@ export default async function DoctorDashboardPage() {
                     })
                   ) : (
                     <p className="px-1 py-6 text-center text-sm text-[#64747c]">
-                      No patients waiting right now.
+                      No active video calls right now.
                     </p>
                   )}
                 </div>

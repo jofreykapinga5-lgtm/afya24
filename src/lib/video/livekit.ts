@@ -53,3 +53,15 @@ export async function createMeetingToken(roomName: string, userName: string, isO
 
   return token.toJwt();
 }
+
+export async function listRoomParticipantIdentities(roomName: string) {
+  try {
+    const { url, apiKey, apiSecret } = livekitEnv();
+    const httpUrl = url.replace(/^wss:\/\//, "https://").replace(/^ws:\/\//, "http://");
+    const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
+    const participants = await roomService.listParticipants(roomName);
+    return participants.map((participant) => participant.identity);
+  } catch {
+    return [];
+  }
+}

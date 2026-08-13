@@ -1,6 +1,6 @@
-import { providers } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
+import type { Provider } from "@/lib/types";
 
 const avatarTints = ["bg-primary", "bg-info", "bg-pending"];
 
@@ -13,10 +13,14 @@ function initials(name: string) {
     .slice(0, 2);
 }
 
-export function HeroAvailabilityChip() {
+export function HeroAvailabilityChip({ providers }: { providers: Provider[] }) {
   const locale = useAppStore((state) => state.locale);
   const shown = providers.slice(0, 3);
   const soonest = providers[0];
+
+  if (!soonest) {
+    return null;
+  }
 
   return (
     <div className="flex items-center gap-3">

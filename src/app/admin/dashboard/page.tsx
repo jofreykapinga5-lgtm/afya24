@@ -22,14 +22,12 @@ import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
 import type { AppointmentPaymentRow } from "@/components/admin/payments-panel";
 import {
-  adminProviderMeta,
   appointments,
   auditLogs,
   labLocations,
   labOrders,
   pharmacyItems,
   pharmacyOrders,
-  providers,
   serviceCategories,
   services,
 } from "@/lib/mock-data";
@@ -162,7 +160,7 @@ export default async function AdminDashboardPage() {
   }
 
   const mappedProviders =
-    dbProviders && dbProviders.length > 0
+    dbProviders
       ? dbProviders.map((provider) => ({
           id: provider.id,
           name: provider.full_name,
@@ -184,7 +182,7 @@ export default async function AdminDashboardPage() {
           bio: provider.bio ?? "Provider profile created by Afya24 admin.",
           timeSlots: [],
         }))
-      : providers;
+      : [];
 
   // Real, honest data -- no mock fallback. An admin needs to be able to
   // trust that "no payments" means no payments, not "the DB happened to be
@@ -206,7 +204,7 @@ export default async function AdminDashboardPage() {
   }));
 
   const mappedProviderMeta =
-    dbProviders && dbProviders.length > 0
+    dbProviders
       ? dbProviders.map((provider) => ({
           providerId: provider.id,
           status: provider.profile_status as "active" | "pending" | "suspended",
@@ -217,7 +215,7 @@ export default async function AdminDashboardPage() {
             year: "numeric",
           }),
         }))
-      : adminProviderMeta;
+      : [];
 
   return (
     <main className="min-h-[100dvh] bg-[#edf3f6] px-3 py-3 text-[#101820] sm:px-5 lg:px-6">

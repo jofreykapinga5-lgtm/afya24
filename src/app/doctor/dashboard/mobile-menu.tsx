@@ -2,14 +2,30 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogOut, Menu } from "lucide-react";
+import {
+  CalendarClock,
+  Clock,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  UsersRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "../actions";
 
-type DoctorMobileMenuItem = {
+export type DoctorMobileMenuItem = {
   label: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: "overview" | "availability" | "schedule" | "patients" | "notes";
+};
+
+const menuIcons = {
+  overview: LayoutDashboard,
+  availability: Clock,
+  schedule: CalendarClock,
+  patients: UsersRound,
+  notes: FileText,
 };
 
 export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuItem[] }) {
@@ -30,7 +46,7 @@ export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuIt
       {open ? (
         <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl bg-white p-2 text-[#071923] shadow-[0_24px_60px_-28px_rgba(8,50,115,0.75)] ring-1 ring-[#dfe8eb]">
           {items.map((item) => {
-            const Icon = item.icon;
+            const Icon = menuIcons[item.icon];
             return (
               <Link
                 key={item.label}

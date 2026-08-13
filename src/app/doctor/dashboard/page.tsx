@@ -32,7 +32,7 @@ import {
   signOut,
 } from "../actions";
 import { DoctorAvailabilityForm } from "./availability-form";
-import { DoctorDashboardMobileMenu } from "./mobile-menu";
+import { DoctorDashboardMobileMenu, type DoctorMobileMenuItem } from "./mobile-menu";
 
 type ProviderRow = {
   id: string;
@@ -80,15 +80,16 @@ function AttachmentKindIcon({ kind }: { kind: string | null }) {
 }
 
 const navItems = [
-  { label: "Overview", icon: LayoutDashboard },
-  { label: "Availability", icon: Clock },
-  { label: "Schedule", icon: CalendarClock },
-  { label: "Patients", icon: UsersRound },
-  { label: "Notes", icon: FileText },
+  { label: "Overview", icon: LayoutDashboard, iconKey: "overview" },
+  { label: "Availability", icon: Clock, iconKey: "availability" },
+  { label: "Schedule", icon: CalendarClock, iconKey: "schedule" },
+  { label: "Patients", icon: UsersRound, iconKey: "patients" },
+  { label: "Notes", icon: FileText, iconKey: "notes" },
 ];
 
-const mobileNavItems = navItems.map((item, index) => ({
-  ...item,
+const mobileNavItems: DoctorMobileMenuItem[] = navItems.map((item, index) => ({
+  label: item.label,
+  icon: item.iconKey as DoctorMobileMenuItem["icon"],
   href: index === 0 ? "#overview" : `#${item.label.toLowerCase()}`,
 }));
 

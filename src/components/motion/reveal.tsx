@@ -32,11 +32,9 @@ export function Reveal({ children, className, delay = 0, variant = "up" }: Revea
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setVisible(true);
-        observer.disconnect();
+        setVisible(entry.isIntersecting);
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.16 }
+      { rootMargin: "-10% 0px -10% 0px", threshold: 0.12 }
     );
 
     observer.observe(node);

@@ -9,11 +9,12 @@ import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 
 const commonTests: Record<string, string[]> = {
-  "lab-nairobi-central": ["Full blood count", "Malaria test", "Liver function panel"],
-  "lab-westlands": ["Full blood count", "Rapid strep test", "Pregnancy test"],
+  "lab-nairobi-central": ["Full blood count", "Malaria test", "Urinalysis"],
+  "lab-westlands": ["Full blood count", "Malaria test", "Pregnancy test"],
   "lab-kilimani": ["Full blood count", "Diabetes panel", "Cholesterol test"],
   "lab-karen": ["Full blood count", "Thyroid panel", "Vitamin D test"],
   "lab-eastleigh": ["Full blood count", "Malaria test", "Typhoid test"],
+  "lab-mombasa-road": ["Full blood count", "Kidney function", "Liver function panel"],
 };
 
 const NEAREST_COUNT = 3;
@@ -53,6 +54,7 @@ export function LabsPreview() {
   const nearestLabs = useMemo(() => {
     if (locate.status !== "ready") return [];
     return labLocations
+      .filter((lab) => lab.status === "active")
       .map((lab) => ({
         lab,
         distance: distanceKm(locate.lat, locate.lng, lab.latitude, lab.longitude),

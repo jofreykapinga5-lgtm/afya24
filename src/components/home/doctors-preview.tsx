@@ -105,9 +105,9 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
         </Link>
       </div>
 
-      <div className="-mx-4 mt-8 overflow-hidden bg-[#e8f7f4] sm:mx-0 sm:rounded-[1.75rem] sm:ring-1 sm:ring-[#ccece7]">
+      <div className="-mx-4 mt-7 overflow-hidden bg-[#e8f7f4] sm:mx-0 sm:rounded-[1.75rem] sm:ring-1 sm:ring-[#ccece7]">
         <div className="grid md:grid-cols-[1fr_310px] md:items-stretch">
-          <div className="p-5 sm:p-6 md:pr-3">
+          <div className="p-5 pb-4 sm:p-6 md:pr-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">
               For professionals
             </p>
@@ -119,18 +119,18 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
             </p>
           </div>
 
-          <div className="relative min-h-72 overflow-hidden md:min-h-80">
+          <div className="relative min-h-64 overflow-hidden md:min-h-80">
             <Image
               src="/images/doctors/tanzanian-male-doctor.png"
               alt="Tanzanian male doctor in a white coat"
               fill
               sizes="(min-width: 768px) 310px, 100vw"
-              className="object-cover object-top"
+              className="object-cover object-[50%_28%] md:object-top"
             />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#071923]/78 via-[#071923]/28 to-transparent p-5 pt-20 sm:p-6">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#071923]/82 via-[#071923]/18 to-transparent p-5 pt-24 sm:p-6">
               <Link
                 href="/doctor/apply"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-5 py-3 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35 sm:w-auto"
+                className="inline-flex w-full translate-y-1 items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-5 py-3 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35 sm:w-auto sm:translate-y-0"
               >
                 Apply now
                 <ArrowRight className="size-4" />

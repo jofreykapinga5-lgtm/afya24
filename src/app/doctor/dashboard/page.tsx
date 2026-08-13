@@ -10,7 +10,6 @@ import {
   ImageIcon,
   LayoutDashboard,
   LogOut,
-  Menu,
   Paperclip,
   Phone,
   ShieldCheck,
@@ -33,6 +32,7 @@ import {
   signOut,
 } from "../actions";
 import { DoctorAvailabilityForm } from "./availability-form";
+import { DoctorDashboardMobileMenu } from "./mobile-menu";
 
 type ProviderRow = {
   id: string;
@@ -86,6 +86,11 @@ const navItems = [
   { label: "Patients", icon: UsersRound },
   { label: "Notes", icon: FileText },
 ];
+
+const mobileNavItems = navItems.map((item, index) => ({
+  ...item,
+  href: index === 0 ? "#overview" : `#${item.label.toLowerCase()}`,
+}));
 
 function statusClass(status: string) {
   if (status === "active" || status === "available" || status === "scheduled" || status === "paid") {
@@ -234,27 +239,7 @@ export default async function DoctorDashboardPage() {
           />
         </Link>
 
-        <details className="group relative">
-          <summary className="flex size-10 cursor-pointer list-none items-center justify-center rounded-full bg-[#e8f7f4] text-[#083273] outline-none transition hover:bg-[#d8f3ef] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/30">
-            <Menu className="size-5" />
-            <span className="sr-only">Open doctor menu</span>
-          </summary>
-          <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl bg-white p-2 text-[#071923] shadow-[0_24px_60px_-28px_rgba(8,50,115,0.75)] ring-1 ring-[#dfe8eb]">
-            {navItems.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.label}
-                  href={index === 0 ? "#overview" : `#${item.label.toLowerCase()}`}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition hover:bg-[#f4f8f9]"
-                >
-                  <Icon className="size-4 text-[#01b7bb]" />
-                  {item.label}
-                </a>
-              );
-            })}
-          </div>
-        </details>
+        <DoctorDashboardMobileMenu items={mobileNavItems} />
       </div>
 
       <div className="mx-auto grid w-full max-w-7xl rounded-[1.75rem] bg-[#f8fbfd] shadow-[0_28px_90px_-50px_rgba(8,50,115,0.55)] lg:grid-cols-[250px_1fr]">

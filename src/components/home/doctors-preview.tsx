@@ -131,7 +131,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
             <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-[#071923]/82 via-[#071923]/18 to-transparent p-5 pt-24 sm:p-6">
               <Link
                 href="/doctor/apply"
-                className="inline-flex w-auto translate-y-1 items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-5 py-2.5 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35 sm:translate-y-0"
+                className="inline-flex w-auto translate-y-1 items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-6 py-3 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35 sm:translate-y-0 sm:px-7"
               >
                 Apply now
                 <ArrowRight className="size-4" />

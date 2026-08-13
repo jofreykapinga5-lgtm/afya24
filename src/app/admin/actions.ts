@@ -44,8 +44,11 @@ function formString(formData: FormData, key: string) {
 }
 
 function formModes(formData: FormData) {
-  const modes = formData.getAll("consultationModes").map(String);
-  return modes.length > 0 ? modes : ["chat", "voice", "video"];
+  const modes = formData
+    .getAll("consultationModes")
+    .map(String)
+    .filter((mode) => mode === "voice" || mode === "video");
+  return modes.length > 0 ? modes : ["voice", "video"];
 }
 
 export async function createProviderAccount(

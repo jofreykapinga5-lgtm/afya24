@@ -9,19 +9,37 @@ import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import type { ConsultationMode, Locale, Provider } from "@/lib/types";
 
+const callModeCopy: Record<"voice" | "video", { titleKey: "doctor_booking_mode_voice" | "doctor_booking_mode_video"; detail: string }> = {
+  voice: {
+    titleKey: "doctor_booking_mode_voice",
+    detail: "LiveKit audio call, camera stays off.",
+  },
+  video: {
+    titleKey: "doctor_booking_mode_video",
+    detail: "LiveKit video call with audio.",
+  },
+};
+
 export function BookingForm({ provider, locale }: { provider: Provider; locale: Locale }) {
   const router = useRouter();
   const qualificationResult = useAppStore((state) => state.qualificationResult);
+  const availableCallModes = provider.consultationModes.filter(
+    (providerMode): providerMode is "voice" | "video" => providerMode === "voice" || providerMode === "video"
+  );
   const [mode, setMode] = useState<ConsultationMode>(
-    provider.consultationModes.includes("video")
+    availableCallModes.includes("video")
       ? "video"
-      : (provider.consultationModes[0] ?? "video")
+      : (availableCallModes[0] ?? "video")
   );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handleConfirm() {
     setError(null);
+    if (availableCallModes.length === 0) {
+      setError("This doctor is not accepting voice or video calls right now.");
+      return;
+    }
     startTransition(async () => {
       try {
         const appointmentId = await bookConsultation({
@@ -41,25 +59,31 @@ export function BookingForm({ provider, locale }: { provider: Provider; locale: 
     <div className="rounded-2xl border border-border bg-card p-6">
       <p className="text-sm font-semibold">{t("doctor_booking_choose_mode", locale)}</p>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <Button
-          type="button"
-          variant={mode === "voice" ? "default" : "outline"}
-          className="h-12 gap-2"
-          onClick={() => setMode("voice")}
-        >
-          <Phone className="size-4" />
-          {t("doctor_booking_mode_voice", locale)}
-        </Button>
-        <Button
-          type="button"
-          variant={mode === "video" ? "default" : "outline"}
-          className="h-12 gap-2"
-          onClick={() => setMode("video")}
-        >
-          <Video className="size-4" />
-          {t("doctor_booking_mode_video", locale)}
-        </Button>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {availableCallModes.length > 0 ? availableCallModes.map((callMode) => {
+          const Icon = callMode === "voice" ? Phone : Video;
+          const copy = callModeCopy[callMode];
+
+          return (
+            <Button
+              key={callMode}
+              type="button"
+              variant={mode === callMode ? "default" : "outline"}
+              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
+              onClick={() => setMode(callMode)}
+            >
+              <Icon className="size-4 shrink-0" />
+              <span>
+                <span className="block font-semibold">{t(copy.titleKey, locale)}</span>
+                <span className="block text-xs opacity-75">{copy.detail}</span>
+              </span>
+            </Button>
+          );
+        }) : (
+          <p className="rounded-xl bg-[#f8fbfd] px-4 py-3 text-sm text-muted-foreground ring-1 ring-[#dfe8eb]">
+            This doctor is not accepting voice or video calls right now.
+          </p>
+        )}
       </div>
 
       {qualificationResult && (

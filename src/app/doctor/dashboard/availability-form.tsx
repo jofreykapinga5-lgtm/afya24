@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { MessageSquare, Phone, Video } from "lucide-react";
+import { Phone, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { updateProviderAvailability } from "../actions";
@@ -38,7 +38,6 @@ export function DoctorAvailabilityForm({
       <fieldset className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
         <legend className="px-1 text-sm font-bold text-[#071923]">Consultation modes</legend>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
-          <ModeCheckbox icon={<MessageSquare className="size-4" />} label="Chat" name="chat" checked={modes.includes("chat")} />
           <ModeCheckbox icon={<Phone className="size-4" />} label="Voice" name="voice" checked={modes.includes("voice")} />
           <ModeCheckbox icon={<Video className="size-4" />} label="Video" name="video" checked={modes.includes("video")} />
         </div>

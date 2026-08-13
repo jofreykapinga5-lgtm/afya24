@@ -228,7 +228,6 @@ export function ProvidersPanel({
                 <fieldset className="rounded-lg border border-border p-3">
                   <legend className="px-1 text-sm font-medium">Consultation modes</legend>
                   <div className="mt-2 flex flex-wrap gap-3 text-sm">
-                    <Checkbox name="consultationModes" value="chat" label="Chat" defaultChecked />
                     <Checkbox name="consultationModes" value="voice" label="Voice" defaultChecked />
                     <Checkbox name="consultationModes" value="video" label="Video" defaultChecked />
                   </div>
@@ -268,6 +267,7 @@ export function ProvidersPanel({
                   availableNow: provider.isAvailableNow,
                   note: provider.nextAvailableAt,
                 };
+                const nextAvailableNow = !currentAvailability.availableNow;
                 const sessionCount = providerSessionCount(provider.id);
                 const canDelete = sessionCount === 0;
 
@@ -321,7 +321,7 @@ export function ProvidersPanel({
                           {provider.consultationModes.map((mode) => (
                             <input key={mode} type="hidden" name="consultationModes" value={mode} />
                           ))}
-                          {!currentAvailability.availableNow ? (
+                          {nextAvailableNow ? (
                             <input type="hidden" name="availableNow" value="on" />
                           ) : null}
                           <Button
@@ -330,11 +330,16 @@ export function ProvidersPanel({
                             variant="outline"
                             onClick={() =>
                               updateAvailability(provider.id, {
-                                availableNow: !currentAvailability.availableNow,
+                                availableNow: nextAvailableNow,
                               })
                             }
+                            aria-label={
+                              currentAvailability.availableNow
+                                ? `${provider.name} is already online. Set offline.`
+                                : `Set ${provider.name} online.`
+                            }
                           >
-                            {currentAvailability.availableNow ? "Set offline" : "Set online"}
+                            {currentAvailability.availableNow ? "Already online - set offline" : "Set online"}
                           </Button>
                         </form>
                       </div>

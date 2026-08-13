@@ -491,6 +491,45 @@ export async function updateLabLocationStatus(formData: FormData) {
   revalidatePath("/admin/dashboard");
 }
 
+export async function updateProviderApplicationStatus(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const applicationId = formString(formData, "applicationId");
+  const status = formString(formData, "status");
+
+  if (!applicationId || !["new", "reviewing", "approved", "rejected"].includes(status)) {
+    throw new Error("Application and valid status are required.");
+  }
+
+  const { data: application, error: fetchError } = await service
+    .from("provider_applications")
+    .select("id, full_name")
+    .eq("id", applicationId)
+    .single();
+
+  if (fetchError || !application) {
+    throw new Error(fetchError?.message ?? "Application not found.");
+  }
+
+  const { error } = await service
+    .from("provider_applications")
+    .update({ status })
+    .eq("id", applicationId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "provider_status_changed",
+    entity_type: "provider_application",
+    entity_id: applicationId,
+    metadata_json: { fullName: application.full_name, status },
+  });
+
+  revalidatePath("/admin/dashboard");
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

@@ -5,6 +5,7 @@ import {
   CalendarClock,
   ClipboardList,
   CreditCard,
+  FileUser,
   FlaskConical,
   LayoutDashboard,
   LogOut,
@@ -21,6 +22,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
 import type { AppointmentPaymentRow } from "@/components/admin/payments-panel";
+import type { ProviderApplicationRow } from "@/components/admin/applications-panel";
 import {
   appointments,
   auditLogs,
@@ -71,9 +73,28 @@ type DbLabLocationRow = {
   status: string;
 };
 
+type DbProviderApplicationRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  license_number: string | null;
+  specialty: string | null;
+  region: string | null;
+  experience_years: number | null;
+  languages: string[] | null;
+  consultation_modes: string[] | null;
+  bio: string | null;
+  file_path: string | null;
+  file_name: string | null;
+  status: string;
+  created_at: string;
+};
+
 const navItems = [
   { label: "Overview", href: "#overview", icon: LayoutDashboard },
   { label: "Doctors", href: "#providers", icon: Stethoscope },
+  { label: "Applications", href: "#applications", icon: FileUser },
   { label: "Services", href: "#services", icon: ClipboardList },
   { label: "Appointments", href: "#appointments", icon: CalendarClock },
   { label: "Payments", href: "#payments", icon: CreditCard },
@@ -84,7 +105,7 @@ const navItems = [
 
 function allowedTabsForRole(role: string | null | undefined): AdminTab[] {
   if (role === "admin") {
-    return ["overview", "providers", "services", "appointments", "payments", "pharmacy", "labs", "audit"];
+    return ["overview", "providers", "applications", "services", "appointments", "payments", "pharmacy", "labs", "audit"];
   }
   if (role === "pharmacy_staff") return ["pharmacy"];
   if (role === "lab_staff") return ["labs"];
@@ -137,6 +158,8 @@ export default async function AdminDashboardPage() {
   let dbProviders: DbProviderRow[] | null = null;
   let paymentAppointments: PaymentAppointmentRow[] | null = null;
   let dbLabLocations: DbLabLocationRow[] | null = null;
+  let dbApplications: DbProviderApplicationRow[] | null = null;
+  const applicationFileUrls = new Map<string, string>();
 
   if (profile) {
     try {
@@ -179,6 +202,35 @@ export default async function AdminDashboardPage() {
       }
 
       dbLabLocations = labsResult.data as DbLabLocationRow[];
+
+      const applicationsResult = await service
+        .from("provider_applications")
+        .select(
+          "id, full_name, email, phone, license_number, specialty, region, experience_years, languages, consultation_modes, bio, file_path, file_name, status, created_at"
+        )
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (applicationsResult.error) {
+        throw applicationsResult.error;
+      }
+
+      dbApplications = applicationsResult.data as DbProviderApplicationRow[];
+
+      const applicationFilePaths = dbApplications
+        .map((application) => application.file_path)
+        .filter((path): path is string => Boolean(path));
+
+      if (applicationFilePaths.length > 0) {
+        const { data: signedUrls } = await service.storage
+          .from("provider-applications")
+          .createSignedUrls(applicationFilePaths, 900);
+        signedUrls?.forEach((entry) => {
+          if (entry.path && entry.signedUrl) {
+            applicationFileUrls.set(entry.path, entry.signedUrl);
+          }
+        });
+      }
     } catch (error) {
       adminDataWarning =
         error instanceof Error
@@ -264,6 +316,24 @@ export default async function AdminDashboardPage() {
         )}`,
       status: location.status as "active" | "inactive",
     })) ?? [];
+
+  const providerApplications: ProviderApplicationRow[] = (dbApplications ?? []).map((application) => ({
+    id: application.id,
+    fullName: application.full_name,
+    email: application.email,
+    phone: application.phone ?? "",
+    licenseNumber: application.license_number ?? "",
+    specialty: application.specialty ?? "",
+    region: application.region ?? "",
+    experienceYears: application.experience_years,
+    languages: application.languages ?? [],
+    consultationModes: application.consultation_modes ?? [],
+    bio: application.bio ?? "",
+    fileName: application.file_name ?? "",
+    fileUrl: application.file_path ? applicationFileUrls.get(application.file_path) ?? null : null,
+    status: application.status as ProviderApplicationRow["status"],
+    createdAt: application.created_at,
+  }));
 
   return (
     <main className="min-h-[100dvh] bg-[#edf3f6] px-3 py-3 text-[#101820] sm:px-5 lg:px-6">
@@ -403,6 +473,7 @@ export default async function AdminDashboardPage() {
                   allowedTabs={allowedTabs}
                   providers={mappedProviders}
                   providerMeta={mappedProviderMeta}
+                  providerApplications={providerApplications}
                   serviceCategories={serviceCategories}
                   services={services}
                   appointments={appointments}

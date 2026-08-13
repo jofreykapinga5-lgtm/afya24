@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { DoctorCarouselCard } from "@/components/doctor-carousel-card";
@@ -102,6 +103,39 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
           {t("doctors_preview_see_all", locale)}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
+      </div>
+
+      <div className="mt-8 overflow-hidden rounded-[1.75rem] bg-[#e8f7f4] p-5 ring-1 ring-[#ccece7] sm:p-6">
+        <div className="grid gap-5 md:grid-cols-[1fr_280px] md:items-center">
+          <div className="max-w-md">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">
+              For professionals
+            </p>
+            <h3 className="mt-3 text-2xl font-bold leading-tight text-[#071923]">
+              Are you a doctor?
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-[#4d5960]">
+              Join Afya24, set your availability, and receive matched patients after admin verification.
+            </p>
+            <Link
+              href="/doctor/apply"
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-5 py-2.5 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35"
+            >
+              Apply now
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_55px_-40px_rgba(8,50,115,0.55)] md:aspect-[4/5]">
+            <Image
+              src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=720&q=80"
+              alt="Black doctor in a white coat"
+              fill
+              sizes="(min-width: 768px) 280px, 100vw"
+              className="object-cover object-top"
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

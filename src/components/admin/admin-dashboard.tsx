@@ -24,6 +24,7 @@ import { AppointmentsPanel } from "@/components/admin/appointments-panel";
 import { PaymentsPanel, type AppointmentPaymentRow } from "@/components/admin/payments-panel";
 import { PharmacyPanel } from "@/components/admin/pharmacy-panel";
 import { LabsPanel } from "@/components/admin/labs-panel";
+import { ApplicationsPanel, type ProviderApplicationRow } from "@/components/admin/applications-panel";
 import { AuditPanel } from "@/components/admin/audit-panel";
 import { adminAuditActionKey, appointmentStatusKey, t, type TranslationKey } from "@/lib/i18n";
 import type {
@@ -50,6 +51,7 @@ let clientLogSeq = 0;
 export type AdminTab =
   | "overview"
   | "providers"
+  | "applications"
   | "services"
   | "appointments"
   | "payments"
@@ -66,6 +68,7 @@ const providerStatusTone: Record<ProviderStatus, "positive" | "pending" | "urgen
 const adminTabs: AdminTab[] = [
   "overview",
   "providers",
+  "applications",
   "services",
   "appointments",
   "payments",
@@ -84,6 +87,7 @@ export function AdminDashboard({
   allowedTabs = adminTabs,
   providers,
   providerMeta,
+  providerApplications,
   serviceCategories,
   services,
   appointments,
@@ -98,6 +102,7 @@ export function AdminDashboard({
   allowedTabs?: AdminTab[];
   providers: Provider[];
   providerMeta: AdminProviderMeta[];
+  providerApplications: ProviderApplicationRow[];
   serviceCategories: ServiceCategory[];
   services: Service[];
   appointments: Appointment[];
@@ -444,6 +449,10 @@ export function AdminDashboard({
             appointments={appointments}
             onStatusChange={handleProviderStatusChange}
           />
+        </TabsContent>
+
+        <TabsContent value="applications" className="mt-0">
+          <ApplicationsPanel applications={providerApplications} />
         </TabsContent>
 
         <TabsContent value="services" className="mt-0">

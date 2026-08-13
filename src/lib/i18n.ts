@@ -143,6 +143,7 @@ const dict = {
   hero_title_affordable: { en: "affordable", sw: "bei nafuu" },
   hero_title_simple: { en: "simple", sw: "rahisi" },
   hero_title_convenient: { en: "convenient", sw: "urahisi" },
+  hero_get_help_cta: { en: "Get help", sw: "Pata msaada" },
   how_it_works_badge: {
     en: "How Afya24 gets you care",
     sw: "Jinsi Afya24 inavyokufikisha huduma",

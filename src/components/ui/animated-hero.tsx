@@ -1,82 +1,56 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { AiChatHeroCard } from "@/components/ai-chat-hero-card";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 
 function Hero() {
   const locale = useAppStore((state) => state.locale);
-  const [titleNumber, setTitleNumber] = useState(0);
-  const titles = useMemo(
-    () => [
-      t("hero_title_fast", locale),
-      t("hero_title_private", locale),
-      t("hero_title_affordable", locale),
-      t("hero_title_simple", locale),
-      t("hero_title_convenient", locale),
-    ],
-    [locale]
-  );
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (titleNumber === titles.length - 1) {
-        setTitleNumber(0);
-      } else {
-        setTitleNumber(titleNumber + 1);
-      }
-    }, 2000);
-    return () => clearTimeout(timeoutId);
-  }, [titleNumber, titles]);
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#e9f8f7]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-35 [background-image:radial-gradient(rgba(8,50,115,0.06)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]"
+    <div className="relative isolate w-full overflow-hidden bg-[#083273]">
+      <Image
+        src="/images/process/telehealth-patient-phone-v2.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="absolute inset-0 -z-20 object-cover object-[25%_center] sm:object-center"
       />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-20 left-1/2 size-96 -translate-x-1/2 rounded-full bg-[#01b7bb]/14 blur-3xl"
-      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#083273]/95 via-[#083273]/72 to-[#083273]/18" />
+      <div className="absolute inset-0 -z-10 bg-[#01b7bb]/18 mix-blend-multiply" />
+      <div className="absolute inset-x-0 bottom-0 -z-10 h-36 bg-gradient-to-t from-[#e9f8f7] to-transparent" />
+
       <div className="container relative mx-auto px-4 sm:px-6">
-        <div className="flex flex-col items-center justify-center gap-8 py-14 sm:py-16 lg:py-20">
-          <div className="flex max-w-2xl flex-col gap-4">
-            <h1 className="text-center text-3xl font-regular tracking-tighter sm:text-4xl">
-              <span className="text-foreground">{t("hero_headline_prefix", locale)}</span>
-              <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
-                &nbsp;
-                {titles.map((title, index) => (
-                  <motion.span
-                    key={title}
-                    className="absolute font-semibold text-primary"
-                    initial={{ opacity: 0, y: "-100" }}
-                    transition={{ type: "spring", stiffness: 50 }}
-                    animate={
-                      titleNumber === index
-                        ? {
-                            y: 0,
-                            opacity: 1,
-                          }
-                        : {
-                            y: titleNumber > index ? -150 : 150,
-                            opacity: 0,
-                          }
-                    }
-                  >
-                    {title}
-                  </motion.span>
-                ))}
-              </span>
+        <div className="grid min-h-[560px] items-center gap-8 py-14 sm:py-16 lg:grid-cols-[0.9fr_0.7fr] lg:py-20">
+          <div className="max-w-2xl">
+            <p className="inline-flex rounded-full bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white ring-1 ring-white/18 backdrop-blur-sm">
+              Afya24
+            </p>
+            <h1 className="mt-5 text-4xl font-bold leading-[1.02] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
+              {t("hero_headline_prefix", locale)}{" "}
+              <span className="text-[#7cf1ee]">{t("hero_title_simple", locale)}</span>
             </h1>
 
-            <p className="mx-auto max-w-xl text-center text-base leading-relaxed tracking-tight text-muted-foreground sm:text-lg">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/84 sm:text-lg">
               {t("hero_body", locale)}
             </p>
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                href="/doctors"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#083273] px-6 text-sm font-bold text-white shadow-[0_18px_44px_-24px_rgba(1,183,187,0.85)] ring-1 ring-white/20 transition-colors hover:bg-[#062960] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#01b7bb]/45"
+              >
+                {t("hero_get_help_cta", locale)}
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
           </div>
-          <div className="w-full max-w-xl">
+
+          <div className="w-full max-w-xl lg:justify-self-end">
             <AiChatHeroCard />
           </div>
         </div>

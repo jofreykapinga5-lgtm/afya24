@@ -105,9 +105,9 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
         </Link>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-[1.75rem] bg-[#e8f7f4] p-5 ring-1 ring-[#ccece7] sm:p-6">
-        <div className="grid gap-5 md:grid-cols-[1fr_280px] md:items-center">
-          <div className="max-w-md">
+      <div className="-mx-4 mt-8 overflow-hidden bg-[#e8f7f4] sm:mx-0 sm:rounded-[1.75rem] sm:ring-1 sm:ring-[#ccece7]">
+        <div className="grid md:grid-cols-[1fr_310px] md:items-stretch">
+          <div className="p-5 sm:p-6 md:pr-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">
               For professionals
             </p>
@@ -117,23 +117,25 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
             <p className="mt-2 text-sm leading-6 text-[#4d5960]">
               Join Afya24, set your availability, and receive matched patients after admin verification.
             </p>
-            <Link
-              href="/doctor/apply"
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-5 py-2.5 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35"
-            >
-              Apply now
-              <ArrowRight className="size-4" />
-            </Link>
           </div>
 
-          <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_55px_-40px_rgba(8,50,115,0.55)] md:aspect-[4/5]">
+          <div className="relative min-h-72 overflow-hidden md:min-h-80">
             <Image
-              src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=720&q=80"
-              alt="Black doctor in a white coat"
+              src="/images/doctors/tanzanian-male-doctor.png"
+              alt="Tanzanian male doctor in a white coat"
               fill
-              sizes="(min-width: 768px) 280px, 100vw"
+              sizes="(min-width: 768px) 310px, 100vw"
               className="object-cover object-top"
             />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#071923]/78 via-[#071923]/28 to-transparent p-5 pt-20 sm:p-6">
+              <Link
+                href="/doctor/apply"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-5 py-3 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35 sm:w-auto"
+              >
+                Apply now
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

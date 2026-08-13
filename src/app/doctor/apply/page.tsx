@@ -59,8 +59,8 @@ export default function DoctorApplicationPage() {
 
             <div className="relative mt-6 aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-white shadow-[0_20px_70px_-45px_rgba(8,50,115,0.55)]">
               <Image
-                src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=900&q=80"
-                alt="Black doctor in a white coat"
+                src="/images/doctors/tanzanian-male-doctor.png"
+                alt="Tanzanian male doctor in a white coat"
                 fill
                 sizes="(min-width: 1024px) 420px, 100vw"
                 className="object-cover object-top"

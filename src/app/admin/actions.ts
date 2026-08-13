@@ -198,6 +198,54 @@ export async function updateProviderStatus(formData: FormData) {
   revalidatePath("/doctors");
 }
 
+export async function updateProviderAvailabilityByAdmin(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const providerId = formString(formData, "providerId");
+  const availableNow = formData.get("availableNow") === "on";
+  const availabilityNote = formString(formData, "availabilityNote");
+  const consultationModes = formModes(formData);
+
+  if (!providerId) {
+    throw new Error("Provider is required.");
+  }
+
+  const { data: provider, error: providerError } = await service
+    .from("providers")
+    .select("id, full_name")
+    .eq("id", providerId)
+    .single();
+
+  if (providerError || !provider) {
+    throw new Error(providerError?.message ?? "Provider not found.");
+  }
+
+  const { error } = await service
+    .from("providers")
+    .update({
+      available_now: availableNow,
+      availability_note: availabilityNote || null,
+      consultation_modes: consultationModes,
+    })
+    .eq("id", providerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "provider_status_changed",
+    entity_type: "provider",
+    entity_id: providerId,
+    metadata_json: { fullName: provider.full_name, availableNow },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/account/dashboard");
+  revalidatePath("/doctors");
+}
+
 export async function resetProviderPassword(formData: FormData) {
   const { adminUserId, service } = await requireAdmin();
   const providerId = formString(formData, "providerId");

@@ -36,6 +36,7 @@ import {
   createProviderAccount,
   deleteProviderAccount,
   resetProviderPassword,
+  updateProviderAvailabilityByAdmin,
   updateProviderStatus,
 } from "@/app/admin/actions";
 import { adminProviderStatusKey, locales, t, type TranslationKey } from "@/lib/i18n";
@@ -314,17 +315,28 @@ export function ProvidersPanel({
                         <p className="max-w-44 truncate text-xs text-muted-foreground">
                           {currentAvailability.note}
                         </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            updateAvailability(provider.id, {
-                              availableNow: !currentAvailability.availableNow,
-                            })
-                          }
-                        >
-                          {currentAvailability.availableNow ? "Set offline" : "Set online"}
-                        </Button>
+                        <form action={updateProviderAvailabilityByAdmin} className="grid gap-2">
+                          <input type="hidden" name="providerId" value={provider.id} />
+                          <input type="hidden" name="availabilityNote" value={currentAvailability.note} />
+                          {provider.consultationModes.map((mode) => (
+                            <input key={mode} type="hidden" name="consultationModes" value={mode} />
+                          ))}
+                          {!currentAvailability.availableNow ? (
+                            <input type="hidden" name="availableNow" value="on" />
+                          ) : null}
+                          <Button
+                            type="submit"
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              updateAvailability(provider.id, {
+                                availableNow: !currentAvailability.availableNow,
+                              })
+                            }
+                          >
+                            {currentAvailability.availableNow ? "Set offline" : "Set online"}
+                          </Button>
+                        </form>
                       </div>
                     </TableCell>
                     <TableCell className="tabular-nums">

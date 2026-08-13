@@ -204,6 +204,7 @@ export default async function AccountDashboardPage() {
       "id, full_name, specialty, credentials, bio, languages, rating_summary, available_now, consultation_modes"
     )
     .eq("profile_status", "active")
+    .eq("available_now", true)
     .order("available_now", { ascending: false })
     .limit(3);
   const featuredDoctors = ((providerRows ?? []) as ProviderRow[]).map((row) =>

@@ -42,6 +42,9 @@ type DbProviderRow = {
   bio: string | null;
   profile_status: string;
   languages: string[] | null;
+  consultation_modes: string[] | null;
+  available_now: boolean | null;
+  availability_note: string | null;
   created_at: string;
   rating_summary: { rating?: number; reviewCount?: number } | null;
 };
@@ -128,7 +131,7 @@ export default async function AdminDashboardPage() {
       const providersResult = await service
         .from("providers")
         .select(
-          "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, created_at, rating_summary"
+          "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
         )
         .order("created_at", { ascending: false });
 
@@ -175,9 +178,11 @@ export default async function AdminDashboardPage() {
             | "sw"
           )[],
           price: 0,
-          consultationModes: ["chat", "voice", "video"] as ("chat" | "voice" | "video")[],
-          nextAvailableAt: "Set availability",
-          isAvailableNow: false,
+          consultationModes: (provider.consultation_modes?.length
+            ? provider.consultation_modes
+            : ["voice", "video"]) as ("chat" | "voice" | "video")[],
+          nextAvailableAt: provider.availability_note || "Set availability",
+          isAvailableNow: Boolean(provider.available_now),
           photoUrl: "",
           bio: provider.bio ?? "Provider profile created by Afya24 admin.",
           timeSlots: [],

@@ -32,15 +32,35 @@ export default async function DoctorsPage({
     mapProviderRow(row, defaultService?.basePrice ?? 0, locale)
   );
 
+  const normalizedSpecialtyFilter = specialtyFilter
+    .replace(/\bdoctor\b/g, "")
+    .replace(/\bpractice\b/g, "")
+    .trim();
+
   const matchesQuery = (provider: (typeof providers)[number]) =>
     !query ||
     provider.name.toLowerCase().includes(query) ||
     provider.specialty.toLowerCase().includes(query);
 
+  const matchesSpecialty = (provider: (typeof providers)[number]) => {
+    if (!specialtyFilter) return true;
+    const providerSpecialty = provider.specialty.toLowerCase();
+    const normalizedProviderSpecialty = providerSpecialty
+      .replace(/\bdoctor\b/g, "")
+      .replace(/\bpractice\b/g, "")
+      .trim();
+
+    return (
+      providerSpecialty.includes(specialtyFilter) ||
+      specialtyFilter.includes(providerSpecialty) ||
+      (Boolean(normalizedSpecialtyFilter) &&
+        (normalizedProviderSpecialty.includes(normalizedSpecialtyFilter) ||
+          normalizedSpecialtyFilter.includes(normalizedProviderSpecialty)))
+    );
+  };
+
   let results = providers.filter(
-    (provider) =>
-      matchesQuery(provider) &&
-      (!specialtyFilter || provider.specialty.toLowerCase() === specialtyFilter)
+    (provider) => matchesQuery(provider) && matchesSpecialty(provider)
   );
 
   // The AI's recommended specialty is free text the model generates;

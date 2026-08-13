@@ -3,7 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
-import { Track } from "livekit-client";
+import { Track, VideoPresets } from "livekit-client";
+import type { AudioCaptureOptions, RoomOptions, VideoCaptureOptions } from "livekit-client";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -18,6 +19,33 @@ import { VideoTile } from "./video-tile";
 import { upgradeToFullAccount } from "@/app/consultation/actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
+
+const AUDIO_CAPTURE_DEFAULTS = {
+  autoGainControl: true,
+  echoCancellation: true,
+  noiseSuppression: true,
+  voiceIsolation: true,
+} satisfies AudioCaptureOptions;
+
+const VIDEO_CAPTURE_DEFAULTS = {
+  facingMode: "user",
+  resolution: VideoPresets.h540.resolution,
+} satisfies VideoCaptureOptions;
+
+const ROOM_OPTIONS = {
+  adaptiveStream: true,
+  dynacast: true,
+  audioCaptureDefaults: AUDIO_CAPTURE_DEFAULTS,
+  videoCaptureDefaults: VIDEO_CAPTURE_DEFAULTS,
+  publishDefaults: {
+    dtx: true,
+    red: true,
+    simulcast: true,
+    videoEncoding: VideoPresets.h540.encoding,
+    videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
+    degradationPreference: "balanced",
+  },
+} satisfies RoomOptions;
 
 function useElapsedSeconds(active: boolean) {
   const [seconds, setSeconds] = useState(0);
@@ -241,8 +269,9 @@ export function CallRoom({
       serverUrl={serverUrl}
       token={token}
       connect
-      audio
-      video={initialVideoEnabled}
+      audio={AUDIO_CAPTURE_DEFAULTS}
+      video={initialVideoEnabled ? VIDEO_CAPTURE_DEFAULTS : false}
+      options={ROOM_OPTIONS}
       onDisconnected={() => setEnded(true)}
       className="flex flex-1 flex-col bg-slate-950"
     >

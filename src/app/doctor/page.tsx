@@ -22,12 +22,19 @@ export default async function DoctorSignInPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (user) {
-    const service = createServiceClient();
-    const { data: profile } = await service
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+    let profile: { role: string } | null = null;
+
+    try {
+      const service = createServiceClient();
+      const { data } = await service
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      profile = data;
+    } catch {
+      profile = null;
+    }
 
     if (profile?.role === "admin") {
       redirect("/admin/dashboard");

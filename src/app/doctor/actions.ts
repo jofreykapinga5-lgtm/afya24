@@ -9,13 +9,30 @@ export async function signIn(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const requestedRedirectTo = String(formData.get("redirectTo") || "/doctor/dashboard");
+  const loginPath = "/doctor?";
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  let data;
+  let authErrorMessage: string | null = null;
+  try {
+    const supabase = await createClient();
+    const result = await supabase.auth.signInWithPassword({ email, password });
+    data = result.data;
 
-  if (error) {
-    const params = new URLSearchParams({ error: error.message, redirectTo: requestedRedirectTo });
-    redirect(`/doctor?${params.toString()}`);
+    if (result.error) {
+      authErrorMessage = result.error.message;
+    }
+  } catch {
+    const params = new URLSearchParams({
+      error:
+        "Could not reach Afya24 authentication. Check Supabase environment variables on Vercel and try again.",
+      redirectTo: requestedRedirectTo,
+    });
+    redirect(`${loginPath}${params.toString()}`);
+  }
+
+  if (authErrorMessage) {
+    const params = new URLSearchParams({ error: authErrorMessage, redirectTo: requestedRedirectTo });
+    redirect(`${loginPath}${params.toString()}`);
   }
 
   const userId = data.user?.id;
@@ -24,15 +41,31 @@ export async function signIn(formData: FormData) {
       error: "Signed in, but staff profile could not be verified.",
       redirectTo: requestedRedirectTo,
     });
-    redirect(`/doctor?${params.toString()}`);
+    redirect(`${loginPath}${params.toString()}`);
   }
 
-  const service = createServiceClient();
-  const { data: profile } = await service
-    .from("users")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
+  let profile: { role: string } | null = null;
+  try {
+    const service = createServiceClient();
+    const { data: staffProfile, error: profileError } = await service
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    profile = staffProfile;
+  } catch {
+    const params = new URLSearchParams({
+      error:
+        "Signed in, but staff profile lookup failed. Check SUPABASE_SERVICE_ROLE_KEY on Vercel.",
+      redirectTo: requestedRedirectTo,
+    });
+    redirect(`${loginPath}${params.toString()}`);
+  }
 
   if (profile?.role === "admin") {
     redirect("/admin/dashboard");

@@ -26,12 +26,15 @@ import {
 } from "../actions";
 import { DoctorAvailabilityForm } from "./availability-form";
 import { DoctorDashboardMobileMenu, type DoctorMobileMenuItem } from "./mobile-menu";
+import { DoctorProfileForm } from "./profile-form";
 import { DoctorVideoQueue } from "./video-queue";
 
 type ProviderRow = {
   id: string;
   full_name: string;
   specialty: string;
+  bio: string | null;
+  photo_url: string | null;
   profile_status: string;
   available_now?: boolean | null;
   availability_note?: string | null;
@@ -117,7 +120,7 @@ export default async function DoctorDashboardPage() {
   const { data: provider } = profile?.role === "doctor"
     ? await service
         .from("providers")
-        .select("id, full_name, specialty, profile_status, available_now, availability_note, consultation_modes")
+        .select("id, full_name, specialty, bio, photo_url, profile_status, available_now, availability_note, consultation_modes")
         .eq("user_id", user.id)
         .maybeSingle<ProviderRow>()
     : { data: null };
@@ -206,6 +209,8 @@ export default async function DoctorDashboardPage() {
 
   const doctorName = provider?.full_name ?? user.email ?? "Doctor";
   const specialty = provider?.specialty ?? "Provider profile pending";
+  const doctorBio = provider?.bio ?? "";
+  const doctorPhotoUrl = provider?.photo_url ?? "";
   const initialVideoQueueItems = videoAppointments.map((appointment) => {
     const summary = appointment.ai_summaries?.[0];
     const patientOnline = patientOnlineByAppointmentId.get(appointment.id) ?? false;
@@ -312,8 +317,12 @@ export default async function DoctorDashboardPage() {
             <div className="grid gap-4">
               <section className="grid gap-4 lg:grid-cols-[260px_1fr]">
                 <article className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
-                  <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[#e8f7f4] text-2xl font-bold text-[#087a7b]">
-                    <Stethoscope className="size-9" />
+                  <div className="mx-auto flex size-20 items-center justify-center overflow-hidden rounded-full bg-[#e8f7f4] text-2xl font-bold text-[#087a7b]">
+                    {doctorPhotoUrl ? (
+                      <Image src={doctorPhotoUrl} alt="" width={96} height={96} className="size-full object-cover" />
+                    ) : (
+                      <Stethoscope className="size-9" />
+                    )}
                   </div>
                   <div className="mt-4 text-center">
                     <p className="font-bold text-[#071923]">{doctorName}</p>
@@ -352,6 +361,10 @@ export default async function DoctorDashboardPage() {
                       {t("doctor_dashboard_no_profile", locale)} public.users {t("doctor_dashboard_with_role", locale)}
                     </p>
                   )}
+
+                  {canManageAvailability ? (
+                    <DoctorProfileForm bio={doctorBio} photoUrl={doctorPhotoUrl} />
+                  ) : null}
                 </article>
               </section>
 

@@ -21,7 +21,7 @@ export default async function DoctorBookingPage({
     service
       .from("providers")
       .select(
-        "id, full_name, specialty, credentials, bio, languages, rating_summary, available_now, consultation_modes"
+        "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
       )
       .eq("id", providerId)
       .eq("profile_status", "active")

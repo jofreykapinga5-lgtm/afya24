@@ -7,6 +7,7 @@ export interface ProviderRow {
   specialty: string;
   credentials: string | null;
   bio: string | null;
+  photo_url: string | null;
   languages: string[] | null;
   rating_summary: { rating?: number; reviewCount?: number } | null;
   available_now: boolean | null;
@@ -17,7 +18,7 @@ export interface ProviderRow {
 // doctor-carousel-card already render, so those components need zero
 // changes. Per-doctor pricing and photo uploads are out of scope this
 // phase -- every doctor gets the one flat consultation price and falls back
-// to DoctorCard's built-in tinted-initials avatar (photoUrl: "").
+// to DoctorCard's built-in tinted-initials avatar when photo_url is empty.
 export function mapProviderRow(row: ProviderRow, basePrice: number, locale: Locale): Provider {
   const languages = (row.languages ?? []).filter(
     (language): language is Locale => language === "en" || language === "sw"
@@ -43,7 +44,7 @@ export function mapProviderRow(row: ProviderRow, basePrice: number, locale: Loca
       ? t("doctor_available_now", locale)
       : t("doctor_check_back_later", locale),
     isAvailableNow: Boolean(row.available_now),
-    photoUrl: "",
+    photoUrl: row.photo_url ?? "",
     bio: row.bio ?? "",
   };
 }

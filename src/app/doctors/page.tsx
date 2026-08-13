@@ -22,7 +22,7 @@ export default async function DoctorsPage({
     service
       .from("providers")
       .select(
-        "id, full_name, specialty, credentials, bio, languages, rating_summary, available_now, consultation_modes"
+        "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
       )
       .eq("profile_status", "active"),
     getDefaultService(service).catch(() => null),

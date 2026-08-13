@@ -125,6 +125,63 @@ function selectedModes(formData: FormData) {
   return modes.length > 0 ? modes : ["voice", "video"];
 }
 
+function imageExtension(type: string) {
+  if (type === "image/png") return "png";
+  if (type === "image/webp") return "webp";
+  return "jpg";
+}
+
+export async function updateDoctorPublicProfile(formData: FormData) {
+  const { service, providerId } = await requireDoctorProvider();
+  const bio = String(formData.get("bio") ?? "").trim();
+  const image = formData.get("image");
+  let photoUrl: string | null = null;
+
+  if (image instanceof File && image.size > 0) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) {
+      throw new Error("Upload a JPG, PNG, or WebP image.");
+    }
+
+    if (image.size > 5 * 1024 * 1024) {
+      throw new Error("Keep the profile image under 5 MB.");
+    }
+
+    const extension = imageExtension(image.type);
+    const path = `${providerId}/${Date.now()}.${extension}`;
+    const { error: uploadError } = await service.storage
+      .from("provider-profile-images")
+      .upload(path, image, {
+        contentType: image.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const { data } = service.storage.from("provider-profile-images").getPublicUrl(path);
+    photoUrl = data.publicUrl;
+  }
+
+  const updates: { bio: string | null; photo_url?: string } = {
+    bio: bio || null,
+  };
+
+  if (photoUrl) {
+    updates.photo_url = photoUrl;
+  }
+
+  const { error } = await service.from("providers").update(updates).eq("id", providerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/doctor/dashboard");
+  revalidatePath("/doctors");
+}
+
 export async function updateProviderAvailability(formData: FormData) {
   const { service, providerId } = await requireDoctorProvider();
   const availableNow = formData.get("availableNow") === "on";

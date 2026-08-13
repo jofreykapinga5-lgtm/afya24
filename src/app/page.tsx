@@ -27,7 +27,7 @@ export default async function Home() {
       service
         .from("providers")
         .select(
-          "id, full_name, specialty, credentials, bio, languages, rating_summary, available_now, consultation_modes"
+          "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
         )
         .eq("profile_status", "active")
         .order("available_now", { ascending: false })

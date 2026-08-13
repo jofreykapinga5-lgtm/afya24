@@ -1,4 +1,5 @@
 import { Hero } from "@/components/ui/animated-hero";
+import { AiChatHeroCard } from "@/components/ai-chat-hero-card";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { HealthTips } from "@/components/home/health-tips";
 import { DoctorsPreview } from "@/components/home/doctors-preview";
@@ -66,6 +67,12 @@ export default async function Home() {
     <div className="flex flex-1 flex-col">
       <main className="flex flex-1 flex-col">
         <Hero />
+
+        <section className="bg-[#e9f8f7] px-4 pb-10 pt-8 sm:px-6 sm:pb-12">
+          <div className="mx-auto w-full max-w-xl">
+            <AiChatHeroCard />
+          </div>
+        </section>
 
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4 py-12 sm:gap-16 sm:px-6 sm:py-16">
           <Reveal>

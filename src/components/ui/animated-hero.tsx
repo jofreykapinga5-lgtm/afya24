@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { AiChatHeroCard } from "@/components/ai-chat-hero-card";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 
@@ -25,7 +24,7 @@ function Hero() {
       <div className="absolute inset-x-0 bottom-0 -z-10 h-36 bg-gradient-to-t from-[#e9f8f7] to-transparent" />
 
       <div className="container relative mx-auto px-4 sm:px-6">
-        <div className="flex min-h-[560px] flex-col items-center justify-center gap-8 py-14 sm:py-16 lg:py-20">
+        <div className="flex min-h-[520px] flex-col items-center justify-center py-16 text-center sm:py-20 lg:py-24">
           <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
             <p className="inline-flex rounded-full bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white ring-1 ring-white/18 backdrop-blur-sm">
               Afya24
@@ -48,10 +47,6 @@ function Hero() {
                 <ArrowRight className="size-4" />
               </Link>
             </div>
-          </div>
-
-          <div className="w-full max-w-xl">
-            <AiChatHeroCard />
           </div>
         </div>
       </div>

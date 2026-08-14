@@ -42,8 +42,8 @@ function Hero() {
         sizes="100vw"
         className="absolute inset-0 -z-20 object-cover object-[70%_center] sm:object-[62%_center]"
       />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#052052]/70 via-[#083273]/40 to-[#083273]/10" />
-      <div className="absolute inset-0 -z-10 bg-[#01b7bb]/10 mix-blend-multiply" />
+      <div className="absolute inset-0 -z-10 bg-[#0a3d8f]/50 mix-blend-multiply" />
+      <div className="absolute inset-0 -z-10 bg-[#052052]/15" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-36 bg-gradient-to-t from-[#e9f8f7] to-transparent" />
 
       <div className="container relative mx-auto px-4 sm:px-6">

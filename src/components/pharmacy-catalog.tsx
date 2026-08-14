@@ -114,9 +114,11 @@ export function PharmacyCatalog({ items, locale }: { items: PharmacyItem[]; loca
   }, [items]);
 
   const trending = useMemo(() => items.filter((item) => item.badge), [items]);
+  const showTrendingRail = trending.length > 0 && !query.trim() && category === "All";
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
+      if (showTrendingRail && item.badge) return false;
       const matchesCategory = category === "All" || item.category === category;
       const search = query.trim().toLowerCase();
       const matchesQuery =
@@ -126,7 +128,7 @@ export function PharmacyCatalog({ items, locale }: { items: PharmacyItem[]; loca
         (item.description ?? "").toLowerCase().includes(search);
       return matchesCategory && matchesQuery;
     });
-  }, [items, query, category]);
+  }, [items, query, category, showTrendingRail]);
 
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
   const cartLines = cart
@@ -255,7 +257,7 @@ export function PharmacyCatalog({ items, locale }: { items: PharmacyItem[]; loca
               {t("pharmacy_catalog_empty_body", locale)}
             </p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 && showTrendingRail ? null : filtered.length === 0 ? (
           <p className="mt-10 text-center text-sm text-muted-foreground">
             {t("pharmacy_no_medicines_match", locale)} &ldquo;{query}&rdquo;.
           </p>

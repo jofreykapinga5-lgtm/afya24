@@ -57,6 +57,27 @@ export interface AiQualification {
   summaryForDoctor: string;
 }
 
+// Used to back the specialty dropdown on both the doctor application form
+// and the admin "add doctor" form, so specialties stay consistent instead
+// of fragmenting into free-text variants (e.g. "Peds" vs "Pediatrics").
+export const MEDICAL_SPECIALTIES = [
+  "General Practice",
+  "Internal Medicine",
+  "Pediatrics",
+  "Obstetrics & Gynecology",
+  "Dermatology",
+  "Psychiatry & Mental Health",
+  "Cardiology",
+  "ENT (Ear, Nose & Throat)",
+  "Ophthalmology",
+  "Orthopedics",
+  "Dentistry",
+  "Nutrition & Dietetics",
+  "Endocrinology & Diabetes",
+  "Urology",
+  "Neurology",
+] as const;
+
 export interface Provider {
   id: string;
   name: string;

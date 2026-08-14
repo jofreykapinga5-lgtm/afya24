@@ -255,62 +255,81 @@ export async function resetProviderPassword(formData: FormData) {
   revalidatePath("/admin/dashboard");
 }
 
-export async function deleteProviderAccount(formData: FormData) {
-  const { adminUserId, service } = await requireAdmin();
-  const providerId = formString(formData, "providerId");
+// Unlike the other provider actions below, this one is wired through
+// useActionState in the panel (see DeleteProviderForm) instead of a plain
+// <form action={...}>. A doctor with session history is a routine, expected
+// case here -- not throwing lets that show as an inline message instead of
+// crashing the whole dashboard the way an uncaught action error does.
+export async function deleteProviderAccount(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
+  try {
+    const { adminUserId, service } = await requireAdmin();
+    const providerId = formString(formData, "providerId");
 
-  if (!providerId) {
-    throw new Error("Provider is required.");
+    if (!providerId) {
+      return { status: "error", message: "Provider is required." };
+    }
+
+    const { data: provider, error: providerError } = await service
+      .from("providers")
+      .select("id, user_id, full_name")
+      .eq("id", providerId)
+      .single();
+
+    if (providerError || !provider) {
+      return { status: "error", message: providerError?.message ?? "Provider not found." };
+    }
+
+    const { count: appointmentCount, error: appointmentError } = await service
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("provider_id", providerId);
+
+    if (appointmentError) {
+      return { status: "error", message: appointmentError.message };
+    }
+
+    if ((appointmentCount ?? 0) > 0) {
+      return {
+        status: "error",
+        message: "This doctor has session history. Disable the doctor instead of deleting them.",
+      };
+    }
+
+    const { error: deleteProviderError } = await service
+      .from("providers")
+      .delete()
+      .eq("id", providerId);
+
+    if (deleteProviderError) {
+      return { status: "error", message: deleteProviderError.message };
+    }
+
+    const { error: deleteUserError } = await service.auth.admin.deleteUser(provider.user_id);
+
+    if (deleteUserError) {
+      return { status: "error", message: deleteUserError.message };
+    }
+
+    await service.from("audit_logs").insert({
+      actor_user_id: adminUserId,
+      action: "provider_status_changed",
+      entity_type: "provider",
+      entity_id: providerId,
+      metadata_json: { fullName: provider.full_name, deleted: true },
+    });
+
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/doctors");
+
+    return { status: "success", message: `${provider.full_name} was deleted.` };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("deleteProviderAccount failed", error);
+    return { status: "error", message: actionErrorMessage(error) };
   }
-
-  const { data: provider, error: providerError } = await service
-    .from("providers")
-    .select("id, user_id, full_name")
-    .eq("id", providerId)
-    .single();
-
-  if (providerError || !provider) {
-    throw new Error(providerError?.message ?? "Provider not found.");
-  }
-
-  const { count: appointmentCount, error: appointmentError } = await service
-    .from("appointments")
-    .select("id", { count: "exact", head: true })
-    .eq("provider_id", providerId);
-
-  if (appointmentError) {
-    throw new Error(appointmentError.message);
-  }
-
-  if ((appointmentCount ?? 0) > 0) {
-    throw new Error("This doctor has session history. Disable the doctor instead of deleting them.");
-  }
-
-  const { error: deleteProviderError } = await service
-    .from("providers")
-    .delete()
-    .eq("id", providerId);
-
-  if (deleteProviderError) {
-    throw new Error(deleteProviderError.message);
-  }
-
-  const { error: deleteUserError } = await service.auth.admin.deleteUser(provider.user_id);
-
-  if (deleteUserError) {
-    throw new Error(deleteUserError.message);
-  }
-
-  await service.from("audit_logs").insert({
-    actor_user_id: adminUserId,
-    action: "provider_status_changed",
-    entity_type: "provider",
-    entity_id: providerId,
-    metadata_json: { fullName: provider.full_name, deleted: true },
-  });
-
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/doctors");
 }
 
 async function setAppointmentPaymentStatus(

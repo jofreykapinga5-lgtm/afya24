@@ -23,6 +23,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -40,12 +47,13 @@ import {
   updateProviderStatus,
 } from "@/app/admin/actions";
 import { adminProviderStatusKey, locales, t, type TranslationKey } from "@/lib/i18n";
-import type {
-  AdminProviderMeta,
-  Appointment,
-  Locale,
-  Provider,
-  ProviderStatus,
+import {
+  MEDICAL_SPECIALTIES,
+  type AdminProviderMeta,
+  type Appointment,
+  type Locale,
+  type Provider,
+  type ProviderStatus,
 } from "@/lib/types";
 
 const statusTone: Record<ProviderStatus, StatusTone> = {
@@ -192,7 +200,18 @@ export function ProvidersPanel({
                   <Input name="fullName" placeholder="Dr. Jane Mwangi" required />
                 </Field>
                 <Field label="Specialty">
-                  <Input name="specialty" placeholder="General Practice" required />
+                  <Select name="specialty" defaultValue="General Practice">
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MEDICAL_SPECIALTIES.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -387,20 +406,11 @@ export function ProvidersPanel({
                         )}
 
                         {isUuid(provider.id) ? (
-                          <form action={deleteProviderAccount}>
-                            <input type="hidden" name="providerId" value={provider.id} />
-                            <Button
-                              type="submit"
-                              size="icon-sm"
-                              variant="destructive"
-                              disabled={!canDelete}
-                              aria-label={
-                                canDelete ? "Delete doctor" : "Doctor has sessions. Disable instead."
-                              }
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-                          </form>
+                          <DeleteProviderForm
+                            providerId={provider.id}
+                            providerName={provider.name}
+                            canDelete={canDelete}
+                          />
                         ) : (
                           <Button
                             size="icon-sm"
@@ -444,6 +454,40 @@ export function ProvidersPanel({
         </Table>
       </div>
     </div>
+  );
+}
+
+const initialDeleteState: AdminActionState = { status: "idle", message: "" };
+
+function DeleteProviderForm({
+  providerId,
+  providerName,
+  canDelete,
+}: {
+  providerId: string;
+  providerName: string;
+  canDelete: boolean;
+}) {
+  const [state, formAction, pending] = useActionState(deleteProviderAccount, initialDeleteState);
+
+  return (
+    <form action={formAction} className="grid justify-items-end gap-1">
+      <input type="hidden" name="providerId" value={providerId} />
+      <Button
+        type="submit"
+        size="icon-sm"
+        variant="destructive"
+        disabled={!canDelete || pending}
+        aria-label={canDelete ? `Delete ${providerName}` : "Doctor has sessions. Disable instead."}
+      >
+        <Trash2 className="size-3.5" />
+      </Button>
+      {state.status === "error" ? (
+        <p role="alert" className="max-w-40 text-right text-[11px] leading-4 text-destructive">
+          {state.message}
+        </p>
+      ) : null}
+    </form>
   );
 }
 

@@ -14,7 +14,9 @@ import {
 import { Reveal } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { MEDICAL_SPECIALTIES } from "@/lib/types";
 
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
 
@@ -119,7 +121,18 @@ export default function DoctorApplicationPage() {
                         <Input name="licenseNumber" required placeholder="Medical council number" />
                       </Field>
                       <Field label="Specialty" required>
-                        <Input name="specialty" required placeholder="General practice" />
+                        <Select name="specialty" defaultValue="General Practice">
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MEDICAL_SPECIALTIES.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </Field>
                       <Field label="Years of experience">
                         <Input name="experienceYears" type="number" min="0" max="70" placeholder="5" />

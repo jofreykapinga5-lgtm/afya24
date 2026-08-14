@@ -1068,6 +1068,10 @@ const dict = {
     en: "Tell Afya24 what's going on, and we'll match you with the right doctor.",
     sw: "Mwambie Afya24 kinachoendelea, tukukutanishe na daktari sahihi.",
   },
+  hero_body: {
+    en: "Licensed doctors by chat, voice, or video. Direct-pay, no waiting rooms.",
+    sw: "Madaktari wenye leseni kwa ujumbe, sauti, au video. Lipa moja kwa moja, bila foleni.",
+  },
   qualification_ai_name: {
     en: "Afya24",
     sw: "Afya24",

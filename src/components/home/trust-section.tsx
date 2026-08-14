@@ -48,7 +48,7 @@ export function TrustSection() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#03302e]/70 via-[#075554]/50 to-[#087a7b]/25" />
       <div className="absolute inset-0 -z-10 bg-brand-teal/10 mix-blend-multiply" />
 
-      <div className="relative grid gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[0.8fr_1.3fr] lg:items-center lg:gap-10">
+      <div className="relative grid min-h-[420px] gap-8 px-5 py-14 sm:px-8 sm:py-16 lg:min-h-[480px] lg:grid-cols-[0.8fr_1.3fr] lg:items-center lg:gap-12 lg:py-20">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80 [text-shadow:0_1px_12px_rgba(3,25,24,0.85)]">
             {t("trust_section_badge", locale)}
@@ -83,7 +83,7 @@ export function TrustSection() {
         </div>
       </div>
 
-      <div className="relative border-t border-white/20 px-5 py-4 text-center text-xs font-medium leading-5 text-white/95 [text-shadow:0_1px_12px_rgba(3,25,24,0.85)] sm:px-8 sm:text-sm sm:leading-6">
+      <div className="relative border-t border-white/20 px-5 py-5 text-center text-xs font-medium leading-5 text-white/95 [text-shadow:0_1px_12px_rgba(3,25,24,0.85)] sm:px-8 sm:py-6 sm:text-sm sm:leading-6">
         {t("trust_section_footer", locale)}
       </div>
     </section>

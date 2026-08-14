@@ -84,7 +84,7 @@ function Hero() {
               <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                 <Link
                   href="/doctors"
-                  className="group inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-base font-bold text-primary-foreground shadow-[0_22px_50px_-20px_rgba(47,111,192,0.85)] ring-1 ring-white/25 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/50"
+                  className="group inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-base font-bold text-primary-foreground shadow-[0_22px_50px_-20px_rgba(47,111,192,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/50"
                 >
                   {t("hero_get_help_cta", locale)}
                   <ArrowRight className="size-5 transition-transform duration-200 group-hover:translate-x-0.5" />

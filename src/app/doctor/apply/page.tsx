@@ -76,32 +76,11 @@ export default function DoctorApplicationPage() {
           />
         </Link>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
-          <Reveal>
-            <section className="rounded-[1.75rem] bg-[#e8f7f4] p-5 ring-1 ring-[#ccece7] sm:p-7 lg:sticky lg:top-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">For doctors</p>
-              <h1 className="mt-4 max-w-sm text-3xl font-bold leading-tight sm:text-4xl">
-                Join Afya24 as a trusted online doctor
-              </h1>
-              <p className="mt-4 max-w-md text-sm leading-6 text-[#4d5960]">
-                Apply to join our trusted provider network. We review your license details before matching you with patients.
-              </p>
-
-              <div className="mt-6 grid gap-3 text-sm text-[#4d5960]">
-                <div className="rounded-2xl bg-white/70 p-4 ring-1 ring-white/80">
-                  <p className="font-bold text-[#071923]">Credential reviewed</p>
-                  <p className="mt-1 leading-6">We review credentials before creating your doctor account.</p>
-                </div>
-                <div className="rounded-2xl bg-white/70 p-4 ring-1 ring-white/80">
-                  <p className="font-bold text-[#071923]">Matched patients</p>
-                  <p className="mt-1 leading-6">Approved doctors receive patients based on service, language, and availability.</p>
-                </div>
-              </div>
-            </section>
-          </Reveal>
+        <div className="mx-auto mt-8 max-w-2xl">
+          <h1 className="text-center text-2xl font-bold sm:text-3xl">Doctor application</h1>
 
           <Reveal delay={60}>
-            <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#dfe8eb] sm:p-7">
+            <section className="mt-6 rounded-[1.75rem] bg-white p-5 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#dfe8eb] sm:p-7">
               {success ? (
                 <div className="grid min-h-[32rem] place-items-center text-center">
                   <div>
@@ -148,24 +127,14 @@ export default function DoctorApplicationPage() {
                     </div>
                   </FormSection>
 
-                  <FormSection title="Languages and consultation modes">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <fieldset className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-                        <legend className="px-1 text-sm font-bold">Languages</legend>
-                        <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                          <Check name="languages" value="sw" label="Swahili" />
-                          <Check name="languages" value="en" label="English" />
-                        </div>
-                      </fieldset>
-
-                      <fieldset className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-                        <legend className="px-1 text-sm font-bold">Preferred call modes</legend>
-                        <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                          <Check name="consultationModes" value="voice" label="Voice" />
-                          <Check name="consultationModes" value="video" label="Video" />
-                        </div>
-                      </fieldset>
-                    </div>
+                  <FormSection title="Languages">
+                    <fieldset className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
+                      <legend className="px-1 text-sm font-bold">Languages</legend>
+                      <div className="mt-2 flex flex-wrap gap-2 text-sm">
+                        <Check name="languages" value="sw" label="Swahili" />
+                        <Check name="languages" value="en" label="English" />
+                      </div>
+                    </fieldset>
                   </FormSection>
 
                   <FormSection title="About you">

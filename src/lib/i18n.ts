@@ -959,6 +959,10 @@ const dict = {
     en: "Not authorized for this appointment",
     sw: "Hauna ruhusa kwa miadi hii",
   },
+  error_access_window_expired: {
+    en: "Your 24-hour access window for this visit has ended. Please book a new consultation.",
+    sw: "Muda wako wa saa 24 wa kufikia ziara hii umeisha. Tafadhali weka miadi mpya ya ushauri.",
+  },
   legal_last_updated: { en: "Last updated August 2026", sw: "Ilisasishwa mwisho Agosti 2026" },
   terms_title: { en: "Terms of Service", sw: "Vigezo vya Huduma" },
   terms_s1_title: { en: "1. What Afya24 is", sw: "1. Afya24 ni nini" },

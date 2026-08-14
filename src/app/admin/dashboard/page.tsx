@@ -27,11 +27,10 @@ import {
   appointments,
   auditLogs,
   labOrders,
-  pharmacyItems,
-  pharmacyOrders,
   serviceCategories,
   services,
 } from "@/lib/mock-data";
+import type { PharmacyCategory, PharmacyItem, PharmacyItemStatus, PharmacyOrder, StockStatus } from "@/lib/types";
 import { signOut } from "../actions";
 
 type DbProviderRow = {
@@ -71,6 +70,38 @@ type DbLabLocationRow = {
   map_url: string | null;
   opening_hours: string | null;
   status: string;
+};
+
+type DbPharmacyItemRow = {
+  id: string;
+  medicine_name: string;
+  category: string;
+  description: string | null;
+  form: string | null;
+  strength: string | null;
+  stock_status: string;
+  unit_price: number | string;
+  requires_prescription: boolean;
+  photo_url: string | null;
+  status: string;
+  created_at: string;
+};
+
+type DbPharmacyOrderRow = {
+  id: string;
+  status: string;
+  fulfillment_method: string;
+  total_amount: number | string;
+  created_at: string;
+  patients: { hospital_reference_number: string } | null;
+  pharmacy_order_items: {
+    id: string;
+    pharmacy_item_id: string;
+    prescribed_medication_name: string | null;
+    quantity: number;
+    availability_status: string;
+    substitution_requested: boolean;
+  }[];
 };
 
 type DbProviderApplicationRow = {
@@ -155,10 +186,13 @@ export default async function AdminDashboardPage() {
   );
 
   let adminDataWarning: string | null = null;
+  let pharmacyDataWarning: string | null = null;
   let dbProviders: DbProviderRow[] | null = null;
   let paymentAppointments: PaymentAppointmentRow[] | null = null;
   let dbLabLocations: DbLabLocationRow[] | null = null;
   let dbApplications: DbProviderApplicationRow[] | null = null;
+  let dbPharmacyItems: DbPharmacyItemRow[] | null = null;
+  let dbPharmacyOrders: DbPharmacyOrderRow[] | null = null;
   const applicationFileUrls = new Map<string, string>();
 
   if (profile) {
@@ -236,6 +270,46 @@ export default async function AdminDashboardPage() {
         error instanceof Error
           ? error.message
           : "Admin data could not be loaded. Check Supabase configuration and migrations.";
+    }
+
+    // Isolated from the block above on purpose: pharmacy_items.description
+    // and .status are a newer migration (0012), so a database that hasn't
+    // been migrated yet would otherwise throw here and take the providers/
+    // payments/labs/applications tabs down with it, even though those don't
+    // depend on this table at all.
+    try {
+      const service = createServiceClient();
+      const pharmacyItemsResult = await service
+        .from("pharmacy_items")
+        .select(
+          "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, status, created_at"
+        )
+        .order("created_at", { ascending: false });
+
+      if (pharmacyItemsResult.error) {
+        throw pharmacyItemsResult.error;
+      }
+
+      dbPharmacyItems = pharmacyItemsResult.data as DbPharmacyItemRow[];
+
+      const pharmacyOrdersResult = await service
+        .from("pharmacy_orders")
+        .select(
+          "id, status, fulfillment_method, total_amount, created_at, patients(hospital_reference_number), pharmacy_order_items(id, pharmacy_item_id, prescribed_medication_name, quantity, availability_status, substitution_requested)"
+        )
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (pharmacyOrdersResult.error) {
+        throw pharmacyOrdersResult.error;
+      }
+
+      dbPharmacyOrders = pharmacyOrdersResult.data as unknown as DbPharmacyOrderRow[];
+    } catch (error) {
+      pharmacyDataWarning =
+        error instanceof Error
+          ? error.message
+          : "Pharmacy data could not be loaded. Check Supabase configuration and migrations.";
     }
   }
 
@@ -333,6 +407,46 @@ export default async function AdminDashboardPage() {
     fileUrl: application.file_path ? applicationFileUrls.get(application.file_path) ?? null : null,
     status: application.status as ProviderApplicationRow["status"],
     createdAt: application.created_at,
+  }));
+
+  // Real, honest data -- same principle as realPayments above. An empty
+  // catalog or order list should read as "nothing here yet," not be padded
+  // out with placeholder products no one actually stocks.
+  const realPharmacyItems: PharmacyItem[] = (dbPharmacyItems ?? []).map((item) => ({
+    id: item.id,
+    medicineName: item.medicine_name,
+    category: item.category as PharmacyCategory,
+    description: item.description ?? undefined,
+    form: item.form ?? "Not set",
+    strength: item.strength ?? "Not set",
+    unitPrice: Number(item.unit_price),
+    stockStatus: item.stock_status as StockStatus,
+    requiresPrescription: item.requires_prescription,
+    photoUrl: item.photo_url ?? undefined,
+    status: item.status as PharmacyItemStatus,
+  }));
+
+  const realPharmacyOrders: PharmacyOrder[] = (dbPharmacyOrders ?? []).map((order) => ({
+    id: order.id,
+    patientReference:
+      (order.patients as unknown as { hospital_reference_number: string } | null)
+        ?.hospital_reference_number ?? "—",
+    prescriptionId: "",
+    items: (order.pharmacy_order_items ?? []).map((orderItem) => ({
+      pharmacyItemId: orderItem.pharmacy_item_id,
+      prescribedMedicationName: orderItem.prescribed_medication_name ?? "",
+      quantity: orderItem.quantity,
+      availabilityStatus: orderItem.availability_status as StockStatus,
+      substitutionRequested: orderItem.substitution_requested,
+    })),
+    fulfillmentMethod: order.fulfillment_method as PharmacyOrder["fulfillmentMethod"],
+    subtotal: Number(order.total_amount),
+    fees: 0,
+    total: Number(order.total_amount),
+    status: order.status as PharmacyOrder["status"],
+    substitutionRequested: (order.pharmacy_order_items ?? []).some(
+      (orderItem) => orderItem.substitution_requested
+    ),
   }));
 
   return (
@@ -466,6 +580,17 @@ export default async function AdminDashboardPage() {
               </div>
             ) : null}
 
+            {pharmacyDataWarning ? (
+              <div className="mb-4 rounded-[1.1rem] bg-[#fff4f0] p-4 text-sm text-[#9b2c12] ring-1 ring-[#ffd4c6]">
+                <p className="font-bold">Pharmacy data could not load.</p>
+                <p className="mt-1">{pharmacyDataWarning}</p>
+                <p className="mt-2 text-xs text-[#9b2c12]/80">
+                  Run migration 0012_pharmacy_catalog_details.sql against this Supabase project,
+                  then reload.
+                </p>
+              </div>
+            ) : null}
+
             {profile ? (
               <div id="admin-tabs">
                 <AdminDashboard
@@ -478,8 +603,8 @@ export default async function AdminDashboardPage() {
                   services={services}
                   appointments={appointments}
                   payments={realPayments}
-                  pharmacyItems={pharmacyItems}
-                  pharmacyOrders={pharmacyOrders}
+                  pharmacyItems={realPharmacyItems}
+                  pharmacyOrders={realPharmacyOrders}
                   labOrders={labOrders}
                   labLocations={realLabLocations}
                   auditLogs={auditLogs}

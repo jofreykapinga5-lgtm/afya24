@@ -212,6 +212,8 @@ export type PharmacyCategory =
   | "Cold & flu"
   | "Chronic condition";
 
+export type PharmacyItemStatus = "published" | "coming_soon" | "hidden";
+
 export interface PharmacyItem {
   id: string;
   medicineName: string;
@@ -223,6 +225,7 @@ export interface PharmacyItem {
   stockStatus: StockStatus;
   requiresPrescription: boolean;
   photoUrl?: string;
+  status: PharmacyItemStatus;
 }
 
 export interface PharmacyOrderItem {

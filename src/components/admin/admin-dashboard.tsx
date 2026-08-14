@@ -37,7 +37,6 @@ import type {
   LabOrder,
   Locale,
   PharmacyOrder,
-  PharmacyOrderStatus,
   PharmacyItem,
   Provider,
   ProviderStatus,
@@ -116,7 +115,6 @@ export function AdminDashboard({
   const [activeTab, setActiveTab] = useState<AdminTab>(allowedTabs[0] ?? "overview");
   const [providerMetaState, setProviderMetaState] = useState(providerMeta);
   const [serviceState, setServiceState] = useState(services);
-  const [pharmacyState, setPharmacyState] = useState(pharmacyOrders);
   const [labLocationState, setLabLocationState] = useState(labLocations);
   const [auditState, setAuditState] = useState(auditLogs);
 
@@ -168,17 +166,6 @@ export function AdminDashboard({
     logActivity("service_price_changed", `${serviceName} marked ${next}`);
   }
 
-  function handlePharmacyStatusChange(
-    orderId: string,
-    patientReference: string,
-    next: PharmacyOrderStatus
-  ) {
-    setPharmacyState((current) =>
-      current.map((order) => (order.id === orderId ? { ...order, status: next } : order))
-    );
-    logActivity("pharmacy_order_status_changed", `Order for ${patientReference} moved to ${next}`);
-  }
-
   function handleToggleLabLocation(locationId: string, name: string, next: LabLocationStatus) {
     setLabLocationState((current) =>
       current.map((location) => (location.id === locationId ? { ...location, status: next } : location))
@@ -204,10 +191,10 @@ export function AdminDashboard({
     const activeProviders = providerMetaState.filter((meta) => meta.status === "active").length;
     const pendingProviders = providerMetaState.filter((meta) => meta.status === "pending").length;
     const suspendedProviders = providerMetaState.filter((meta) => meta.status === "suspended").length;
-    const openPharmacyOrders = pharmacyState.filter(
+    const openPharmacyOrders = pharmacyOrders.filter(
       (order) => order.status !== "delivered" && order.status !== "completed"
     ).length;
-    const pharmacySubstitutions = pharmacyState.filter((order) => order.substitutionRequested).length;
+    const pharmacySubstitutions = pharmacyOrders.filter((order) => order.substitutionRequested).length;
     const openLabOrders = labOrders.filter((order) => order.status !== "results_ready").length;
     const labWhatsappPending = labOrders.filter((order) => order.whatsappDeliveryStatus !== "delivered").length;
     const activeLabLocations = labLocationState.filter((location) => location.status === "active").length;
@@ -227,7 +214,7 @@ export function AdminDashboard({
       labWhatsappPending,
       activeLabLocations,
     };
-  }, [appointments, labLocationState, labOrders, payments, pharmacyState, providerMetaState]);
+  }, [appointments, labLocationState, labOrders, payments, pharmacyOrders, providerMetaState]);
 
   const providerQueue = providerRows
     .filter(({ meta }) => meta.status !== "active")
@@ -478,12 +465,7 @@ export function AdminDashboard({
         </TabsContent>
 
         <TabsContent value="pharmacy" className="mt-0">
-          <PharmacyPanel
-            locale={locale}
-            products={pharmacyItems}
-            orders={pharmacyState}
-            onStatusChange={handlePharmacyStatusChange}
-          />
+          <PharmacyPanel locale={locale} products={pharmacyItems} orders={pharmacyOrders} />
         </TabsContent>
 
         <TabsContent value="labs" className="mt-0">

@@ -752,6 +752,10 @@ const dict = {
     en: "Booking needs a patient file. Describe what's going on to Afya24, or look yourself up if you're a returning patient, then come back to book.",
     sw: "Kuweka miadi kunahitaji faili la mgonjwa. Mwambie Afya24 kinachoendelea, au jitafute kama wewe ni mgonjwa wa zamani, kisha urudi kuweka miadi.",
   },
+  pharmacy_checkout_no_session_body: {
+    en: "Checkout needs a patient file. Describe what's going on to Afya24, or look yourself up if you're a returning patient, then come back to check out.",
+    sw: "Malipo yanahitaji faili la mgonjwa. Mwambie Afya24 kinachoendelea, au jitafute kama wewe ni mgonjwa wa zamani, kisha urudi kulipa.",
+  },
   doctor_lang_en: { en: "English", sw: "Kiingereza" },
   doctor_lang_sw: { en: "Swahili", sw: "Kiswahili" },
   doctor_available_now: { en: "Available now", sw: "Anapatikana sasa" },
@@ -787,6 +791,11 @@ const dict = {
     sw: "Tafuta orodha yetu kamili kwa jina, au chagua aina hapo juu.",
   },
   pharmacy_no_medicines_match: { en: "No medicines match", sw: "Hakuna dawa zinazolingana na" },
+  pharmacy_catalog_empty_title: { en: "The pharmacy is opening soon", sw: "Duka la dawa linakaribia kufunguliwa" },
+  pharmacy_catalog_empty_body: {
+    en: "We're stocking the catalog. Check back shortly, or ask Afya24 about a prescription refill in the meantime.",
+    sw: "Tunaandaa orodha ya bidhaa. Rudi hivi karibuni, au muulize Afya24 kuhusu kuongeza dawa wakati unasubiri.",
+  },
   pharmacy_requires_rx: { en: "Requires Rx", sw: "Inahitaji Rx" },
   pharmacy_add_to_cart: { en: "Add to cart", sw: "Ongeza kwenye kikapu" },
   pharmacy_in_cart: { en: "In cart", sw: "Kwenye kikapu" },

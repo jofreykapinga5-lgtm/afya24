@@ -1,22 +1,25 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   Edit3,
-  Eye,
-  EyeOff,
-  ImagePlus,
+  Package,
   PackagePlus,
-  Save,
   Search,
   ShoppingBag,
-  Timer,
   Trash2,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -35,17 +38,26 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
+import {
+  createPharmacyItem,
+  deletePharmacyItem,
+  setPharmacyItemStatus,
+  updatePharmacyItem,
+  updatePharmacyOrderStatus,
+  type PharmacyActionState,
+} from "@/app/admin/pharmacy-actions";
 import { adminPharmacyOrderStatusKey, t, type TranslationKey } from "@/lib/i18n";
 import type {
   Locale,
   PharmacyCategory,
   PharmacyItem,
+  PharmacyItemStatus,
   PharmacyOrder,
   PharmacyOrderStatus,
   StockStatus,
 } from "@/lib/types";
 
-const statusTone: Record<PharmacyOrderStatus, StatusTone> = {
+const orderStatusTone: Record<PharmacyOrderStatus, StatusTone> = {
   pending: "pending",
   preparing: "pending",
   ready_for_pickup: "info",
@@ -60,7 +72,19 @@ const stockTone: Record<StockStatus, StatusTone> = {
   out_of_stock: "urgent",
 };
 
-const statusOrder: PharmacyOrderStatus[] = [
+const itemStatusTone: Record<PharmacyItemStatus, StatusTone> = {
+  published: "positive",
+  coming_soon: "pending",
+  hidden: "neutral",
+};
+
+const itemStatusLabel: Record<PharmacyItemStatus, string> = {
+  published: "Published",
+  coming_soon: "Coming soon",
+  hidden: "Hidden",
+};
+
+const orderStatusOrder: PharmacyOrderStatus[] = [
   "pending",
   "preparing",
   "ready_for_pickup",
@@ -70,6 +94,11 @@ const statusOrder: PharmacyOrderStatus[] = [
 ];
 
 const stockOptions: StockStatus[] = ["in_stock", "low_stock", "out_of_stock"];
+const stockLabel: Record<StockStatus, string> = {
+  in_stock: "In stock",
+  low_stock: "Low stock",
+  out_of_stock: "Out of stock",
+};
 
 const categoryOptions: PharmacyCategory[] = [
   "Pain relief",
@@ -85,152 +114,51 @@ const categoryOptions: PharmacyCategory[] = [
   "Chronic condition",
 ];
 
-const stockLabel: Record<StockStatus, string> = {
-  in_stock: "In stock",
-  low_stock: "Low stock",
-  out_of_stock: "Out of stock",
-};
-
-type ProductStatus = "published" | "coming_soon" | "hidden";
-
-type AdminPharmacyItem = PharmacyItem & {
-  productStatus: ProductStatus;
-};
-
-const productStatusLabel: Record<ProductStatus, string> = {
-  published: "Published",
-  coming_soon: "Coming soon",
-  hidden: "Hidden",
-};
-
-const productStatusTone: Record<ProductStatus, StatusTone> = {
-  published: "positive",
-  coming_soon: "pending",
-  hidden: "neutral",
-};
-
-function toAdminProduct(product: PharmacyItem): AdminPharmacyItem {
-  return { ...product, productStatus: "published" };
-}
+const initialFormState: PharmacyActionState = { status: "idle", message: "" };
 
 export function PharmacyPanel({
   locale,
   products,
   orders,
-  onStatusChange,
 }: {
   locale: Locale;
   products: PharmacyItem[];
   orders: PharmacyOrder[];
-  onStatusChange: (orderId: string, patientReference: string, next: PharmacyOrderStatus) => void;
 }) {
-  const [productState, setProductState] = useState<AdminPharmacyItem[]>(
-    products.map(toAdminProduct)
-  );
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<PharmacyCategory | "all">("all");
-  const [visibility, setVisibility] = useState<ProductStatus | "all">("all");
-  const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<AdminPharmacyItem | null>(null);
-  const [imageName, setImageName] = useState("");
-  const [form, setForm] = useState({
-    medicineName: "",
-    category: "Pain relief" as PharmacyCategory,
-    description: "",
-    form: "",
-    strength: "",
-    unitPrice: "",
-    stockStatus: "in_stock" as StockStatus,
-    productStatus: "published" as ProductStatus,
-    requiresPrescription: false,
-  });
+  const [visibility, setVisibility] = useState<PharmacyItemStatus | "all">("all");
+  const [orderPending, startOrderTransition] = useTransition();
 
   const filteredProducts = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return productState.filter((product) => {
+    return products.filter((product) => {
       const matchesQuery =
         !needle ||
         product.medicineName.toLowerCase().includes(needle) ||
         (product.description ?? "").toLowerCase().includes(needle) ||
         product.category.toLowerCase().includes(needle);
       const matchesCategory = category === "all" || product.category === category;
-      const matchesVisibility = visibility === "all" || product.productStatus === visibility;
+      const matchesVisibility = visibility === "all" || product.status === visibility;
       return matchesQuery && matchesCategory && matchesVisibility;
     });
-  }, [category, productState, query, visibility]);
+  }, [category, products, query, visibility]);
 
   const inventoryStats = useMemo(() => {
-    const lowStock = productState.filter((product) => product.stockStatus === "low_stock").length;
-    const outOfStock = productState.filter((product) => product.stockStatus === "out_of_stock").length;
-    const prescriptionOnly = productState.filter((product) => product.requiresPrescription).length;
-    const comingSoon = productState.filter((product) => product.productStatus === "coming_soon").length;
-    const hidden = productState.filter((product) => product.productStatus === "hidden").length;
-    return { lowStock, outOfStock, prescriptionOnly, comingSoon, hidden };
-  }, [productState]);
+    const published = products.filter((product) => product.status === "published").length;
+    const lowStock = products.filter((product) => product.stockStatus === "low_stock").length;
+    const outOfStock = products.filter((product) => product.stockStatus === "out_of_stock").length;
+    const prescriptionOnly = products.filter((product) => product.requiresPrescription).length;
+    return { published, lowStock, outOfStock, prescriptionOnly };
+  }, [products]);
 
-  function handleAddProduct(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const price = Number(form.unitPrice);
-    if (!form.medicineName.trim() || !form.description.trim() || !price) {
-      return;
-    }
-
-    const nextProduct: AdminPharmacyItem = {
-      id: `rx-item-admin-${Date.now()}`,
-      medicineName: form.medicineName.trim(),
-      category: form.category,
-      description: form.description.trim(),
-      form: form.form.trim() || "Not set",
-      strength: form.strength.trim() || "Not set",
-      unitPrice: price,
-      stockStatus: form.stockStatus,
-      requiresPrescription: form.requiresPrescription,
-      photoUrl: imageName ? `/uploads/${imageName}` : undefined,
-      productStatus: form.productStatus,
-    };
-
-    setProductState((current) => [nextProduct, ...current]);
-    setForm({
-      medicineName: "",
-      category: "Pain relief",
-      description: "",
-      form: "",
-      strength: "",
-      unitPrice: "",
-      stockStatus: "in_stock",
-      productStatus: "published",
-      requiresPrescription: false,
+  function handleOrderStatusChange(orderId: string, status: PharmacyOrderStatus) {
+    const formData = new FormData();
+    formData.set("orderId", orderId);
+    formData.set("status", status);
+    startOrderTransition(async () => {
+      await updatePharmacyOrderStatus(formData);
     });
-    setImageName("");
-  }
-
-  function startEdit(product: AdminPharmacyItem) {
-    setEditingProductId(product.id);
-    setEditDraft({ ...product });
-  }
-
-  function cancelEdit() {
-    setEditingProductId(null);
-    setEditDraft(null);
-  }
-
-  function saveEdit() {
-    if (!editDraft) return;
-    setProductState((current) =>
-      current.map((product) => (product.id === editDraft.id ? editDraft : product))
-    );
-    cancelEdit();
-  }
-
-  function patchProduct(productId: string, patch: Partial<AdminPharmacyItem>) {
-    setProductState((current) =>
-      current.map((product) => (product.id === productId ? { ...product, ...patch } : product))
-    );
-  }
-
-  function deleteProduct(productId: string) {
-    setProductState((current) => current.filter((product) => product.id !== productId));
-    if (editingProductId === productId) cancelEdit();
   }
 
   return (
@@ -239,12 +167,12 @@ export function PharmacyPanel({
         <div>
           <h3 className="text-lg font-semibold tracking-tight">Pharmacy management</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage e-pharmacy products, medicine descriptions, stock, prescription rules, and orders.
+            Manage the e-pharmacy catalog, stock, and doctor-approved orders.
           </p>
         </div>
         <TabsList>
           <TabsTrigger value="products">
-            <PackagePlus className="size-4" />
+            <Package className="size-4" />
             Products
           </TabsTrigger>
           <TabsTrigger value="orders">
@@ -256,420 +184,141 @@ export function PharmacyPanel({
 
       <TabsContent value="products" className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-5">
-          <InventoryStat label="Total products" value={productState.length} />
+          <InventoryStat label="Total products" value={products.length} />
+          <InventoryStat label="Published" value={inventoryStats.published} />
           <InventoryStat label="Low stock" value={inventoryStats.lowStock} tone="pending" />
           <InventoryStat label="Out of stock" value={inventoryStats.outOfStock} tone="pending" />
-          <InventoryStat label="Coming soon" value={inventoryStats.comingSoon} tone="pending" />
-          <InventoryStat label="Hidden" value={inventoryStats.hidden} />
+          <InventoryStat label="Prescription only" value={inventoryStats.prescriptionOnly} />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.3fr]">
-          <form onSubmit={handleAddProduct} className="rounded-xl border border-border bg-background p-4">
-            <div className="flex items-center gap-2">
-              <PackagePlus className="size-4 text-primary" />
-              <h4 className="text-sm font-semibold">Upload product</h4>
-            </div>
-
-            <div className="mt-4 grid gap-3">
-              <Field label="Medicine name">
-                <Input
-                  value={form.medicineName}
-                  onChange={(event) => setForm((current) => ({ ...current, medicineName: event.target.value }))}
-                  placeholder="Paracetamol 500mg"
-                />
-              </Field>
-
-              <Field label="Description">
-                <Textarea
-                  value={form.description}
-                  onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                  placeholder="Short customer-facing description, usage notes, and important warning."
-                  className="min-h-24"
-                />
-              </Field>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Category">
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm((current) => ({ ...current, category: value as PharmacyCategory }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                <Field label="Stock">
-                  <Select
-                    value={form.stockStatus}
-                    onValueChange={(value) =>
-                      setForm((current) => ({ ...current, stockStatus: value as StockStatus }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stockOptions.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {stockLabel[option]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
-
-              <Field label="Store status">
-                <Select
-                  value={form.productStatus}
-                  onValueChange={(value) =>
-                    setForm((current) => ({ ...current, productStatus: value as ProductStatus }))
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="coming_soon">Coming soon</SelectItem>
-                    <SelectItem value="hidden">Hidden</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Field label="Form">
-                  <Input
-                    value={form.form}
-                    onChange={(event) => setForm((current) => ({ ...current, form: event.target.value }))}
-                    placeholder="Tablet"
-                  />
-                </Field>
-                <Field label="Strength">
-                  <Input
-                    value={form.strength}
-                    onChange={(event) => setForm((current) => ({ ...current, strength: event.target.value }))}
-                    placeholder="500mg"
-                  />
-                </Field>
-                <Field label="Price">
-                  <Input
-                    value={form.unitPrice}
-                    onChange={(event) => setForm((current) => ({ ...current, unitPrice: event.target.value }))}
-                    inputMode="numeric"
-                    placeholder="150"
-                  />
-                </Field>
-              </div>
-
-              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
-                <span>
-                  <span className="block font-medium">Requires prescription</span>
-                  <span className="text-xs text-muted-foreground">Show only when doctor signed a valid prescription.</span>
-                </span>
-                <input
-                  checked={form.requiresPrescription}
-                  className="size-4 accent-primary"
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, requiresPrescription: event.target.checked }))
-                  }
-                  type="checkbox"
-                />
-              </label>
-
-              <Field label="Product image">
-                <label className="flex h-20 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
-                  <ImagePlus className="size-4" />
-                  {imageName || "Choose image"}
-                  <input
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={(event) => setImageName(event.target.files?.[0]?.name ?? "")}
-                    type="file"
-                  />
-                </label>
-              </Field>
-
-              <Button type="submit" className="mt-1">
-                <PackagePlus className="size-4" />
-                Add product
-              </Button>
-            </div>
-          </form>
-
-          <div className="space-y-3">
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search medicine, category, or description"
-                  className="pl-8"
-                />
-              </div>
-              <Select
-                value={category}
-                onValueChange={(value) => setCategory(value as PharmacyCategory | "all")}
-              >
-                <SelectTrigger className="w-full sm:w-56">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={visibility}
-                onValueChange={(value) => setVisibility(value as ProductStatus | "all")}
-              >
-                <SelectTrigger className="w-full sm:w-44">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All status</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="coming_soon">Coming soon</SelectItem>
-                  <SelectItem value="hidden">Hidden</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="rounded-xl border border-border bg-background">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-4">Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Rules</TableHead>
-                    <TableHead className="pr-4 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="pl-4">
-                        {editingProductId === product.id && editDraft ? (
-                          <div className="grid gap-2">
-                            <Input
-                              value={editDraft.medicineName}
-                              onChange={(event) =>
-                                setEditDraft((current) =>
-                                  current ? { ...current, medicineName: event.target.value } : current
-                                )
-                              }
-                            />
-                            <Textarea
-                              value={editDraft.description ?? ""}
-                              onChange={(event) =>
-                                setEditDraft((current) =>
-                                  current ? { ...current, description: event.target.value } : current
-                                )
-                              }
-                              className="min-h-16 text-xs"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <ProductThumb product={product} />
-                            <div className="min-w-0">
-                              <p className="font-medium">{product.medicineName}</p>
-                              <p className="line-clamp-1 text-xs text-muted-foreground">
-                                {product.description ?? "No product description added yet."}
-                              </p>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {product.form} / {product.strength}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {editingProductId === product.id && editDraft ? (
-                          <Select
-                            value={editDraft.category}
-                            onValueChange={(value) =>
-                              setEditDraft((current) =>
-                                current ? { ...current, category: value as PharmacyCategory } : current
-                              )
-                            }
-                          >
-                            <SelectTrigger className="w-44">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categoryOptions.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          product.category
-                        )}
-                      </TableCell>
-                      <TableCell className="tabular-nums">
-                        {editingProductId === product.id && editDraft ? (
-                          <Input
-                            value={String(editDraft.unitPrice)}
-                            onChange={(event) =>
-                              setEditDraft((current) =>
-                                current ? { ...current, unitPrice: Number(event.target.value) || 0 } : current
-                              )
-                            }
-                            className="w-24"
-                            inputMode="numeric"
-                          />
-                        ) : (
-                          `TZS ${product.unitPrice}`
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingProductId === product.id && editDraft ? (
-                          <Select
-                            value={editDraft.stockStatus}
-                            onValueChange={(value) =>
-                              setEditDraft((current) =>
-                                current ? { ...current, stockStatus: value as StockStatus } : current
-                              )
-                            }
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {stockOptions.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {stockLabel[option]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <StatusPill tone={stockTone[product.stockStatus]}>
-                            {stockLabel[product.stockStatus]}
-                          </StatusPill>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusPill tone={productStatusTone[product.productStatus]}>
-                          {productStatusLabel[product.productStatus]}
-                        </StatusPill>
-                      </TableCell>
-                      <TableCell className="pr-4">
-                        {editingProductId === product.id && editDraft ? (
-                          <label className="inline-flex items-center gap-2 text-xs">
-                            <input
-                              checked={editDraft.requiresPrescription}
-                              className="size-4 accent-primary"
-                              onChange={(event) =>
-                                setEditDraft((current) =>
-                                  current
-                                    ? { ...current, requiresPrescription: event.target.checked }
-                                    : current
-                                )
-                              }
-                              type="checkbox"
-                            />
-                            Prescription
-                          </label>
-                        ) : product.requiresPrescription ? (
-                          <StatusPill tone="info">Prescription</StatusPill>
-                        ) : (
-                          <StatusPill tone="neutral">Public</StatusPill>
-                        )}
-                      </TableCell>
-                      <TableCell className="pr-4">
-                        <div className="flex justify-end gap-1.5">
-                          {editingProductId === product.id ? (
-                            <>
-                              <Button size="icon-sm" variant="outline" onClick={saveEdit} aria-label="Save product">
-                                <Save className="size-3.5" />
-                              </Button>
-                              <Button size="icon-sm" variant="ghost" onClick={cancelEdit} aria-label="Cancel edit">
-                                <X className="size-3.5" />
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button size="icon-sm" variant="ghost" onClick={() => startEdit(product)} aria-label="Edit product">
-                                <Edit3 className="size-3.5" />
-                              </Button>
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  patchProduct(product.id, {
-                                    productStatus:
-                                      product.productStatus === "coming_soon"
-                                        ? "published"
-                                        : "coming_soon",
-                                  })
-                                }
-                                aria-label="Toggle coming soon"
-                              >
-                                <Timer className="size-3.5" />
-                              </Button>
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  patchProduct(product.id, {
-                                    productStatus:
-                                      product.productStatus === "hidden" ? "published" : "hidden",
-                                  })
-                                }
-                                aria-label="Toggle product visibility"
-                              >
-                                {product.productStatus === "hidden" ? (
-                                  <Eye className="size-3.5" />
-                                ) : (
-                                  <EyeOff className="size-3.5" />
-                                )}
-                              </Button>
-                              <Button
-                                size="icon-sm"
-                                variant="destructive"
-                                onClick={() => deleteProduct(product.id)}
-                                aria-label="Delete product"
-                              >
-                                <Trash2 className="size-3.5" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search medicine, category, or description"
+              className="pl-8"
+            />
           </div>
+          <Select value={category} onValueChange={(value) => setCategory(value as PharmacyCategory | "all")}>
+            <SelectTrigger className="w-full sm:w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categoryOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={visibility}
+            onValueChange={(value) => setVisibility(value as PharmacyItemStatus | "all")}
+          >
+            <SelectTrigger className="w-full sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All status</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="coming_soon">Coming soon</SelectItem>
+              <SelectItem value="hidden">Hidden</SelectItem>
+            </SelectContent>
+          </Select>
+          <PharmacyItemDialog mode="create" />
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-border bg-background">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-4">Product</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Rules</TableHead>
+                <TableHead className="pr-4 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    {products.length === 0
+                      ? "No products yet. Add your first one to start the catalog."
+                      : t("admin_no_results", locale)}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredProducts.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="pl-4">
+                      <div className="flex items-center gap-3">
+                        <ProductThumb product={product} />
+                        <div className="min-w-0">
+                          <p className="font-medium">{product.medicineName}</p>
+                          <p className="line-clamp-1 max-w-72 text-xs text-muted-foreground">
+                            {product.description || "No description yet."}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {product.form} · {product.strength}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{product.category}</TableCell>
+                    <TableCell className="tabular-nums">TZS {product.unitPrice}</TableCell>
+                    <TableCell>
+                      <StatusPill tone={stockTone[product.stockStatus]}>
+                        {stockLabel[product.stockStatus]}
+                      </StatusPill>
+                    </TableCell>
+                    <TableCell>
+                      <StatusPill tone={itemStatusTone[product.status]}>
+                        {itemStatusLabel[product.status]}
+                      </StatusPill>
+                    </TableCell>
+                    <TableCell>
+                      {product.requiresPrescription ? (
+                        <StatusPill tone="info">Prescription</StatusPill>
+                      ) : (
+                        <StatusPill tone="neutral">Public</StatusPill>
+                      )}
+                    </TableCell>
+                    <TableCell className="pr-4">
+                      <div className="flex justify-end gap-1.5">
+                        <PharmacyItemDialog mode="edit" item={product} />
+                        <ItemStatusForm
+                          itemId={product.id}
+                          currentStatus={product.status}
+                        />
+                        <form action={deletePharmacyItem}>
+                          <input type="hidden" name="itemId" value={product.id} />
+                          <Button
+                            type="submit"
+                            size="icon-sm"
+                            variant="destructive"
+                            aria-label={`Delete ${product.medicineName}`}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </form>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </TabsContent>
 
       <TabsContent value="orders">
-        <div className="rounded-xl border border-border bg-background">
+        <div className="overflow-x-auto rounded-xl border border-border bg-background">
           <Table>
             <TableHeader>
               <TableRow>
@@ -682,54 +331,284 @@ export function PharmacyPanel({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="pl-4 font-mono text-xs">{order.patientReference}</TableCell>
-                  <TableCell className="max-w-56 text-muted-foreground">
-                    <span className="line-clamp-1">
-                      {order.items.map((item) => item.prescribedMedicationName).join(", ")}
-                    </span>
-                    {order.substitutionRequested ? (
-                      <StatusPill tone="urgent" className="mt-1">
-                        {t("admin_substitution_flag", locale)}
-                      </StatusPill>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="capitalize text-muted-foreground">
-                    {order.fulfillmentMethod}
-                  </TableCell>
-                  <TableCell className="tabular-nums">TZS {order.total}</TableCell>
-                  <TableCell>
-                    <StatusPill tone={statusTone[order.status]}>
-                      {t(adminPharmacyOrderStatusKey[order.status] as TranslationKey, locale)}
-                    </StatusPill>
-                  </TableCell>
-                  <TableCell className="pr-4">
-                    <Select
-                      value={order.status}
-                      onValueChange={(value) =>
-                        onStatusChange(order.id, order.patientReference, value as PharmacyOrderStatus)
-                      }
-                    >
-                      <SelectTrigger size="sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOrder.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {t(adminPharmacyOrderStatusKey[status] as TranslationKey, locale)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {orders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    No pharmacy orders yet.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="pl-4 font-mono text-xs">{order.patientReference}</TableCell>
+                    <TableCell className="max-w-56 text-muted-foreground">
+                      <span className="line-clamp-1">
+                        {order.items.map((item) => item.prescribedMedicationName).join(", ")}
+                      </span>
+                      {order.substitutionRequested ? (
+                        <StatusPill tone="urgent" className="mt-1">
+                          {t("admin_substitution_flag", locale)}
+                        </StatusPill>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="capitalize text-muted-foreground">
+                      {order.fulfillmentMethod}
+                    </TableCell>
+                    <TableCell className="tabular-nums">TZS {order.total}</TableCell>
+                    <TableCell>
+                      <StatusPill tone={orderStatusTone[order.status]}>
+                        {t(adminPharmacyOrderStatusKey[order.status] as TranslationKey, locale)}
+                      </StatusPill>
+                    </TableCell>
+                    <TableCell className="pr-4">
+                      <Select
+                        value={order.status}
+                        disabled={orderPending}
+                        onValueChange={(value) =>
+                          handleOrderStatusChange(order.id, value as PharmacyOrderStatus)
+                        }
+                      >
+                        <SelectTrigger size="sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {orderStatusOrder.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {t(adminPharmacyOrderStatusKey[status] as TranslationKey, locale)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </TabsContent>
     </Tabs>
+  );
+}
+
+function ItemStatusForm({
+  itemId,
+  currentStatus,
+}: {
+  itemId: string;
+  currentStatus: PharmacyItemStatus;
+}) {
+  const next = currentStatus === "hidden" ? "published" : "hidden";
+  return (
+    <form action={setPharmacyItemStatus}>
+      <input type="hidden" name="itemId" value={itemId} />
+      <input type="hidden" name="status" value={next} />
+      <Button
+        type="submit"
+        size="sm"
+        variant="outline"
+        aria-label={currentStatus === "hidden" ? "Publish product" : "Hide product"}
+      >
+        {currentStatus === "hidden" ? "Publish" : "Hide"}
+      </Button>
+    </form>
+  );
+}
+
+function PharmacyItemDialog({
+  mode,
+  item,
+}: {
+  mode: "create" | "edit";
+  item?: PharmacyItem;
+}) {
+  const [open, setOpen] = useState(false);
+  const action = mode === "create" ? createPharmacyItem : updatePharmacyItem;
+  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const [imageName, setImageName] = useState("");
+  const [removeImage, setRemoveImage] = useState(false);
+
+  useEffect(() => {
+    // The table refreshes underneath via revalidatePath; just close once a
+    // submission actually succeeds. Deferred a tick so this isn't a direct
+    // synchronous setState-in-effect (React flags that as a footgun even
+    // though it's a one-shot response to an async action completing, not a
+    // derived-state loop).
+    if (state.status !== "success") return;
+    const timeoutId = setTimeout(() => setOpen(false), 0);
+    return () => clearTimeout(timeoutId);
+  }, [state]);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) {
+          setImageName("");
+          setRemoveImage(false);
+        }
+      }}
+    >
+      {mode === "create" ? (
+        <DialogTrigger render={<Button className="shrink-0" />}>
+          <PackagePlus className="size-4" />
+          Add product
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger render={<Button size="icon-sm" variant="ghost" />} aria-label={`Edit ${item?.medicineName}`}>
+          <Edit3 className="size-3.5" />
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{mode === "create" ? "Add product" : `Edit ${item?.medicineName}`}</DialogTitle>
+          <DialogDescription>
+            {mode === "create"
+              ? "New products are added as published by default and appear on the storefront right away."
+              : "Changes apply to the live storefront as soon as you save."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form action={formAction} className="grid gap-3">
+          {mode === "edit" && item ? <input type="hidden" name="itemId" value={item.id} /> : null}
+
+          {state.status === "error" ? (
+            <p role="alert" className="rounded-lg bg-urgent-soft px-3 py-2 text-sm text-urgent">
+              {state.message}
+            </p>
+          ) : null}
+
+          <Field label="Medicine name">
+            <Input
+              name="medicineName"
+              defaultValue={item?.medicineName}
+              placeholder="Paracetamol 500mg"
+              required
+            />
+          </Field>
+
+          <Field label="Description">
+            <Textarea
+              name="description"
+              defaultValue={item?.description}
+              placeholder="Short customer-facing description and usage notes."
+              className="min-h-20"
+            />
+          </Field>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Category">
+              <Select name="category" defaultValue={item?.category ?? "Pain relief"}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Price (TZS)">
+              <Input
+                name="unitPrice"
+                defaultValue={item?.unitPrice}
+                inputMode="numeric"
+                placeholder="1500"
+                required
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Form">
+              <Input name="form" defaultValue={item?.form} placeholder="Tablet" />
+            </Field>
+            <Field label="Strength">
+              <Input name="strength" defaultValue={item?.strength} placeholder="500mg" />
+            </Field>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Stock">
+              <Select name="stockStatus" defaultValue={item?.stockStatus ?? "in_stock"}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {stockOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {stockLabel[option]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Store status">
+              <Select name="status" defaultValue={item?.status ?? "published"}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="coming_soon">Coming soon</SelectItem>
+                  <SelectItem value="hidden">Hidden</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+            <span>
+              <span className="block font-medium">Requires prescription</span>
+              <span className="text-xs text-muted-foreground">
+                Only shows for patients with a doctor-signed prescription.
+              </span>
+            </span>
+            <input
+              name="requiresPrescription"
+              type="checkbox"
+              defaultChecked={item?.requiresPrescription}
+              className="size-4 accent-primary"
+            />
+          </label>
+
+          <Field label="Product image">
+            <label className="flex h-20 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+              <PackagePlus className="size-4" />
+              {imageName || (item?.photoUrl ? "Replace image" : "Choose image")}
+              <input
+                name="image"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                type="file"
+                onChange={(event) => setImageName(event.target.files?.[0]?.name ?? "")}
+              />
+            </label>
+            {item?.photoUrl && !removeImage ? (
+              <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  name="removeImage"
+                  type="checkbox"
+                  checked={removeImage}
+                  onChange={(event) => setRemoveImage(event.target.checked)}
+                  className="size-3.5 accent-destructive"
+                />
+                Remove current image
+              </label>
+            ) : null}
+          </Field>
+
+          <Button type="submit" disabled={pending} className="mt-1">
+            <PackagePlus className="size-4" />
+            {pending ? "Saving..." : mode === "create" ? "Add product" : "Save changes"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

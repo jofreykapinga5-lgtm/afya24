@@ -3,45 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
+import { actionErrorMessage, formString, requireAdmin } from "@/lib/admin/auth";
 import type { ProviderStatus } from "@/lib/types";
 
 export type AdminActionState = {
   status: "idle" | "success" | "error";
   message: string;
 };
-
-function actionErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
-}
-
-async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/doctor");
-  }
-
-  const service = createServiceClient();
-  const { data: profile, error } = await service
-    .from("users")
-    .select("id, role, status")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (error || profile?.role !== "admin" || profile.status !== "active") {
-    redirect("/doctor/dashboard");
-  }
-
-  return { adminUserId: user.id, service };
-}
-
-function formString(formData: FormData, key: string) {
-  return String(formData.get(key) ?? "").trim();
-}
 
 function formModes(formData: FormData) {
   const modes = formData

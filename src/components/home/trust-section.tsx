@@ -1,39 +1,34 @@
 "use client";
 
 import Image from "next/image";
-import { SectionHeading } from "@/components/home/section-heading";
+import { Lock, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
 
 const points: {
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
-  image: string;
-  alt: string;
+  icon: typeof ShieldCheck;
 }[] = [
   {
     titleKey: "trust_point1_title",
     bodyKey: "trust_point1_body",
-    image: "/images/trust/licensed-doctor.jpg",
-    alt: "Smiling licensed doctor with a tablet",
+    icon: ShieldCheck,
   },
   {
     titleKey: "trust_point2_title",
     bodyKey: "trust_point2_body",
-    image: "/images/trust/ai-assist.jpg",
-    alt: "Doctor preparing for a virtual care session",
+    icon: Sparkles,
   },
   {
     titleKey: "trust_point4_title",
     bodyKey: "trust_point4_body",
-    image: "/images/trust/secure-records.jpg",
-    alt: "Clinician writing secure patient notes",
+    icon: Lock,
   },
   {
     titleKey: "trust_point5_title",
     bodyKey: "trust_point5_body",
-    image: "/images/trust/urgent-boundaries.jpg",
-    alt: "Doctor speaking with a patient by phone",
+    icon: TriangleAlert,
   },
 ];
 
@@ -41,64 +36,54 @@ export function TrustSection() {
   const locale = useAppStore((state) => state.locale);
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-[#fbf7f0] px-4 py-5 shadow-[0_28px_80px_-55px_rgba(8,50,115,0.45)] sm:px-6 lg:px-8 lg:py-8">
-      <div className="pointer-events-none absolute -left-28 -top-6 h-56 w-56 rounded-full bg-brand-teal/20" />
-      <div className="pointer-events-none absolute -bottom-32 right-12 h-72 w-72 rounded-full bg-primary/10" />
+    <section className="relative isolate overflow-hidden rounded-[2rem] shadow-[0_28px_80px_-55px_rgba(8,50,115,0.55)]">
+      <Image
+        src="/images/trust/trust-panel-blue.png"
+        alt=""
+        fill
+        priority={false}
+        sizes="(min-width: 1024px) 1024px, 100vw"
+        className="absolute inset-0 -z-20 object-cover object-[68%_center]"
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#03302e]/70 via-[#075554]/50 to-[#087a7b]/25" />
+      <div className="absolute inset-0 -z-10 bg-brand-teal/10 mix-blend-multiply" />
 
-      <div className="relative grid gap-5 lg:grid-cols-[0.72fr_1.45fr] lg:items-start">
+      <div className="relative grid gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[0.8fr_1.3fr] lg:items-center lg:gap-10">
         <div>
-          <SectionHeading eyebrow={t("trust_section_badge", locale)} body={t("trust_section_body", locale)}>
-            <span className="text-[#01b7bb]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80 [text-shadow:0_1px_12px_rgba(3,25,24,0.85)]">
+            {t("trust_section_badge", locale)}
+          </p>
+          <h2 className="mt-4 max-w-[26ch] text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#7cf1ee] [text-shadow:0_2px_20px_rgba(3,25,24,0.85)]">
             {t("trust_section_title", locale)}
-            </span>
-          </SectionHeading>
-
-          <div className="relative mt-5 hidden min-h-[220px] pt-4 sm:block">
-            <div className="absolute bottom-0 left-8 h-44 w-[78%] rounded-t-[8rem] bg-brand-teal/12" />
-            <div className="relative h-[230px] overflow-hidden rounded-t-[7rem] rounded-br-[2rem] bg-white shadow-[0_25px_55px_-35px_rgba(8,50,115,0.65)]">
-              <Image
-                src="/images/trust/doctor-video-consult.jpg"
-                alt="Doctor smiling during an online consultation"
-                fill
-                sizes="(min-width: 1024px) 390px, 92vw"
-                className="object-cover object-center"
-              />
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/35 to-transparent" />
-            </div>
-
-            <div className="absolute bottom-4 right-0 max-w-[220px] rounded-2xl bg-[#087a7b] p-3 text-white shadow-[0_20px_45px_-25px_rgba(8,50,115,0.9)]">
-              <p className="text-sm font-semibold leading-snug">{t("trust_section_photo_badge", locale)}</p>
-            </div>
-          </div>
+          </h2>
+          <p className="mt-4 max-w-[42ch] text-sm leading-6 text-white/90 [text-shadow:0_1px_14px_rgba(3,25,24,0.85)]">
+            {t("trust_section_body", locale)}
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-          {points.map((point) => (
-            <article
-              key={point.titleKey}
-              className="flex min-h-[160px] flex-col items-center rounded-2xl bg-white/82 px-3 py-4 text-center shadow-[0_18px_45px_-38px_rgba(8,50,115,0.5)] ring-1 ring-primary/5 backdrop-blur sm:min-h-[190px] sm:px-4 sm:py-5"
-            >
-              <div className="relative size-16 overflow-hidden rounded-full bg-[#e8f3ef] ring-6 ring-[#f2f5ee] sm:size-20">
-                <Image
-                  src={point.image}
-                  alt={point.alt}
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
+          {points.map((point) => {
+            const Icon = point.icon;
+            return (
+              <div key={point.titleKey} className="flex items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/30 backdrop-blur-sm">
+                  <Icon className="size-4.5" strokeWidth={1.75} />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold leading-tight text-white [text-shadow:0_1px_12px_rgba(3,25,24,0.85)] sm:text-[15px]">
+                    {t(point.titleKey, locale)}
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-white/90 [text-shadow:0_1px_10px_rgba(3,25,24,0.85)]">
+                    {t(point.bodyKey, locale)}
+                  </p>
+                </div>
               </div>
-              <h3 className="mt-3 max-w-[12rem] text-sm font-bold leading-tight tracking-tight text-[#064f55] sm:text-base">
-                {t(point.titleKey, locale)}
-              </h3>
-              <p className="mt-2 line-clamp-3 max-w-[13rem] text-xs leading-5 text-[#4f5b61]">
-                {t(point.bodyKey, locale)}
-              </p>
-            </article>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      <div className="relative mt-4 rounded-2xl bg-[#e8f2ee] px-4 py-3 text-center text-xs font-medium leading-5 text-[#0f5d63] sm:text-sm sm:leading-6">
+      <div className="relative border-t border-white/20 px-5 py-4 text-center text-xs font-medium leading-5 text-white/95 [text-shadow:0_1px_12px_rgba(3,25,24,0.85)] sm:px-8 sm:text-sm sm:leading-6">
         {t("trust_section_footer", locale)}
       </div>
     </section>

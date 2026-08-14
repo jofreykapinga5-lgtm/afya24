@@ -74,11 +74,6 @@ const navItems = [
   { label: "Files", icon: FileText },
 ];
 
-const mobileNavItems = navItems.map((item, index) => ({
-  ...item,
-  href: index === 0 ? "#overview" : `#${item.label.toLowerCase().replaceAll(" ", "-")}`,
-}));
-
 const modeIcon: Record<ConsultationMode, typeof MessageCircle> = {
   chat: MessageCircle,
   voice: HeartPulse,
@@ -239,7 +234,7 @@ export default async function AccountDashboardPage() {
           />
         </Link>
 
-        <PatientDashboardMobileMenu items={mobileNavItems} />
+        <PatientDashboardMobileMenu />
       </div>
 
       <div className="mx-auto grid w-full max-w-7xl rounded-[1.75rem] bg-[#f8fbfd] shadow-[0_28px_90px_-50px_rgba(8,50,115,0.55)] lg:grid-cols-[250px_1fr]">

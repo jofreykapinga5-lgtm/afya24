@@ -2,17 +2,34 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogOut, Menu } from "lucide-react";
+import {
+  CreditCard,
+  FileText,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Stethoscope,
+  Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "../actions";
 
-type MobileMenuItem = {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
+// Defined here rather than passed in as a prop: a Server Component can't
+// hand a Client Component raw icon component references (React can't
+// serialize functions across that boundary -- it throws "Functions cannot
+// be passed directly to Client Components"), so this list has to be local
+// to the client tree instead of built in dashboard/page.tsx.
+const items = [
+  { label: "Overview", href: "#overview", icon: LayoutDashboard },
+  { label: "Book a call", href: "#book-a-call", icon: Video },
+  { label: "Doctors", href: "#doctors", icon: Stethoscope },
+  { label: "History", href: "#history", icon: History },
+  { label: "Payments", href: "#payments", icon: CreditCard },
+  { label: "Files", href: "#files", icon: FileText },
+];
 
-export function PatientDashboardMobileMenu({ items }: { items: MobileMenuItem[] }) {
+export function PatientDashboardMobileMenu() {
   const [open, setOpen] = useState(false);
 
   return (

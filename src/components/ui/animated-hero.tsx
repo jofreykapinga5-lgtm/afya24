@@ -42,15 +42,15 @@ function Hero() {
         sizes="100vw"
         className="absolute inset-0 -z-20 object-cover object-[70%_center] sm:object-[62%_center]"
       />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#052052]/97 via-[#083273]/78 to-[#083273]/25" />
-      <div className="absolute inset-0 -z-10 bg-[#01b7bb]/22 mix-blend-multiply" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#052052]/70 via-[#083273]/40 to-[#083273]/10" />
+      <div className="absolute inset-0 -z-10 bg-[#01b7bb]/10 mix-blend-multiply" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-36 bg-gradient-to-t from-[#e9f8f7] to-transparent" />
 
       <div className="container relative mx-auto px-4 sm:px-6">
         <div className="flex min-h-[560px] flex-col items-center justify-center py-16 text-center sm:py-20 lg:py-24">
           <Reveal variant="fade">
             <div className="flex max-w-2xl flex-col items-center gap-5 text-center">
-              <h1 className="text-4xl font-bold leading-[1.15] tracking-[-0.03em] text-white sm:text-5xl sm:leading-[1.15] lg:text-6xl">
+              <h1 className="text-4xl font-bold leading-[1.15] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(5,32,82,0.55)] sm:text-5xl sm:leading-[1.15] lg:text-6xl">
                 {t("hero_headline_prefix", locale)}
                 <span className="relative flex h-[1.15em] w-full items-center justify-center overflow-hidden text-[#7cf1ee]">
                   {titles.map((title, index) =>
@@ -77,14 +77,14 @@ function Hero() {
                 </span>
               </h1>
 
-              <p className="max-w-xl text-base leading-relaxed text-white/84 sm:text-lg">
+              <p className="max-w-xl text-base leading-relaxed text-white/90 [text-shadow:0_1px_16px_rgba(5,32,82,0.55)] sm:text-lg">
                 {t("hero_body", locale)}
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                 <Link
                   href="/doctors"
-                  className="group inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-[#2f6fc0] px-8 text-base font-bold text-white shadow-[0_22px_50px_-20px_rgba(47,111,192,0.85)] ring-1 ring-white/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#3c7ecf] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#2f6fc0]/50"
+                  className="group inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-base font-bold text-primary-foreground shadow-[0_22px_50px_-20px_rgba(47,111,192,0.85)] ring-1 ring-white/25 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/50"
                 >
                   {t("hero_get_help_cta", locale)}
                   <ArrowRight className="size-5 transition-transform duration-200 group-hover:translate-x-0.5" />

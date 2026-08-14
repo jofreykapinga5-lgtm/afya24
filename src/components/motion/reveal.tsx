@@ -25,11 +25,9 @@ export function Reveal({ children, className, delay = 0, variant = "swipe" }: Re
     const node = ref.current;
     if (!node) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
-    }
-
+    // Reduced motion still gets an opacity fade-in (motion-reduce: below
+    // neutralizes the transform/scale) -- it just doesn't need the eager
+    // synchronous reveal a `matchMedia` branch here used to trigger.
     const observer = new IntersectionObserver(
       ([entry]) => {
         setVisible(entry.isIntersecting);

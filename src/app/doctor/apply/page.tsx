@@ -106,8 +106,8 @@ export default function DoctorApplicationPage() {
                       <Field label="Email" required>
                         <Input name="email" type="email" required placeholder="doctor@email.com" />
                       </Field>
-                      <Field label="Phone">
-                        <Input name="phone" placeholder="+255..." />
+                      <Field label="Phone" required>
+                        <Input name="phone" required placeholder="+255..." />
                       </Field>
                       <Field label="Region">
                         <Input name="region" placeholder="Dar es Salaam" />

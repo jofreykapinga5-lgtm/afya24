@@ -36,9 +36,9 @@ export async function POST(request: Request) {
   const consultationModes = formData.getAll("consultationModes").map(String).filter(Boolean);
   const file = formData.get("file");
 
-  if (!fullName || !email || !specialty || !licenseNumber) {
+  if (!fullName || !email || !phone || !specialty || !licenseNumber) {
     return NextResponse.json(
-      { error: "Full name, email, license number, and specialty are required." },
+      { error: "Full name, email, phone number, license number, and specialty are required." },
       { status: 400 }
     );
   }

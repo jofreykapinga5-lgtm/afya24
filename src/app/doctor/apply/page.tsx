@@ -117,11 +117,6 @@ export default function DoctorApplicationPage() {
                 </div>
               ) : (
                 <form onSubmit={submitApplication} className="grid gap-7" noValidate>
-                  <div>
-                    <h2 className="text-xl font-bold">Doctor application</h2>
-                    <p className="mt-1 text-sm text-[#60717a]">Your documents are handled privately by the Afya24 team.</p>
-                  </div>
-
                   <FormSection title="Personal details">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field label="Full name" required>

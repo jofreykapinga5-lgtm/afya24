@@ -49,7 +49,7 @@ function Hero() {
       <div className="container relative mx-auto px-4 sm:px-6">
         <div className="flex min-h-[560px] flex-col items-center justify-center py-16 text-center sm:py-20 lg:py-24">
           <Reveal variant="fade">
-            <div className="flex max-w-2xl flex-col items-center gap-5 text-center">
+            <div className="flex max-w-2xl flex-col items-center gap-6 text-center">
               <h1 className="text-4xl font-bold leading-[1.15] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(5,32,82,0.55)] sm:text-5xl sm:leading-[1.15] lg:text-6xl">
                 {t("hero_headline_prefix", locale)}
                 <span className="relative flex h-[1.15em] w-full items-center justify-center overflow-hidden text-[#7cf1ee]">
@@ -77,11 +77,7 @@ function Hero() {
                 </span>
               </h1>
 
-              <p className="max-w-xl text-base leading-relaxed text-white/90 [text-shadow:0_1px_16px_rgba(5,32,82,0.55)] sm:text-lg">
-                {t("hero_body", locale)}
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <Link
                   href="/doctors"
                   className="group inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-base font-bold text-primary-foreground shadow-[0_22px_50px_-20px_rgba(47,111,192,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/50"

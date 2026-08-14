@@ -1064,9 +1064,9 @@ const dict = {
     en: "You can review your own record, and you can reach out to have your account and its associated data deleted, subject to the clinical and legal record-keeping obligations that apply to healthcare providers.",
     sw: "Unaweza kupitia rekodi yako mwenyewe, na unaweza kuwasiliana ili akaunti yako na data inayohusiana ifutwe, kulingana na wajibu wa kisheria na kitabibu wa kuhifadhi rekodi unaowahusu watoa huduma za afya.",
   },
-  hero_body: {
-    en: "Skip the waiting room. Tell Afya24 what's going on, then connect with a licensed doctor by chat, voice, or video — direct-pay, no insurance paperwork.",
-    sw: "Ruka foleni ya kusubiri. Mwambie Afya24 kinachoendelea, kisha uunganishwe na daktari mwenye leseni kwa ujumbe, sauti, au video — lipa moja kwa moja, bila makaratasi ya bima.",
+  ai_chat_intro: {
+    en: "Tell Afya24 what's going on, and we'll match you with the right doctor.",
+    sw: "Mwambie Afya24 kinachoendelea, tukukutanishe na daktari sahihi.",
   },
   qualification_ai_name: {
     en: "Afya24",

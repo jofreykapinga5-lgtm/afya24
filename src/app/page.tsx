@@ -16,6 +16,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
+import { t } from "@/lib/i18n";
 import type { Provider } from "@/lib/types";
 
 export default async function Home() {
@@ -70,6 +71,9 @@ export default async function Home() {
 
         <section className="bg-[#e9f8f7] px-4 pb-10 pt-8 sm:px-6 sm:pb-12">
           <div className="mx-auto w-full max-w-xl">
+            <p className="mb-4 text-center text-base font-medium leading-relaxed text-[#083273] sm:text-lg">
+              {t("ai_chat_intro", locale)}
+            </p>
             <AiChatHeroCard />
           </div>
         </section>

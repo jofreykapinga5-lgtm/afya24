@@ -539,6 +539,8 @@ const dict = {
   header_doctor_admin_login: { en: "Staff login", sw: "Kuingia kwa wafanyakazi" },
   header_sign_up: { en: "Sign up", sw: "Jisajili" },
   header_log_in: { en: "Log in", sw: "Ingia" },
+  header_my_account: { en: "My account", sw: "Akaunti yangu" },
+  header_log_out: { en: "Log out", sw: "Toka" },
   header_help: { en: "Help", sw: "Msaada" },
   header_search_aria: { en: "Search for care", sw: "Tafuta huduma" },
   header_search_placeholder: {

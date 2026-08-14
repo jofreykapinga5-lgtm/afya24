@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { SiteHeader } from "@/components/site-header";
 import { getServerLocale } from "@/lib/locale-cookie";
+import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 
 const geistSans = Geist({
@@ -27,6 +28,20 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getServerLocale();
 
+  // Header needs to know whether to show "Log in" or the account menu.
+  // Only patients get an account menu here -- doctors/admins have their own
+  // dashboards and a Supabase session from browsing there shouldn't make the
+  // public marketing header look like a patient is signed in (see the
+  // "navbar must stay patient-first" rule).
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const patientName =
+    user?.user_metadata?.role === "patient" && typeof user.user_metadata.full_name === "string"
+      ? user.user_metadata.full_name
+      : null;
+
   return (
     <html
       lang={locale}
@@ -34,7 +49,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <SiteHeader />
+          <SiteHeader patientName={patientName} />
           {children}
         </QueryProvider>
       </body>

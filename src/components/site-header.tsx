@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { ChevronDown, CircleHelp, Menu, Search, Stethoscope, User, X } from "lucide-react";
+import { ChevronDown, CircleHelp, LayoutDashboard, LogOut, Menu, Search, Stethoscope, User, X } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { signOut } from "@/app/account/actions";
 import {
   Sheet,
   SheetContent,
@@ -30,7 +31,11 @@ const navLinks: { href: string; labelKey: TranslationKey }[] = [
 
 const headerHiddenPrefixes = ["/account", "/admin", "/auth", "/consultation", "/doctor"];
 
-export function SiteHeader() {
+function firstName(fullName: string) {
+  return fullName.replace(/^Dr\.\s*/i, "").split(" ")[0] || fullName;
+}
+
+export function SiteHeader({ patientName }: { patientName: string | null }) {
   const locale = useAppStore((state) => state.locale);
   const router = useRouter();
   const pathname = usePathname();
@@ -191,28 +196,56 @@ export function SiteHeader() {
               </div>
 
               <div className="mt-2 flex flex-col gap-2 border-t border-border px-4 pt-4 sm:hidden">
-                <SheetClose
-                  nativeButton={false}
-                  render={
-                    <Link
-                      href="/account"
-                      className="flex h-11 items-center justify-center rounded-full border border-border text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                    />
-                  }
-                >
-                  {t("header_log_in", locale)}
-                </SheetClose>
-                <SheetClose
-                  nativeButton={false}
-                  render={
-                    <Link
-                      href="/account/sign-up"
-                      className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    />
-                  }
-                >
-                  {t("header_sign_up", locale)}
-                </SheetClose>
+                {patientName ? (
+                  <>
+                    <SheetClose
+                      nativeButton={false}
+                      render={
+                        <Link
+                          href="/account/dashboard"
+                          className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-border text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
+                        />
+                      }
+                    >
+                      <LayoutDashboard className="size-3.5" />
+                      {t("header_my_account", locale)}
+                    </SheetClose>
+                    <form action={signOut}>
+                      <button
+                        type="submit"
+                        className="flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-destructive/10 px-4 text-sm font-semibold text-destructive outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      >
+                        <LogOut className="size-3.5" />
+                        {t("header_log_out", locale)}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <SheetClose
+                      nativeButton={false}
+                      render={
+                        <Link
+                          href="/account"
+                          className="flex h-11 items-center justify-center rounded-full border border-border text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
+                        />
+                      }
+                    >
+                      {t("header_log_in", locale)}
+                    </SheetClose>
+                    <SheetClose
+                      nativeButton={false}
+                      render={
+                        <Link
+                          href="/account/sign-up"
+                          className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                        />
+                      }
+                    >
+                      {t("header_sign_up", locale)}
+                    </SheetClose>
+                  </>
+                )}
               </div>
               <SheetHeader>
                 <button
@@ -272,7 +305,7 @@ export function SiteHeader() {
               className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <User className="size-4" />
-              {t("header_log_in", locale)}
+              {patientName ? firstName(patientName) : t("header_log_in", locale)}
               <ChevronDown
                 className={`size-4 transition-transform ${loginMenuOpen ? "rotate-180" : ""}`}
               />
@@ -283,22 +316,48 @@ export function SiteHeader() {
                 role="menu"
                 className="absolute right-0 top-[calc(100%+0.35rem)] z-50 w-44 overflow-hidden rounded-lg border border-border bg-popover py-1 text-sm text-popover-foreground shadow-lg"
               >
-                <Link
-                  href="/account"
-                  role="menuitem"
-                  onClick={() => setLoginMenuOpen(false)}
-                  className="block px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
-                >
-                  {t("header_log_in", locale)}
-                </Link>
-                <Link
-                  href="/account/sign-up"
-                  role="menuitem"
-                  onClick={() => setLoginMenuOpen(false)}
-                  className="block px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
-                >
-                  {t("header_sign_up", locale)}
-                </Link>
+                {patientName ? (
+                  <>
+                    <Link
+                      href="/account/dashboard"
+                      role="menuitem"
+                      onClick={() => setLoginMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
+                    >
+                      <LayoutDashboard className="size-3.5" />
+                      {t("header_my_account", locale)}
+                    </Link>
+                    <form action={signOut}>
+                      <button
+                        type="submit"
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-destructive outline-none hover:bg-secondary focus:bg-secondary"
+                      >
+                        <LogOut className="size-3.5" />
+                        {t("header_log_out", locale)}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/account"
+                      role="menuitem"
+                      onClick={() => setLoginMenuOpen(false)}
+                      className="block px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
+                    >
+                      {t("header_log_in", locale)}
+                    </Link>
+                    <Link
+                      href="/account/sign-up"
+                      role="menuitem"
+                      onClick={() => setLoginMenuOpen(false)}
+                      className="block px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
+                    >
+                      {t("header_sign_up", locale)}
+                    </Link>
+                  </>
+                )}
               </div>
             ) : null}
           </div>

@@ -20,7 +20,15 @@ const callModeCopy: Record<"voice" | "video", { titleKey: "doctor_booking_mode_v
   },
 };
 
-export function BookingForm({ provider, locale }: { provider: Provider; locale: Locale }) {
+export function BookingForm({
+  provider,
+  locale,
+  hasSession,
+}: {
+  provider: Provider;
+  locale: Locale;
+  hasSession: boolean;
+}) {
   const router = useRouter();
   const qualificationResult = useAppStore((state) => state.qualificationResult);
   const availableCallModes = provider.consultationModes.filter(
@@ -40,6 +48,10 @@ export function BookingForm({ provider, locale }: { provider: Provider; locale: 
       setError("This doctor is not accepting voice or video calls right now.");
       return;
     }
+    if (!hasSession) {
+      setError(t("doctor_booking_no_session_body", locale));
+      return;
+    }
     startTransition(async () => {
       try {
         const appointmentId = await bookConsultation({
@@ -49,8 +61,12 @@ export function BookingForm({ provider, locale }: { provider: Provider; locale: 
           qualification: qualificationResult,
         });
         router.push(`/consultation/${appointmentId}?mode=${mode}`);
-      } catch {
-        setError(t("doctor_booking_error", locale));
+      } catch (err) {
+        // Show the real reason instead of a generic "try again" -- the fix
+        // is usually specific (session expired, no doctors available, a
+        // database error) and "try again" alone won't help when the same
+        // click will just fail the same way again.
+        setError(err instanceof Error ? err.message : t("doctor_booking_error", locale));
       }
     });
   }
@@ -94,7 +110,7 @@ export function BookingForm({ provider, locale }: { provider: Provider; locale: 
 
       {error && <p className="mt-3 text-sm text-urgent">{error}</p>}
 
-      <Button size="lg" className="mt-4 w-full" disabled={pending} onClick={handleConfirm}>
+      <Button size="lg" className="mt-4 w-full" disabled={pending || !hasSession} onClick={handleConfirm}>
         {t("doctor_booking_confirm_cta", locale)}
       </Button>
     </div>

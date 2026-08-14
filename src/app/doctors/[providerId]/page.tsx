@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Star, TriangleAlert } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
+import { getPatientSession } from "@/lib/patient-session";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
@@ -17,7 +18,7 @@ export default async function DoctorBookingPage({
   const locale = await getServerLocale();
   const service = createServiceClient();
 
-  const [{ data: row }, defaultService] = await Promise.all([
+  const [{ data: row }, defaultService, patientSession] = await Promise.all([
     service
       .from("providers")
       .select(
@@ -27,6 +28,7 @@ export default async function DoctorBookingPage({
       .eq("profile_status", "active")
       .maybeSingle(),
     getDefaultService(service),
+    getPatientSession(),
   ]);
 
   if (!row) {
@@ -87,8 +89,26 @@ export default async function DoctorBookingPage({
         </div>
       </div>
 
+      {!patientSession && (
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-pending/30 bg-pending-soft px-4 py-3.5 text-sm text-pending">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+          <div>
+            <p className="font-semibold">{t("doctor_booking_no_session_title", locale)}</p>
+            <p className="mt-0.5 opacity-90">{t("doctor_booking_no_session_body", locale)}</p>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              <Link href="/" className="font-medium underline underline-offset-2">
+                {t("start_assessment_cta", locale)}
+              </Link>
+              <Link href="/lookup" className="font-medium underline underline-offset-2">
+                {t("reference_lookup_link", locale)}
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-6">
-        <BookingForm provider={provider} locale={locale} />
+        <BookingForm provider={provider} locale={locale} hasSession={Boolean(patientSession)} />
       </div>
     </main>
   );

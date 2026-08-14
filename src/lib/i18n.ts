@@ -744,6 +744,14 @@ const dict = {
     en: "We couldn't start your consultation. Please try again.",
     sw: "Hatukuweza kuanza ushauri wako. Tafadhali jaribu tena.",
   },
+  doctor_booking_no_session_title: {
+    en: "Start with Afya24 first",
+    sw: "Anza na Afya24 kwanza",
+  },
+  doctor_booking_no_session_body: {
+    en: "Booking needs a patient file. Describe what's going on to Afya24, or look yourself up if you're a returning patient, then come back to book.",
+    sw: "Kuweka miadi kunahitaji faili la mgonjwa. Mwambie Afya24 kinachoendelea, au jitafute kama wewe ni mgonjwa wa zamani, kisha urudi kuweka miadi.",
+  },
   doctor_lang_en: { en: "English", sw: "Kiingereza" },
   doctor_lang_sw: { en: "Swahili", sw: "Kiswahili" },
   doctor_available_now: { en: "Available now", sw: "Anapatikana sasa" },

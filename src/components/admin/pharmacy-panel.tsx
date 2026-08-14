@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState, useEffect, useId, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   Edit3,
@@ -47,14 +47,16 @@ import {
   type PharmacyActionState,
 } from "@/app/admin/pharmacy-actions";
 import { adminPharmacyOrderStatusKey, t, type TranslationKey } from "@/lib/i18n";
-import type {
-  Locale,
-  PharmacyCategory,
-  PharmacyItem,
-  PharmacyItemStatus,
-  PharmacyOrder,
-  PharmacyOrderStatus,
-  StockStatus,
+import {
+  KNOWN_PHARMACY_CATEGORIES,
+  type Locale,
+  type PharmacyCategory,
+  type PharmacyItem,
+  type PharmacyItemBadge,
+  type PharmacyItemStatus,
+  type PharmacyOrder,
+  type PharmacyOrderStatus,
+  type StockStatus,
 } from "@/lib/types";
 
 const orderStatusTone: Record<PharmacyOrderStatus, StatusTone> = {
@@ -100,19 +102,19 @@ const stockLabel: Record<StockStatus, string> = {
   out_of_stock: "Out of stock",
 };
 
-const categoryOptions: PharmacyCategory[] = [
-  "Pain relief",
-  "Allergy",
-  "Antibiotics",
-  "Vitamins & supplements",
-  "Supplements",
-  "Hospital tools",
-  "Medical devices",
-  "Wound care",
-  "First aid",
-  "Cold & flu",
-  "Chronic condition",
-];
+const badgeOptions: PharmacyItemBadge[] = ["trending", "hot", "new", "sale"];
+const badgeLabel: Record<PharmacyItemBadge, string> = {
+  trending: "Trending",
+  hot: "Hot",
+  new: "New",
+  sale: "Sale",
+};
+const badgeTone: Record<PharmacyItemBadge, StatusTone> = {
+  trending: "info",
+  hot: "urgent",
+  new: "positive",
+  sale: "pending",
+};
 
 const initialFormState: PharmacyActionState = { status: "idle", message: "" };
 
@@ -129,6 +131,14 @@ export function PharmacyPanel({
   const [category, setCategory] = useState<PharmacyCategory | "all">("all");
   const [visibility, setVisibility] = useState<PharmacyItemStatus | "all">("all");
   const [orderPending, startOrderTransition] = useTransition();
+
+  const categoryOptions = useMemo(() => {
+    const present = new Set<string>(KNOWN_PHARMACY_CATEGORIES);
+    for (const product of products) {
+      if (product.category) present.add(product.category);
+    }
+    return Array.from(present).sort((a, b) => a.localeCompare(b));
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -228,7 +238,7 @@ export function PharmacyPanel({
               <SelectItem value="hidden">Hidden</SelectItem>
             </SelectContent>
           </Select>
-          <PharmacyItemDialog mode="create" />
+          <PharmacyItemDialog mode="create" categoryOptions={categoryOptions} />
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-border bg-background">
@@ -237,6 +247,7 @@ export function PharmacyPanel({
               <TableRow>
                 <TableHead className="pl-4">Product</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Badge</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Status</TableHead>
@@ -247,7 +258,7 @@ export function PharmacyPanel({
             <TableBody>
               {filteredProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                     {products.length === 0
                       ? "No products yet. Add your first one to start the catalog."
                       : t("admin_no_results", locale)}
@@ -271,6 +282,13 @@ export function PharmacyPanel({
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{product.category}</TableCell>
+                    <TableCell>
+                      {product.badge ? (
+                        <StatusPill tone={badgeTone[product.badge]}>{badgeLabel[product.badge]}</StatusPill>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="tabular-nums">TZS {product.unitPrice}</TableCell>
                     <TableCell>
                       <StatusPill tone={stockTone[product.stockStatus]}>
@@ -291,7 +309,7 @@ export function PharmacyPanel({
                     </TableCell>
                     <TableCell className="pr-4">
                       <div className="flex justify-end gap-1.5">
-                        <PharmacyItemDialog mode="edit" item={product} />
+                        <PharmacyItemDialog mode="edit" item={product} categoryOptions={categoryOptions} />
                         <ItemStatusForm
                           itemId={product.id}
                           currentStatus={product.status}
@@ -418,15 +436,18 @@ function ItemStatusForm({
 function PharmacyItemDialog({
   mode,
   item,
+  categoryOptions,
 }: {
   mode: "create" | "edit";
   item?: PharmacyItem;
+  categoryOptions: string[];
 }) {
   const [open, setOpen] = useState(false);
   const action = mode === "create" ? createPharmacyItem : updatePharmacyItem;
   const [state, formAction, pending] = useActionState(action, initialFormState);
   const [imageName, setImageName] = useState("");
   const [removeImage, setRemoveImage] = useState(false);
+  const categoryListId = useId();
 
   useEffect(() => {
     // The table refreshes underneath via revalidatePath; just close once a
@@ -499,18 +520,18 @@ function PharmacyItemDialog({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Category">
-              <Select name="category" defaultValue={item?.category ?? "Pain relief"}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                name="category"
+                list={categoryListId}
+                defaultValue={item?.category ?? "Pain relief"}
+                placeholder="Pain relief"
+                required
+              />
+              <datalist id={categoryListId}>
+                {categoryOptions.map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
             </Field>
             <Field label="Price (TZS)">
               <Input
@@ -560,6 +581,22 @@ function PharmacyItemDialog({
               </Select>
             </Field>
           </div>
+
+          <Field label="Merchandising badge">
+            <Select name="badge" defaultValue={item?.badge ?? "none"}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {badgeOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {badgeLabel[option]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
           <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
             <span>

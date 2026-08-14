@@ -30,7 +30,14 @@ import {
   serviceCategories,
   services,
 } from "@/lib/mock-data";
-import type { PharmacyCategory, PharmacyItem, PharmacyItemStatus, PharmacyOrder, StockStatus } from "@/lib/types";
+import type {
+  PharmacyCategory,
+  PharmacyItem,
+  PharmacyItemBadge,
+  PharmacyItemStatus,
+  PharmacyOrder,
+  StockStatus,
+} from "@/lib/types";
 import { signOut } from "../actions";
 
 type DbProviderRow = {
@@ -84,6 +91,7 @@ type DbPharmacyItemRow = {
   requires_prescription: boolean;
   photo_url: string | null;
   status: string;
+  badge: string | null;
   created_at: string;
 };
 
@@ -282,7 +290,7 @@ export default async function AdminDashboardPage() {
       const pharmacyItemsResult = await service
         .from("pharmacy_items")
         .select(
-          "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, status, created_at"
+          "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, status, badge, created_at"
         )
         .order("created_at", { ascending: false });
 
@@ -424,6 +432,7 @@ export default async function AdminDashboardPage() {
     requiresPrescription: item.requires_prescription,
     photoUrl: item.photo_url ?? undefined,
     status: item.status as PharmacyItemStatus,
+    badge: (item.badge as PharmacyItemBadge | null) ?? undefined,
   }));
 
   const realPharmacyOrders: PharmacyOrder[] = (dbPharmacyOrders ?? []).map((order) => ({

@@ -797,6 +797,15 @@ const dict = {
     sw: "Tunaandaa orodha ya bidhaa. Rudi hivi karibuni, au muulize Afya24 kuhusu kuongeza dawa wakati unasubiri.",
   },
   pharmacy_requires_rx: { en: "Requires Rx", sw: "Inahitaji Rx" },
+  pharmacy_trending_title: { en: "Trending now", sw: "Zinazotafutwa zaidi" },
+  pharmacy_trending_subtitle: {
+    en: "Popular picks other patients are buying right now.",
+    sw: "Bidhaa maarufu ambazo wagonjwa wengine wananunua sasa.",
+  },
+  pharmacy_badge_trending: { en: "Trending", sw: "Inatafutwa" },
+  pharmacy_badge_hot: { en: "Hot", sw: "Moto" },
+  pharmacy_badge_new: { en: "New", sw: "Mpya" },
+  pharmacy_badge_sale: { en: "Sale", sw: "Ofa" },
   pharmacy_add_to_cart: { en: "Add to cart", sw: "Ongeza kwenye kikapu" },
   pharmacy_in_cart: { en: "In cart", sw: "Kwenye kikapu" },
   pharmacy_hero_price_label: { en: "From", sw: "Kuanzia" },
@@ -1370,6 +1379,13 @@ export const pharmacyCategoryKey: Record<string, TranslationKey> = {
   "First aid": "pharmacy_cat_first_aid",
   "Cold & flu": "pharmacy_cat_cold_flu",
   "Chronic condition": "pharmacy_cat_chronic",
+};
+
+export const pharmacyBadgeKey: Record<string, TranslationKey> = {
+  trending: "pharmacy_badge_trending",
+  hot: "pharmacy_badge_hot",
+  new: "pharmacy_badge_new",
+  sale: "pharmacy_badge_sale",
 };
 
 export const pharmacyStockKey: Record<string, TranslationKey> = {

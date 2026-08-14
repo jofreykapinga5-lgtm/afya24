@@ -15,6 +15,7 @@ const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const VALID_STOCK_STATUSES = ["in_stock", "low_stock", "out_of_stock"];
 const VALID_ITEM_STATUSES = ["published", "coming_soon", "hidden"];
+const VALID_BADGES = ["trending", "hot", "new", "sale"];
 const VALID_ORDER_STATUSES = [
   "pending",
   "preparing",
@@ -27,6 +28,10 @@ const VALID_ORDER_STATUSES = [
 // Product photos are shown on the public catalog, so this bucket is public
 // (unlike provider-applications, which needs signed URLs for private
 // documents) -- a direct public URL is fine and simpler for a storefront.
+// The bucket itself is provisioned by migration 0013, not at request time --
+// runtime getBucket()/createBucket() round trips were slow and fragile
+// (a Vercel function crash was traced to this) and every other bucket in
+// this codebase (0007, 0010, 0011) is already migration-provisioned.
 async function uploadPharmacyItemImage(
   service: ReturnType<typeof createServiceClient>,
   file: File
@@ -38,18 +43,6 @@ async function uploadPharmacyItemImage(
     throw new Error("Image must be 6 MB or smaller.");
   }
 
-  const { error: bucketError } = await service.storage.getBucket(PHARMACY_BUCKET);
-  if (bucketError) {
-    const { error: createBucketError } = await service.storage.createBucket(PHARMACY_BUCKET, {
-      public: true,
-      fileSizeLimit: MAX_IMAGE_BYTES,
-      allowedMimeTypes: ALLOWED_IMAGE_TYPES,
-    });
-    if (createBucketError && !createBucketError.message.toLowerCase().includes("already exists")) {
-      throw new Error(createBucketError.message);
-    }
-  }
-
   const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const path = `${crypto.randomUUID()}.${extension}`;
   const bytes = await file.arrayBuffer();
@@ -58,6 +51,7 @@ async function uploadPharmacyItemImage(
     .upload(path, bytes, { contentType: file.type, upsert: false });
 
   if (uploadError) {
+    console.error("pharmacy image upload failed", uploadError);
     throw new Error(uploadError.message);
   }
 
@@ -84,6 +78,8 @@ export async function createPharmacyItem(
     const unitPrice = Number(formString(formData, "unitPrice"));
     const stockStatus = formString(formData, "stockStatus") || "in_stock";
     const status = formString(formData, "status") || "published";
+    const badgeField = formString(formData, "badge");
+    const badge = badgeField === "none" ? "" : badgeField;
     const requiresPrescription = formData.get("requiresPrescription") === "on";
     const imageFile = formData.get("image");
 
@@ -92,6 +88,10 @@ export async function createPharmacyItem(
         status: "error",
         message: "Medicine name, category, and a valid price are required.",
       };
+    }
+
+    if (badge && !VALID_BADGES.includes(badge)) {
+      return { status: "error", message: "That badge isn't valid." };
     }
 
     let photoUrl: string | null = null;
@@ -110,6 +110,7 @@ export async function createPharmacyItem(
         unit_price: unitPrice,
         stock_status: stockStatus,
         status,
+        badge: badge || null,
         requires_prescription: requiresPrescription,
         photo_url: photoUrl,
       })
@@ -133,6 +134,7 @@ export async function createPharmacyItem(
     return { status: "success", message: `${medicineName} added to the catalog.` };
   } catch (error) {
     unstable_rethrow(error);
+    console.error("createPharmacyItem failed", error);
     return { status: "error", message: actionErrorMessage(error) };
   }
 }
@@ -152,6 +154,8 @@ export async function updatePharmacyItem(
     const unitPrice = Number(formString(formData, "unitPrice"));
     const stockStatus = formString(formData, "stockStatus");
     const status = formString(formData, "status");
+    const badgeField = formString(formData, "badge");
+    const badge = badgeField === "none" ? "" : badgeField;
     const requiresPrescription = formData.get("requiresPrescription") === "on";
     const removeImage = formData.get("removeImage") === "on";
     const imageFile = formData.get("image");
@@ -163,7 +167,8 @@ export async function updatePharmacyItem(
       !Number.isFinite(unitPrice) ||
       unitPrice <= 0 ||
       !VALID_STOCK_STATUSES.includes(stockStatus) ||
-      !VALID_ITEM_STATUSES.includes(status)
+      !VALID_ITEM_STATUSES.includes(status) ||
+      (badge && !VALID_BADGES.includes(badge))
     ) {
       return {
         status: "error",
@@ -180,6 +185,7 @@ export async function updatePharmacyItem(
       unit_price: unitPrice,
       stock_status: stockStatus,
       status,
+      badge: badge || null,
       requires_prescription: requiresPrescription,
     };
 
@@ -208,6 +214,7 @@ export async function updatePharmacyItem(
     return { status: "success", message: `${medicineName} updated.` };
   } catch (error) {
     unstable_rethrow(error);
+    console.error("updatePharmacyItem failed", error);
     return { status: "error", message: actionErrorMessage(error) };
   }
 }

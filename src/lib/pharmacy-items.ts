@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { PharmacyCategory, PharmacyItem, StockStatus } from "@/lib/types";
+import type { PharmacyCategory, PharmacyItem, PharmacyItemBadge, StockStatus } from "@/lib/types";
 
 type DbPharmacyItemRow = {
   id: string;
@@ -13,6 +13,7 @@ type DbPharmacyItemRow = {
   unit_price: number | string;
   requires_prescription: boolean;
   photo_url: string | null;
+  badge: string | null;
 };
 
 // Shared by the storefront and checkout -- both need the same published
@@ -24,7 +25,7 @@ export async function getPublishedPharmacyItems(): Promise<PharmacyItem[]> {
   const { data } = await supabase
     .from("pharmacy_items")
     .select(
-      "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url"
+      "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, badge"
     )
     .eq("status", "published")
     .order("medicine_name", { ascending: true })
@@ -42,5 +43,6 @@ export async function getPublishedPharmacyItems(): Promise<PharmacyItem[]> {
     requiresPrescription: item.requires_prescription,
     photoUrl: item.photo_url ?? undefined,
     status: "published",
+    badge: (item.badge as PharmacyItemBadge | null) ?? undefined,
   }));
 }

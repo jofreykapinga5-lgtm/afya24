@@ -199,20 +199,29 @@ export interface LabOrder {
 
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
 
-export type PharmacyCategory =
-  | "Pain relief"
-  | "Allergy"
-  | "Antibiotics"
-  | "Vitamins & supplements"
-  | "Supplements"
-  | "Hospital tools"
-  | "Medical devices"
-  | "Wound care"
-  | "First aid"
-  | "Cold & flu"
-  | "Chronic condition";
+// Admin-defined free text -- no longer a closed enum, so new categories can
+// be added from the admin panel without a code change.
+export type PharmacyCategory = string;
+
+// A small set of well-known categories to seed the admin panel's suggestion
+// list; not exhaustive and not enforced by the database.
+export const KNOWN_PHARMACY_CATEGORIES = [
+  "Pain relief",
+  "Allergy",
+  "Antibiotics",
+  "Vitamins & supplements",
+  "Supplements",
+  "Hospital tools",
+  "Medical devices",
+  "Wound care",
+  "First aid",
+  "Cold & flu",
+  "Chronic condition",
+] as const;
 
 export type PharmacyItemStatus = "published" | "coming_soon" | "hidden";
+
+export type PharmacyItemBadge = "trending" | "hot" | "new" | "sale";
 
 export interface PharmacyItem {
   id: string;
@@ -226,6 +235,7 @@ export interface PharmacyItem {
   requiresPrescription: boolean;
   photoUrl?: string;
   status: PharmacyItemStatus;
+  badge?: PharmacyItemBadge | null;
 }
 
 export interface PharmacyOrderItem {

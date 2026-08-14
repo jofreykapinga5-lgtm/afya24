@@ -15,7 +15,14 @@ import {
 import { PharmacyProductTile } from "@/components/pharmacy-category-icon";
 import { useAppStore } from "@/lib/store";
 import type { Locale, PharmacyCategory, PharmacyItem } from "@/lib/types";
-import { pharmacyCategoryKey, t, type TranslationKey } from "@/lib/i18n";
+import { pharmacyBadgeKey, pharmacyCategoryKey, t, type TranslationKey } from "@/lib/i18n";
+
+const badgeClassName: Record<string, string> = {
+  trending: "bg-brand-teal text-white",
+  hot: "bg-urgent text-white",
+  new: "bg-primary text-white",
+  sale: "bg-pending text-white",
+};
 
 const stockLabelKey: Record<string, { key: TranslationKey; className: string }> = {
   in_stock: { key: "pharmacy_stock_in", className: "text-emerald-600" },
@@ -41,7 +48,16 @@ function ProductCard({
 
   return (
     <div className="group flex h-full flex-col rounded-2xl border border-border bg-white p-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(8,50,115,0.45)]">
-      <PharmacyProductTile category={item.category} photoUrl={item.photoUrl} className="aspect-square w-full" />
+      <div className="relative">
+        <PharmacyProductTile category={item.category} photoUrl={item.photoUrl} className="aspect-square w-full" />
+        {item.badge ? (
+          <span
+            className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeClassName[item.badge] ?? "bg-primary text-white"}`}
+          >
+            {t(pharmacyBadgeKey[item.badge], locale)}
+          </span>
+        ) : null}
+      </div>
 
       <div className="mt-3 min-w-0">
         <p className="line-clamp-2 text-sm font-semibold leading-snug">{item.medicineName}</p>
@@ -96,6 +112,8 @@ export function PharmacyCatalog({ items, locale }: { items: PharmacyItem[]; loca
     const present = new Set(items.map((item) => item.category));
     return ["All", ...Array.from(present)] as (PharmacyCategory | "All")[];
   }, [items]);
+
+  const trending = useMemo(() => items.filter((item) => item.badge), [items]);
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -178,6 +196,26 @@ export function PharmacyCatalog({ items, locale }: { items: PharmacyItem[]; loca
           </p>
         </div>
 
+        {trending.length > 0 && !query.trim() && category === "All" ? (
+          <div className="mt-6">
+            <h2 className="text-base font-semibold tracking-tight">{t("pharmacy_trending_title", locale)}</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("pharmacy_trending_subtitle", locale)}</p>
+            <div className="mt-3 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {trending.map((item) => (
+                <div key={item.id} className="w-36 shrink-0 sm:w-44">
+                  <ProductCard
+                    item={item}
+                    locale={locale}
+                    cartQuantity={cartQuantityFor(item.id)}
+                    onAdd={addToCart}
+                    onPrescription={startAssessmentForPrescription}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="relative mt-5 w-full sm:hidden">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -201,7 +239,7 @@ export function PharmacyCatalog({ items, locale }: { items: PharmacyItem[]; loca
                     : "border-border bg-white text-muted-foreground hover:border-primary/40 hover:bg-primary-soft"
                 }`}
               >
-                {t(pharmacyCategoryKey[cat], locale)}
+                {pharmacyCategoryKey[cat] ? t(pharmacyCategoryKey[cat], locale) : cat}
               </button>
             ))}
           </div>

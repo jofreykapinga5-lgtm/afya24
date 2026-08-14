@@ -21,6 +21,23 @@ export async function POST(request: Request) {
     );
   }
 
+  try {
+    return await joinRoom(appointmentId, locale);
+  } catch (error) {
+    // Without this, an unexpected failure here (a LiveKit API call
+    // erroring out, a bad LIVEKIT_* env value, a transient network blip)
+    // would crash out of the route handler entirely -- the client would
+    // get Next's default HTML error page instead of JSON, and
+    // `response.json()` on the consultation page would throw its own
+    // confusing "unexpected token '<'" parse error instead of showing the
+    // real problem. Always return a clean, readable JSON error instead.
+    console.error("POST /api/video/room failed", error);
+    const message = error instanceof Error ? error.message : "Could not start the call.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+async function joinRoom(appointmentId: string, locale: Locale) {
   const service = createServiceClient();
   const { data: appointment } = await service
     .from("appointments")

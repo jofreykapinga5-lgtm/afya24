@@ -196,6 +196,10 @@ const dict = {
     en: "A prescription, pharmacy handoff, lab referral, or signed visit summary, doctor-approved.",
     sw: "Dawa, upitishaji wa dawa kwa duka la dawa, rufaa ya maabara, au muhtasari wa ziara uliosainiwa, ulioidhinishwa na daktari.",
   },
+  how_it_works_cta: {
+    en: "Start now",
+    sw: "Muone daktari",
+  },
   how_it_works_benefit1_title: { en: "Private and secure", sw: "Salama na siri" },
   how_it_works_benefit1_body: {
     en: "Your information is protected through the care flow.",

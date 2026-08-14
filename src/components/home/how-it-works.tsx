@@ -76,7 +76,7 @@ export function HowItWorks() {
           href="/qualification"
           className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full bg-[#083273] px-5 text-sm font-bold text-white outline-none transition-colors hover:bg-[#062960] focus-visible:ring-3 focus-visible:ring-[#083273]/30"
         >
-          Start now
+          {t("how_it_works_cta", locale)}
           <ArrowRight className="size-4" />
         </Link>
       </div>

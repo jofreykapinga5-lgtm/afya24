@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
 import type { Provider, Locale } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { StarRating } from "@/components/star-rating";
 import { t, type TranslationKey } from "@/lib/i18n";
 
 const avatarTints = ["bg-primary", "bg-brand-teal", "bg-info", "bg-[#0a5c8a]"];
@@ -61,12 +61,12 @@ export function DoctorCarouselCard({
       <div className="flex items-start gap-3.5">
         <span className="relative shrink-0">
           {provider.photoUrl ? (
-            <span className="relative size-[3.25rem] shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
-              <Image src={provider.photoUrl} alt="" fill sizes="52px" className="object-cover" />
+            <span className="relative size-16 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
+              <Image src={provider.photoUrl} alt="" fill sizes="64px" className="object-cover" />
             </span>
           ) : (
             <span
-              className={`inline-flex size-[3.25rem] shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white ${avatarTints[tintIndex % avatarTints.length]}`}
+              className={`inline-flex size-16 shrink-0 items-center justify-center rounded-full text-base font-bold text-white ring-2 ring-white ${avatarTints[tintIndex % avatarTints.length]}`}
             >
               {initials(provider.name)}
             </span>
@@ -81,11 +81,12 @@ export function DoctorCarouselCard({
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="truncate text-base font-semibold leading-tight text-foreground">{provider.name}</p>
           <p className="mt-0.5 truncate text-sm text-muted-foreground">{provider.specialty}</p>
-          <div className="mt-1.5 flex items-center gap-1 text-xs">
-            <Star className="size-3.5 shrink-0 fill-pending text-pending" aria-hidden="true" />
-            <span className="font-semibold tabular-nums text-foreground">{provider.rating}</span>
-            <span className="text-muted-foreground">({provider.reviewCount})</span>
-          </div>
+          <StarRating
+            rating={provider.rating}
+            reviewCount={provider.reviewCount}
+            locale={locale}
+            className="mt-1.5 text-xs"
+          />
         </div>
       </div>
 

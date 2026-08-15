@@ -46,5 +46,10 @@ export function mapProviderRow(row: ProviderRow, basePrice: number, locale: Loca
     isAvailableNow: Boolean(row.available_now),
     photoUrl: row.photo_url ?? "",
     bio: row.bio ?? "",
+    // There's no separate patient-testimonial data source yet -- the
+    // doctor's own bio is the only real first-person content available, so
+    // it doubles as the card's pull-quote instead of leaving that space
+    // blank for every real provider.
+    quote: row.bio || undefined,
   };
 }

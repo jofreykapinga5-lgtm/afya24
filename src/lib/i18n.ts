@@ -761,6 +761,7 @@ const dict = {
   doctor_lang_en: { en: "English", sw: "Kiingereza" },
   doctor_lang_sw: { en: "Swahili", sw: "Kiswahili" },
   doctor_available_now: { en: "Available now", sw: "Anapatikana sasa" },
+  doctor_rating_new: { en: "New", sw: "Mpya" },
   doctor_check_back_later: { en: "Check back later", sw: "Angalia tena baadaye" },
   doctor_badge_available_today: { en: "Available today", sw: "Anapatikana leo" },
   doctor_badge_highly_rated: { en: "Highly rated", sw: "Anapendwa sana" },

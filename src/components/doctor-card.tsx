@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
 import type { Provider, Locale } from "@/lib/types";
 import { ConsultationModeIcons } from "@/components/consultation-mode-icons";
 import { Button } from "@/components/ui/button";
+import { StarRating } from "@/components/star-rating";
 import { t } from "@/lib/i18n";
 
 const avatarTints = ["bg-primary", "bg-brand-teal", "bg-info", "bg-[#0a5c8a]"];
@@ -36,12 +36,12 @@ export function DoctorCard({
       <div className="flex items-start gap-3.5">
         <span className="relative shrink-0">
           {provider.photoUrl ? (
-            <span className="relative size-12 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
-              <Image src={provider.photoUrl} alt="" fill sizes="48px" className="object-cover" />
+            <span className="relative size-14 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
+              <Image src={provider.photoUrl} alt="" fill sizes="56px" className="object-cover" />
             </span>
           ) : (
             <span
-              className={`inline-flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white ${avatarTints[tintIndex % avatarTints.length]}`}
+              className={`inline-flex size-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white ${avatarTints[tintIndex % avatarTints.length]}`}
             >
               {initials(provider.name)}
             </span>
@@ -56,11 +56,12 @@ export function DoctorCard({
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="truncate font-semibold text-foreground">{provider.name}</p>
           <p className="mt-0.5 truncate text-sm text-muted-foreground">{provider.specialty}</p>
-          <div className="mt-1.5 flex items-center gap-1 text-xs">
-            <Star className="size-3 shrink-0 fill-pending text-pending" aria-hidden="true" />
-            <span className="font-semibold tabular-nums text-foreground">{provider.rating}</span>
-            <span className="text-muted-foreground">({provider.reviewCount})</span>
-          </div>
+          <StarRating
+            rating={provider.rating}
+            reviewCount={provider.reviewCount}
+            locale={locale}
+            className="mt-1.5 text-xs"
+          />
           {provider.isAvailableNow && (
             <p className="mt-1 text-xs font-medium text-emerald-600">{t("doctor_available_now", locale)}</p>
           )}

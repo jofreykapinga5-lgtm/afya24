@@ -7,6 +7,7 @@ import {
   Eye,
   Lock,
   Search,
+  Star,
   Trash2,
   UserPlus,
   Users,
@@ -44,6 +45,7 @@ import {
   deleteProviderAccount,
   resetProviderPassword,
   updateProviderAvailabilityByAdmin,
+  updateProviderRating,
   updateProviderStatus,
 } from "@/app/admin/actions";
 import { adminProviderStatusKey, locales, t, type TranslationKey } from "@/lib/i18n";
@@ -311,6 +313,19 @@ export function ProvidersPanel({
                           </DoctorDetail>
                           <DoctorDetail label="Modes">{provider.consultationModes.join(", ")}</DoctorDetail>
                           <DoctorDetail label="Bio">{provider.bio}</DoctorDetail>
+                          <DoctorDetail label="Rating shown on doctor card">
+                            {isUuid(provider.id) ? (
+                              <UpdateRatingForm
+                                providerId={provider.id}
+                                rating={provider.rating}
+                                reviewCount={provider.reviewCount}
+                              />
+                            ) : (
+                              <span>
+                                {provider.rating.toFixed(1)} ({provider.reviewCount} reviews)
+                              </span>
+                            )}
+                          </DoctorDetail>
                           <DoctorDetail label="Availability note">
                             <Input
                               value={currentAvailability.note}
@@ -487,6 +502,47 @@ function DeleteProviderForm({
           {state.message}
         </p>
       ) : null}
+    </form>
+  );
+}
+
+function UpdateRatingForm({
+  providerId,
+  rating,
+  reviewCount,
+}: {
+  providerId: string;
+  rating: number;
+  reviewCount: number;
+}) {
+  return (
+    <form action={updateProviderRating} className="flex items-center gap-1.5">
+      <input type="hidden" name="providerId" value={providerId} />
+      <Star className="size-3.5 shrink-0 fill-pending text-pending" aria-hidden="true" />
+      <input
+        name="rating"
+        type="number"
+        min={0}
+        max={5}
+        step={0.1}
+        defaultValue={rating}
+        aria-label="Rating out of 5"
+        className="h-7 w-14 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      />
+      <span className="text-xs text-muted-foreground">/5 ·</span>
+      <input
+        name="reviewCount"
+        type="number"
+        min={0}
+        step={1}
+        defaultValue={reviewCount}
+        aria-label="Number of reviews"
+        className="h-7 w-16 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      />
+      <span className="text-xs text-muted-foreground">reviews</span>
+      <Button type="submit" size="sm" variant="outline" className="ml-1 h-7 px-2.5 text-xs">
+        Save
+      </Button>
     </form>
   );
 }

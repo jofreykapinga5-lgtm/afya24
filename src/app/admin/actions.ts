@@ -169,6 +169,60 @@ export async function updateProviderStatus(formData: FormData) {
   revalidatePath("/doctors");
 }
 
+// Ratings are admin-curated (there's no patient review pipeline feeding
+// providers.rating_summary yet), so this is the only place that number can
+// change -- it drives the star shown on DoctorCard everywhere a patient
+// browses doctors.
+export async function updateProviderRating(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const providerId = formString(formData, "providerId");
+  const rating = Number(formString(formData, "rating"));
+  const reviewCount = Number(formString(formData, "reviewCount"));
+
+  if (
+    !providerId ||
+    !Number.isFinite(rating) ||
+    rating < 0 ||
+    rating > 5 ||
+    !Number.isFinite(reviewCount) ||
+    reviewCount < 0
+  ) {
+    throw new Error("A rating between 0 and 5, and a review count, are required.");
+  }
+
+  const { data: provider, error: providerError } = await service
+    .from("providers")
+    .select("id, full_name")
+    .eq("id", providerId)
+    .single();
+
+  if (providerError || !provider) {
+    throw new Error(providerError?.message ?? "Provider not found.");
+  }
+
+  const { error } = await service
+    .from("providers")
+    .update({ rating_summary: { rating, reviewCount } })
+    .eq("id", providerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "provider_status_changed",
+    entity_type: "provider",
+    entity_id: providerId,
+    metadata_json: { fullName: provider.full_name, rating, reviewCount },
+  });
+
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/");
+  revalidatePath("/doctors");
+  revalidatePath("/doctors/[providerId]", "page");
+}
+
 export async function updateProviderAvailabilityByAdmin(formData: FormData) {
   const { adminUserId, service } = await requireAdmin();
   const providerId = formString(formData, "providerId");

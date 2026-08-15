@@ -1,9 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+
+export type AvailabilityActionState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
 
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
@@ -180,28 +185,51 @@ export async function updateDoctorPublicProfile(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/doctor/dashboard");
   revalidatePath("/doctors");
+  revalidatePath("/doctors/[providerId]", "page");
 }
 
-export async function updateProviderAvailability(formData: FormData) {
-  const { service, providerId } = await requireDoctorProvider();
-  const availableNow = formData.get("availableNow") === "on";
-  const availabilityNote = String(formData.get("availabilityNote") ?? "").trim();
+export async function updateProviderAvailability(
+  _previousState: AvailabilityActionState,
+  formData: FormData
+): Promise<AvailabilityActionState> {
+  try {
+    const { service, providerId } = await requireDoctorProvider();
+    const availableNow = formData.get("availableNow") === "on";
+    const availabilityNote = String(formData.get("availabilityNote") ?? "").trim();
 
-  const { error } = await service
-    .from("providers")
-    .update({
-      available_now: availableNow,
-      availability_note: availabilityNote || null,
-      consultation_modes: selectedModes(formData),
-    })
-    .eq("id", providerId);
+    const { error } = await service
+      .from("providers")
+      .update({
+        available_now: availableNow,
+        availability_note: availabilityNote || null,
+        consultation_modes: selectedModes(formData),
+      })
+      .eq("id", providerId);
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Also revalidate "/" (missed previously): the home page's doctor
+    // preview reads the same providers rows, so it would keep showing a
+    // doctor as away/online after they'd just toggled it here.
+    revalidatePath("/");
+    revalidatePath("/doctor/dashboard");
+    revalidatePath("/doctors");
+    revalidatePath("/doctors/[providerId]", "page");
+
+    return {
+      status: "success",
+      message: availableNow ? "You're visible to patients now." : "You're set to offline.",
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("updateProviderAvailability failed", error);
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Could not save availability. Try again.",
+    };
   }
-
-  revalidatePath("/doctor/dashboard");
-  revalidatePath("/doctors");
 }
 
 export async function createAvailabilitySlot(formData: FormData) {

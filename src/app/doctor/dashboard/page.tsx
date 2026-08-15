@@ -93,6 +93,11 @@ function statusClass(status: string) {
 
 export default async function DoctorDashboardPage() {
   const locale = await getServerLocale();
+  // Floors the datetime-local pickers below so a doctor can't accidentally
+  // schedule a block in the past (the landing page only ever shows upcoming
+  // slots, so a past one would just silently never appear -- confusing to
+  // debug from the dashboard side).
+  const minScheduleValue = new Date().toISOString().slice(0, 16);
   const supabase = await createClient();
   const {
     data: { user },
@@ -406,10 +411,22 @@ export default async function DoctorDashboardPage() {
                 {canManageAvailability ? (
                   <form action={createAvailabilitySlot} className="mt-5 grid gap-3 rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb] lg:grid-cols-[1fr_1fr_0.7fr_1fr_auto] lg:items-end">
                     <Field label="Start">
-                      <Input name="startsAt" type="datetime-local" required className="rounded-xl bg-white" />
+                      <Input
+                        name="startsAt"
+                        type="datetime-local"
+                        min={minScheduleValue}
+                        required
+                        className="rounded-xl bg-white"
+                      />
                     </Field>
                     <Field label="End">
-                      <Input name="endsAt" type="datetime-local" required className="rounded-xl bg-white" />
+                      <Input
+                        name="endsAt"
+                        type="datetime-local"
+                        min={minScheduleValue}
+                        required
+                        className="rounded-xl bg-white"
+                      />
                     </Field>
                     <Field label="Type">
                       <select

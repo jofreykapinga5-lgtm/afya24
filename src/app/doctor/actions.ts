@@ -243,6 +243,19 @@ export async function createAvailabilitySlot(formData: FormData) {
     throw new Error("Start, end, and slot type are required.");
   }
 
+  // The datetime pickers already floor at "now" client-side, but that's
+  // only a browser-native guard -- enforce it here too since a slot dated
+  // in the past would just silently never show up on the storefront (which
+  // only ever queries upcoming slots), with no obvious signal to the doctor
+  // about why.
+  if (new Date(startsAt).getTime() < Date.now()) {
+    throw new Error("Start time can't be in the past.");
+  }
+
+  if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
+    throw new Error("End time must be after the start time.");
+  }
+
   const { error } = await service.from("provider_availability_slots").insert({
     provider_id: providerId,
     starts_at: new Date(startsAt).toISOString(),

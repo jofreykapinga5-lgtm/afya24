@@ -35,7 +35,7 @@ export function DoctorCard({
       <div className="flex items-start gap-3.5">
         <span className="relative shrink-0">
           {provider.photoUrl ? (
-            <span className="relative size-14 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
+            <span className="relative inline-flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-white">
               {/* Plain <img> straight to storage -- see doctor-carousel-card
                   for why this bypasses next/image's /_next/image proxy. */}
               <img

@@ -60,7 +60,7 @@ export function DoctorCarouselCard({
       <div className="flex items-start gap-3.5">
         <span className="relative shrink-0">
           {provider.photoUrl ? (
-            <span className="relative size-16 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
+            <span className="relative inline-flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-white">
               {/* Plain <img> straight to Supabase storage, not next/image's
                   /_next/image proxy -- that proxy URL shape (same-origin
                   request carrying an encoded external URL as a query param)

@@ -634,7 +634,7 @@ function DoctorMiniCard({ provider }: { provider: ReturnType<typeof mapProviderR
     <article className="rounded-2xl border border-[#e1e9ec] bg-[#f8fbfd] p-4">
       <div className="flex items-center gap-3">
         {provider.photoUrl ? (
-          <span className="relative size-11 overflow-hidden rounded-full bg-[#e8f7f4]">
+          <span className="relative flex size-11 shrink-0 overflow-hidden rounded-full bg-[#e8f7f4]">
             <Image src={provider.photoUrl} alt="" fill sizes="44px" className="object-cover" />
           </span>
         ) : (

@@ -139,7 +139,7 @@ export function DoctorCarouselCard({
           <div className="grid grid-cols-3 gap-1.5">
             {slots.slice(0, 5).map((slot, index) => (
               <span
-                key={slot}
+                key={`${slot}-${index}`}
                 className={`inline-flex h-8 items-center justify-center rounded-lg border text-[11px] font-medium tabular-nums ${
                   index === 0
                     ? "border-primary/30 bg-primary-soft text-primary"

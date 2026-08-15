@@ -14,12 +14,27 @@ export interface ProviderRow {
   consultation_modes: string[] | null;
 }
 
+export interface ProviderScheduleInfo {
+  // Formatted time chips ("2:40 PM") for the storefront's upcoming-slots grid.
+  chips: string[];
+  // Pre-formatted "Today, 2:40 PM" / "Tomorrow, 9:15 AM" / "Fri, Aug 21"
+  // string for the earliest open schedule block, when the caller has real
+  // provider_availability_slots data. Falls back to the available_now-based
+  // copy below when omitted or there's nothing upcoming.
+  nextAvailableAt?: string;
+}
+
 // Maps a real public.providers row onto the Provider shape DoctorCard/
 // doctor-carousel-card already render, so those components need zero
 // changes. Per-doctor pricing and photo uploads are out of scope this
 // phase -- every doctor gets the one flat consultation price and falls back
 // to DoctorCard's built-in tinted-initials avatar when photo_url is empty.
-export function mapProviderRow(row: ProviderRow, basePrice: number, locale: Locale): Provider {
+export function mapProviderRow(
+  row: ProviderRow,
+  basePrice: number,
+  locale: Locale,
+  schedule: ProviderScheduleInfo = { chips: [] }
+): Provider {
   const languages = (row.languages ?? []).filter(
     (language): language is Locale => language === "en" || language === "sw"
   );
@@ -42,7 +57,7 @@ export function mapProviderRow(row: ProviderRow, basePrice: number, locale: Loca
     consultationModes,
     nextAvailableAt: row.available_now
       ? t("doctor_available_now", locale)
-      : t("doctor_check_back_later", locale),
+      : (schedule.nextAvailableAt ?? t("doctor_check_back_later", locale)),
     isAvailableNow: Boolean(row.available_now),
     photoUrl: row.photo_url ?? "",
     bio: row.bio ?? "",
@@ -51,5 +66,6 @@ export function mapProviderRow(row: ProviderRow, basePrice: number, locale: Loca
     // it doubles as the card's pull-quote instead of leaving that space
     // blank for every real provider.
     quote: row.bio || undefined,
+    timeSlots: schedule.chips.length > 0 ? schedule.chips : undefined,
   };
 }

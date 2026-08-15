@@ -206,12 +206,36 @@ export default async function AdminDashboardPage() {
   if (profile) {
     try {
       const service = createServiceClient();
-      const providersResult = await service
-        .from("providers")
-        .select(
-          "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
-        )
-        .order("created_at", { ascending: false });
+      // Four independent tables -- was four sequential round trips before
+      // this, one after another, even though none of them depend on each
+      // other's result.
+      const [providersResult, appointmentsResult, labsResult, applicationsResult] = await Promise.all([
+        service
+          .from("providers")
+          .select(
+            "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
+          )
+          .order("created_at", { ascending: false }),
+        service
+          .from("appointments")
+          .select(
+            "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
+          )
+          .order("scheduled_at", { ascending: false })
+          .limit(50),
+        service
+          .from("lab_locations")
+          .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
+          .order("region", { ascending: true })
+          .order("name", { ascending: true }),
+        service
+          .from("provider_applications")
+          .select(
+            "id, full_name, email, phone, license_number, specialty, region, experience_years, languages, consultation_modes, bio, file_path, file_name, status, created_at"
+          )
+          .order("created_at", { ascending: false })
+          .limit(100),
+      ]);
 
       if (providersResult.error) {
         throw providersResult.error;
@@ -219,39 +243,17 @@ export default async function AdminDashboardPage() {
 
       dbProviders = providersResult.data as DbProviderRow[];
 
-      const appointmentsResult = await service
-        .from("appointments")
-        .select(
-          "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
-        )
-        .order("scheduled_at", { ascending: false })
-        .limit(50);
-
       if (appointmentsResult.error) {
         throw appointmentsResult.error;
       }
 
       paymentAppointments = appointmentsResult.data as unknown as PaymentAppointmentRow[];
 
-      const labsResult = await service
-        .from("lab_locations")
-        .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
-        .order("region", { ascending: true })
-        .order("name", { ascending: true });
-
       if (labsResult.error) {
         throw labsResult.error;
       }
 
       dbLabLocations = labsResult.data as DbLabLocationRow[];
-
-      const applicationsResult = await service
-        .from("provider_applications")
-        .select(
-          "id, full_name, email, phone, license_number, specialty, region, experience_years, languages, consultation_modes, bio, file_path, file_name, status, created_at"
-        )
-        .order("created_at", { ascending: false })
-        .limit(100);
 
       if (applicationsResult.error) {
         throw applicationsResult.error;
@@ -287,26 +289,27 @@ export default async function AdminDashboardPage() {
     // depend on this table at all.
     try {
       const service = createServiceClient();
-      const pharmacyItemsResult = await service
-        .from("pharmacy_items")
-        .select(
-          "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, status, badge, created_at"
-        )
-        .order("created_at", { ascending: false });
+      const [pharmacyItemsResult, pharmacyOrdersResult] = await Promise.all([
+        service
+          .from("pharmacy_items")
+          .select(
+            "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, status, badge, created_at"
+          )
+          .order("created_at", { ascending: false }),
+        service
+          .from("pharmacy_orders")
+          .select(
+            "id, status, fulfillment_method, total_amount, created_at, patients(hospital_reference_number), pharmacy_order_items(id, pharmacy_item_id, prescribed_medication_name, quantity, availability_status, substitution_requested)"
+          )
+          .order("created_at", { ascending: false })
+          .limit(100),
+      ]);
 
       if (pharmacyItemsResult.error) {
         throw pharmacyItemsResult.error;
       }
 
       dbPharmacyItems = pharmacyItemsResult.data as DbPharmacyItemRow[];
-
-      const pharmacyOrdersResult = await service
-        .from("pharmacy_orders")
-        .select(
-          "id, status, fulfillment_method, total_amount, created_at, patients(hospital_reference_number), pharmacy_order_items(id, pharmacy_item_id, prescribed_medication_name, quantity, availability_status, substitution_requested)"
-        )
-        .order("created_at", { ascending: false })
-        .limit(100);
 
       if (pharmacyOrdersResult.error) {
         throw pharmacyOrdersResult.error;

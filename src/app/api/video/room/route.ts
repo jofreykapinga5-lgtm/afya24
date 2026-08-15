@@ -52,16 +52,17 @@ async function joinRoom(appointmentId: string, locale: Locale) {
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const patientSession = await getPatientSession();
-
-  const { data: providerRow } = await service
-    .from("providers")
-    .select("user_id, full_name")
-    .eq("id", appointment.provider_id)
-    .maybeSingle();
+  const [
+    {
+      data: { user },
+    },
+    patientSession,
+    { data: providerRow },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getPatientSession(),
+    service.from("providers").select("user_id, full_name").eq("id", appointment.provider_id).maybeSingle(),
+  ]);
 
   const isProvider = Boolean(user && providerRow?.user_id === user.id);
   const isPatient = Boolean(patientSession && patientSession.patientId === appointment.patient_id);

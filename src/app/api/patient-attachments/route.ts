@@ -4,18 +4,6 @@ import { getPatientSession } from "@/lib/patient-session";
 
 const BUCKET = "patient-attachments";
 const MAX_BYTES = 12 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/pdf",
-  "audio/webm",
-  "audio/mpeg",
-  "audio/mp4",
-  "audio/m4a",
-  "audio/x-m4a",
-  "audio/wav",
-];
 
 function attachmentKind(file: File) {
   if (file.type.startsWith("image/")) return "image";
@@ -72,18 +60,6 @@ export async function POST(request: Request) {
   const mimeType = normalizedMimeType(file);
   const storagePath = `${session.patientId}/${crypto.randomUUID()}.${extension}`;
   const bytes = await file.arrayBuffer();
-
-  const { error: bucketError } = await service.storage.getBucket(BUCKET);
-  if (bucketError) {
-    const { error: createBucketError } = await service.storage.createBucket(BUCKET, {
-      public: false,
-      fileSizeLimit: MAX_BYTES,
-      allowedMimeTypes: ALLOWED_MIME_TYPES,
-    });
-    if (createBucketError && !createBucketError.message.toLowerCase().includes("already exists")) {
-      return NextResponse.json({ error: createBucketError.message }, { status: 500 });
-    }
-  }
 
   const { error: uploadError } = await service.storage
     .from(BUCKET)

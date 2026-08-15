@@ -138,46 +138,66 @@ export default async function AccountDashboardPage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const { data: liveAppointments } = patient
-    ? await supabase
-        .from("appointments")
-        .select(
-          "id, scheduled_at, status, payment_status, price, currency, providers(full_name, specialty), consultation_orders(consultation_mode)"
-        )
-        .eq("patient_id", patient.id)
-        .order("scheduled_at", { ascending: false })
-        .returns<DbAppointment[]>()
-    : { data: [] };
-
-  const { data: pharmacyOrdersData } = patient
-    ? await supabase
-        .from("pharmacy_orders")
-        .select("id, status, fulfillment_method, total_amount, created_at")
-        .eq("patient_id", patient.id)
-        .order("created_at", { ascending: false })
-        .limit(5)
-        .returns<DbPharmacyOrder[]>()
-    : { data: [] };
-
-  const { data: labOrdersData } = patient
-    ? await supabase
-        .from("lab_orders")
-        .select("id, status, reason, map_url, lab_locations(name)")
-        .eq("patient_id", patient.id)
-        .order("created_at", { ascending: false })
-        .limit(5)
-        .returns<DbLabOrder[]>()
-    : { data: [] };
-
-  const { data: attachmentFiles } = patient
-    ? await supabase
-        .from("files")
-        .select("id, original_filename, attachment_kind, storage_path, created_at")
-        .eq("patient_id", patient.id)
-        .order("created_at", { ascending: false })
-        .limit(6)
-        .returns<DbFile[]>()
-    : { data: [] };
+  // These five reads don't depend on each other (only the signed-URL step
+  // below depends on attachmentFiles, and featuredDoctors depends on
+  // providerRows/defaultService) -- running them one at a time was six
+  // sequential round trips to Supabase on every dashboard load.
+  const [
+    { data: liveAppointments },
+    { data: pharmacyOrdersData },
+    { data: labOrdersData },
+    { data: attachmentFiles },
+    defaultService,
+    { data: providerRows },
+  ] = await Promise.all([
+    patient
+      ? supabase
+          .from("appointments")
+          .select(
+            "id, scheduled_at, status, payment_status, price, currency, providers(full_name, specialty), consultation_orders(consultation_mode)"
+          )
+          .eq("patient_id", patient.id)
+          .order("scheduled_at", { ascending: false })
+          .returns<DbAppointment[]>()
+      : Promise.resolve({ data: [] as DbAppointment[] }),
+    patient
+      ? supabase
+          .from("pharmacy_orders")
+          .select("id, status, fulfillment_method, total_amount, created_at")
+          .eq("patient_id", patient.id)
+          .order("created_at", { ascending: false })
+          .limit(5)
+          .returns<DbPharmacyOrder[]>()
+      : Promise.resolve({ data: [] as DbPharmacyOrder[] }),
+    patient
+      ? supabase
+          .from("lab_orders")
+          .select("id, status, reason, map_url, lab_locations(name)")
+          .eq("patient_id", patient.id)
+          .order("created_at", { ascending: false })
+          .limit(5)
+          .returns<DbLabOrder[]>()
+      : Promise.resolve({ data: [] as DbLabOrder[] }),
+    patient
+      ? supabase
+          .from("files")
+          .select("id, original_filename, attachment_kind, storage_path, created_at")
+          .eq("patient_id", patient.id)
+          .order("created_at", { ascending: false })
+          .limit(6)
+          .returns<DbFile[]>()
+      : Promise.resolve({ data: [] as DbFile[] }),
+    getDefaultService(supabase).catch(() => null),
+    supabase
+      .from("providers")
+      .select(
+        "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
+      )
+      .eq("profile_status", "active")
+      .eq("available_now", true)
+      .order("available_now", { ascending: false })
+      .limit(3),
+  ]);
 
   const signedUrlByPath = new Map<string, string>();
   if (attachmentFiles && attachmentFiles.length > 0) {
@@ -191,17 +211,6 @@ export default async function AccountDashboardPage() {
       if (entry.signedUrl) signedUrlByPath.set(entry.path ?? "", entry.signedUrl);
     });
   }
-
-  const defaultService = await getDefaultService(supabase).catch(() => null);
-  const { data: providerRows } = await supabase
-    .from("providers")
-    .select(
-      "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
-    )
-    .eq("profile_status", "active")
-    .eq("available_now", true)
-    .order("available_now", { ascending: false })
-    .limit(3);
   const featuredDoctors = ((providerRows ?? []) as ProviderRow[]).map((row) =>
     mapProviderRow(row, defaultService?.basePrice ?? 0, locale)
   );

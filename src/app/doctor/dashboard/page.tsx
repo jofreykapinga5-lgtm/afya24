@@ -130,27 +130,40 @@ export default async function DoctorDashboardPage() {
         .maybeSingle<ProviderRow>()
     : { data: null };
 
-  const { data: slots } = provider
-    ? await service
-        .from("provider_availability_slots")
-        .select("id, starts_at, ends_at, status, slot_type, consultation_modes, note")
-        .eq("provider_id", provider.id)
-        .order("starts_at", { ascending: true })
-        .limit(12)
-        .returns<AvailabilitySlot[]>()
-    : { data: [] };
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
-  const { data: waitingAppointments } = provider
-    ? await service
-        .from("appointments")
-        .select(
-          "id, scheduled_at, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
-        )
-        .eq("provider_id", provider.id)
-        .in("status", ["waiting", "in_progress"])
-        .order("scheduled_at", { ascending: true })
-        .returns<WaitingAppointment[]>()
-    : { data: [] };
+  // These three only depend on provider.id, not on each other -- running
+  // them one at a time was three sequential round trips per dashboard load.
+  const [{ data: slots }, { data: waitingAppointments }, { count: completedToday }] = provider
+    ? await Promise.all([
+        service
+          .from("provider_availability_slots")
+          .select("id, starts_at, ends_at, status, slot_type, consultation_modes, note")
+          .eq("provider_id", provider.id)
+          .order("starts_at", { ascending: true })
+          .limit(12)
+          .returns<AvailabilitySlot[]>(),
+        service
+          .from("appointments")
+          .select(
+            "id, scheduled_at, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
+          )
+          .eq("provider_id", provider.id)
+          .in("status", ["waiting", "in_progress"])
+          .order("scheduled_at", { ascending: true })
+          .returns<WaitingAppointment[]>(),
+        service
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("provider_id", provider.id)
+          .eq("status", "completed")
+          .gte("scheduled_at", todayStart.toISOString())
+          .lt("scheduled_at", tomorrowStart.toISOString()),
+      ])
+    : [{ data: [] as AvailabilitySlot[] }, { data: [] as WaitingAppointment[] }, { count: 0 }];
 
   const videoAppointments = (waitingAppointments ?? []).filter(
     (appointment) =>
@@ -174,21 +187,6 @@ export default async function DoctorDashboardPage() {
       );
     })
   );
-
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const tomorrowStart = new Date(todayStart);
-  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-
-  const { count: completedToday } = provider
-    ? await service
-        .from("appointments")
-        .select("id", { count: "exact", head: true })
-        .eq("provider_id", provider.id)
-        .eq("status", "completed")
-        .gte("scheduled_at", todayStart.toISOString())
-        .lt("scheduled_at", tomorrowStart.toISOString())
-    : { count: 0 };
 
   // Attachments live in a private bucket -- generate short-lived signed URLs
   // for whatever's in the queue right now rather than making the bucket

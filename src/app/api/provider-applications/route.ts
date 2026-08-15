@@ -60,18 +60,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File must be 12 MB or smaller." }, { status: 400 });
     }
 
-    const { error: bucketError } = await service.storage.getBucket(BUCKET);
-    if (bucketError) {
-      const { error: createBucketError } = await service.storage.createBucket(BUCKET, {
-        public: false,
-        fileSizeLimit: MAX_BYTES,
-        allowedMimeTypes: ALLOWED_MIME_TYPES,
-      });
-      if (createBucketError && !createBucketError.message.toLowerCase().includes("already exists")) {
-        return NextResponse.json({ error: createBucketError.message }, { status: 500 });
-      }
-    }
-
     const path = `${crypto.randomUUID()}/${crypto.randomUUID()}.${extensionFor(file)}`;
     const bytes = await file.arrayBuffer();
     const { error: uploadError } = await service.storage

@@ -22,26 +22,6 @@ const dict = {
     en: "Talk to a doctor in minutes",
     sw: "Ongea na daktari kwa dakika chache",
   },
-  home_headline_1: {
-    en: "Talk first.",
-    sw: "Ongea kwanza.",
-  },
-  home_headline_2: {
-    en: "See the right doctor.",
-    sw: "Ona daktari sahihi.",
-  },
-  ai_greeting: {
-    en: "Tell me what's happening and I'll help you understand your options, what they cost, or connect you to a doctor you can see today.",
-    sw: "Niambie kinachoendelea nami nitakusaidia kuelewa chaguo zako, gharama zake, au kukuunganisha na daktari unayeweza kuonana naye leo.",
-  },
-  ai_greeting_price: {
-    en: "Visits start at TZS 7,000.",
-    sw: "Ziara huanzia TZS 7,000.",
-  },
-  rating_trust: {
-    en: "average doctor rating",
-    sw: "ukadiriaji wastani wa madaktari",
-  },
   availability_next: {
     en: "Next available",
     sw: "Anayepatikana ijayo",
@@ -58,30 +38,6 @@ const dict = {
     en: "Start assessment",
     sw: "Anza tathmini",
   },
-  emergency_title: {
-    en: "This is not for emergencies",
-    sw: "Hii sio kwa dharura",
-  },
-  emergency_body: {
-    en: "If you have chest pain, severe bleeding, difficulty breathing, or other life-threatening symptoms, go to the nearest emergency room or call emergency services immediately.",
-    sw: "Ikiwa una maumivu ya kifua, kutokwa damu nyingi, ugumu wa kupumua, au dalili nyingine hatari, nenda hospitali ya dharura iliyo karibu au piga simu huduma za dharura mara moja.",
-  },
-  trust_licensed: {
-    en: "Licensed doctors",
-    sw: "Madaktari wenye leseni",
-  },
-  trust_pricing: {
-    en: "Upfront prices",
-    sw: "Bei wazi kabla ya kuanza",
-  },
-  trust_secure: {
-    en: "Secure chat, voice & video",
-    sw: "Mazungumzo salama, sauti na video",
-  },
-  reference_lookup_prompt: {
-    en: "Already a patient?",
-    sw: "Tayari ni mgonjwa wetu?",
-  },
   reference_lookup_link: {
     en: "Enter your reference number",
     sw: "Weka nambari yako ya rejea",
@@ -90,49 +46,21 @@ const dict = {
     en: "Health tips & info",
     sw: "Vidokezo vya afya",
   },
-  learn_more: {
-    en: "Learn more",
-    sw: "Jifunze zaidi",
-  },
-  faq_title: {
-    en: "Frequently asked questions",
-    sw: "Maswali yanayoulizwa mara kwa mara",
-  },
-  providers_title: {
-    en: "Doctors who can help",
-    sw: "Madaktari wanaoweza kusaidia",
-  },
-  providers_count: {
-    en: "available now",
-    sw: "wanapatikana sasa",
-  },
-  sort_soonest: {
-    en: "Soonest",
-    sw: "Karibu zaidi",
-  },
-  sort_price: {
-    en: "Price",
-    sw: "Bei",
-  },
-  sort_rating: {
-    en: "Rating",
-    sw: "Ukadiriaji",
-  },
-  filter_all_languages: {
-    en: "All languages",
-    sw: "Lugha zote",
-  },
-  book_cta: {
-    en: "Book",
-    sw: "Weka miadi",
-  },
   back_to_home: {
     en: "Back to home",
     sw: "Rudi mwanzo",
   },
-  hero_badge_cta: {
-    en: "See how Afya24 works",
-    sw: "Ona jinsi Afya24 inavyofanya kazi",
+  error_page_title: {
+    en: "Something went wrong",
+    sw: "Hitilafu imetokea",
+  },
+  error_page_body: {
+    en: "That didn't go through. Please try again, or head back to the home page.",
+    sw: "Hatua hiyo haikukamilika. Tafadhali jaribu tena, au rudi kwenye ukurasa wa mwanzo.",
+  },
+  error_page_retry: {
+    en: "Try again",
+    sw: "Jaribu tena",
   },
   hero_headline_prefix: {
     en: "Healthcare, made",
@@ -144,26 +72,6 @@ const dict = {
   hero_title_simple: { en: "simple", sw: "rahisi" },
   hero_title_convenient: { en: "convenient", sw: "urahisi" },
   hero_get_help_cta: { en: "See a doctor now", sw: "Ona daktari sasa" },
-  how_it_works_badge: {
-    en: "How Afya24 gets you care",
-    sw: "Jinsi Afya24 inavyokufikisha huduma",
-  },
-  how_it_works_title: {
-    en: "From first message to your next step.",
-    sw: "Kutoka ujumbe wa kwanza hadi hatua yako inayofuata.",
-  },
-  how_it_works_body: {
-    en: "Afya24 keeps the patient journey simple: explain the issue, get routed to the right care, choose how to consult, then leave with a clear signed outcome.",
-    sw: "Afya24 inarahisisha safari yako: eleza tatizo lako, uelekezwe kwa huduma sahihi, chagua jinsi ya kuongea na daktari, kisha upate matokeo wazi yaliyosainiwa.",
-  },
-  how_it_works_doctors_today: {
-    en: "Doctors available today",
-    sw: "Madaktari wanaopatikana leo",
-  },
-  how_it_works_online_suffix: {
-    en: "online",
-    sw: "mtandaoni",
-  },
   how_it_works_step1_title: {
     en: "Explain your issue to Afya24",
     sw: "Eleza tatizo lako kwa Afya24",
@@ -200,26 +108,6 @@ const dict = {
     en: "Start now",
     sw: "Muone daktari",
   },
-  how_it_works_benefit1_title: { en: "Private and secure", sw: "Salama na siri" },
-  how_it_works_benefit1_body: {
-    en: "Your information is protected through the care flow.",
-    sw: "Taarifa zako zinalindwa katika safari nzima ya huduma.",
-  },
-  how_it_works_benefit2_title: { en: "Fast and simple", sw: "Haraka na rahisi" },
-  how_it_works_benefit2_body: {
-    en: "Start from your phone and move to the right next step.",
-    sw: "Anza kwa simu yako na uende hatua inayokufaa.",
-  },
-  how_it_works_benefit3_title: { en: "Licensed doctors", sw: "Madaktari bora" },
-  how_it_works_benefit3_body: {
-    en: "Get connected to qualified providers for your issue.",
-    sw: "Unganishwa na wataalamu wenye sifa kwa tatizo lako.",
-  },
-  how_it_works_benefit4_title: { en: "Care for everyone", sw: "Huduma kwa wote" },
-  how_it_works_benefit4_body: {
-    en: "Accessible care options for patients across Tanzania.",
-    sw: "Chaguo za huduma kwa wagonjwa Tanzania nzima.",
-  },
   trust_section_title: {
     en: "Built for clinical trust",
     sw: "Imejengwa kwa uaminifu wa kitabibu",
@@ -231,10 +119,6 @@ const dict = {
   trust_section_body: {
     en: "Afya24 is designed with care, transparency, and safety at its core, so every patient knows what happens before speaking to a doctor.",
     sw: "Afya24 imeundwa kwa uangalifu, uwazi, na usalama ili kila mgonjwa aelewe kinachofuata kabla ya kuongea na daktari.",
-  },
-  trust_section_photo_badge: {
-    en: "Compassionate care, every step of the way.",
-    sw: "Huduma yenye utu, kila hatua.",
   },
   trust_section_footer: {
     en: "At Afya24, your trust is our foundation. We combine technology with human care to deliver a safe, supportive, and reliable healthcare experience.",
@@ -250,11 +134,6 @@ const dict = {
     en: "Afya24 summarizes and routes. Diagnosis and treatment decisions stay with your doctor.",
     sw: "Afya24 hufupisha na kuelekeza. Maamuzi ya uchunguzi na matibabu hubaki kwa daktari wako.",
   },
-  trust_point3_title: { en: "Doctor approval required", sw: "Idhini ya daktari inahitajika" },
-  trust_point3_body: {
-    en: "Prescriptions, lab orders, and referrals are only issued after clinician review and sign-off.",
-    sw: "Dawa, maagizo ya maabara, na rufaa hutolewa tu baada ya daktari kupitia na kuidhinisha.",
-  },
   trust_point4_title: { en: "Secure patient records", sw: "Rekodi salama za mgonjwa" },
   trust_point4_body: {
     en: "Your medical file is private and only visible to doctors involved in your care.",
@@ -265,23 +144,12 @@ const dict = {
     en: "We tell you plainly when a symptom needs in-person or emergency care instead of a virtual visit.",
     sw: "Tunakuambia wazi wakati dalili inahitaji huduma ya ana kwa ana au dharura badala ya ziara ya mtandaoni.",
   },
-  trust_point6_title: { en: "Signed visit summaries", sw: "Muhtasari wa ziara uliosainiwa" },
-  trust_point6_body: {
-    en: "Every completed visit produces a signed record you can retrieve with your reference number.",
-    sw: "Kila ziara iliyokamilika hutoa rekodi iliyosainiwa unayoweza kuipata kwa nambari yako ya rejea.",
-  },
   services_title: { en: "Services", sw: "Huduma" },
   services_subtitle: {
     en: "Choose a care type and Afya24 will guide you to the right doctor.",
     sw: "Chagua aina ya huduma na Afya24 itakuongoza kwa daktari sahihi.",
   },
-  services_body: {
-    en: "Upfront pricing for every service. Pick a category to see matching doctors and slots.",
-    sw: "Bei wazi kwa kila huduma. Chagua aina ili kuona madaktari na nafasi zinazolingana.",
-  },
-  services_from_price: { en: "From TZS", sw: "Kuanzia TZS" },
   services_feature_title: { en: "Find the right care", sw: "Pata huduma sahihi" },
-  services_feature_cta: { en: "Start with general care", sw: "Anza na huduma ya jumla" },
   returning_patient_title: { en: "Returning patient?", sw: "Uliwahi kuwa mgonjwa wetu?" },
   returning_patient_body: {
     en: "Use your reference number to view appointments, prescriptions, lab referrals, or signed summaries. Or",
@@ -296,10 +164,6 @@ const dict = {
   returning_patient_new_here: {
     en: "New here? Create an account instead",
     sw: "Mgeni hapa? Fungua akaunti badala yake",
-  },
-  reviews_title: {
-    en: "Care people feel good coming back to",
-    sw: "Huduma inayowafanya wagonjwa warudi kwa imani",
   },
   reviews_kicker: {
     en: "Those who choose Afya24",
@@ -316,17 +180,6 @@ const dict = {
   reviews_medvi_body: {
     en: "Real patient stories, clear care, and trusted next steps.",
     sw: "Hadithi halisi za wagonjwa, huduma iliyo wazi, na hatua zinazofuata za kuaminika.",
-  },
-  reviews_body: {
-    en: "Patient experiences shared after real visits.",
-    sw: "Uzoefu wa wagonjwa ulioshirikiwa baada ya ziara halisi.",
-  },
-  reviews_families_served: { en: "families served", sw: "familia zilizohudumiwa" },
-  reviews_rating_label: { en: "average rating", sw: "ukadiriaji wastani" },
-  reviews_approved_label: { en: "approved reviews", sw: "maoni yaliyoidhinishwa" },
-  reviews_photo_note: {
-    en: "Real visits, doctor-approved care, clear next steps.",
-    sw: "Ziara halisi, huduma iliyoidhinishwa na daktari, hatua zinazofuata zilizo wazi.",
   },
   reviews_role_mother: { en: "Patient account, mother", sw: "Akaunti ya mgonjwa, mama" },
   reviews_role_patient: { en: "Patient account", sw: "Akaunti ya mgonjwa" },
@@ -355,8 +208,6 @@ const dict = {
     en: "I could check my records later with my reference number. That made follow-up easier.",
     sw: "Niliweza kuangalia rekodi zangu baadaye kwa nambari ya rejea. Hilo lilirahisisha ufuatiliaji.",
   },
-  reviews_previous: { en: "Previous reviews", sw: "Maoni yaliyotangulia" },
-  reviews_next: { en: "Next reviews", sw: "Maoni yanayofuata" },
   email_capture_badge: { en: "Stay in the loop", sw: "Endelea kufahamu" },
   email_capture_title: { en: "Get health tips and updates", sw: "Pata vidokezo vya afya na taarifa" },
   email_capture_body: {
@@ -379,16 +230,6 @@ const dict = {
     en: "A quiet, well-lit spot and a few notes on your symptoms make the visit go faster.",
     sw: "Sehemu tulivu, yenye mwanga mzuri, na maandishi machache kuhusu dalili zako hufanya ziara iende haraka.",
   },
-  health_tip3_title: { en: "What to tell your doctor", sw: "Nini cha kumwambia daktari wako" },
-  health_tip3_teaser: {
-    en: "Duration, severity, and anything that makes it better or worse all help with an accurate assessment.",
-    sw: "Muda, ukali, na chochote kinachofanya iwe bora au mbaya zaidi husaidia katika tathmini sahihi.",
-  },
-  health_tip4_title: { en: "How lab referrals work", sw: "Jinsi rufaa za maabara zinavyofanya kazi" },
-  health_tip4_teaser: {
-    en: "What happens after a doctor orders tests, from referral to results.",
-    sw: "Kinachotokea baada ya daktari kuagiza vipimo, kutoka rufaa hadi matokeo.",
-  },
   health_tips_coming_soon: { en: "Coming soon", sw: "Inakuja hivi karibuni" },
   health_tips_editorial_eyebrow: {
     en: "Better health, better life",
@@ -397,22 +238,6 @@ const dict = {
   health_tips_editorial_subtitle: {
     en: "Expert guidance. Better everyday health.",
     sw: "Ushauri wa kitaalamu. Maisha bora kila siku.",
-  },
-  health_tips_editorial_side_title: {
-    en: "Learn. Understand. Act with confidence.",
-    sw: "Elimu. Uelewa. Uwezo wa kujichukulia hatua.",
-  },
-  health_tips_editorial_side_body: {
-    en: "The right knowledge helps you make better decisions about your health.",
-    sw: "Maarifa sahihi husaidia maamuzi bora kuhusu afya yako.",
-  },
-  health_tips_editorial_footer: {
-    en: "Safe care. Expert guidance. Better health.",
-    sw: "Huduma salama. Ushauri wa kitaalamu. Afya bora.",
-  },
-  health_tips_editorial_cta: {
-    en: "We are here, wherever you are.",
-    sw: "Tunakuwepo, popote ulipo.",
   },
   email_capture_enter_email_error: { en: "Enter an email address.", sw: "Weka anwani ya barua pepe." },
   email_capture_generic_error: {
@@ -428,10 +253,6 @@ const dict = {
   doctors_preview_prev: { en: "Previous doctor", sw: "Daktari aliyetangulia" },
   doctors_preview_next: { en: "Next doctor", sw: "Daktari anayefuata" },
   labs_title: { en: "Partner labs near you", sw: "Maabara washirika karibu nawe" },
-  labs_body: {
-    en: "When a doctor orders tests, we point you to a real nearby lab and can send the location straight to your WhatsApp.",
-    sw: "Daktari anapoagiza vipimo, tunakuelekeza kwa maabara halisi iliyo karibu na tunaweza kutuma eneo moja kwa moja kwenye WhatsApp yako.",
-  },
   labs_geo_unavailable: {
     en: "Location isn't available in this browser.",
     sw: "Huduma ya eneo haipatikani kwenye kivinjari hiki.",
@@ -451,14 +272,9 @@ const dict = {
   },
   labs_finding_you: { en: "Finding you...", sw: "Tunatafuta eneo lako..." },
   labs_find_near_me: { en: "Find labs near me", sw: "Tafuta maabara karibu nami" },
-  labs_showing_nearest: {
-    en: "Showing the {n} nearest partner labs.",
-    sw: "Inaonyesha maabara washirika {n} zilizo karibu zaidi.",
-  },
   labs_search_again: { en: "Search again", sw: "Tafuta tena" },
   labs_away_meters: { en: "m away", sw: "m mbali" },
   labs_away_km: { en: "km away", sw: "km mbali" },
-  labs_sent_whatsapp: { en: "Sent via WhatsApp", sw: "Imetumwa kupitia WhatsApp" },
   labs_open_maps: { en: "Open in Maps", sw: "Fungua kwenye Ramani" },
   pharmacy_cat_all: { en: "All", sw: "Zote" },
   pharmacy_cat_pain_relief: { en: "Pain relief", sw: "Kupunguza maumivu" },
@@ -480,10 +296,6 @@ const dict = {
   pharmacy_order_ready: { en: "Ready", sw: "Tayari" },
   pharmacy_order_delivery: { en: "Delivery", sw: "Inasafirishwa" },
   pharmacy_order_done: { en: "Done", sw: "Imekamilika" },
-  pharmacy_preview_title: {
-    en: "E-pharmacy, connected to your doctor.",
-    sw: "Duka la dawa mtandaoni, lililounganishwa na daktari wako.",
-  },
   pharmacy_preview_label: {
     en: "Afya24 pharmacy",
     sw: "Duka la dawa Afya24",
@@ -512,25 +324,7 @@ const dict = {
     en: "Doctor-linked prescriptions and trusted essentials.",
     sw: "Dawa zilizounganishwa na daktari pamoja na bidhaa muhimu.",
   },
-  pharmacy_preview_body: {
-    en: "Browse everyday health items, then continue prescription medicine checkout only after a doctor signs it inside Afya24.",
-    sw: "Vinjari bidhaa za afya za kila siku, kisha uendelee na malipo ya dawa za maagizo tu baada ya daktari kuzisaini ndani ya Afya24.",
-  },
-  pharmacy_preview_gate_title: { en: "Prescription gate", sw: "Lango la dawa za maagizo" },
-  pharmacy_preview_gate_body: {
-    en: "Restricted medicine needs doctor approval first.",
-    sw: "Dawa zenye vizuizi zinahitaji idhini ya daktari kwanza.",
-  },
-  pharmacy_preview_signed_rx: { en: "Signed prescription", sw: "Dawa iliyoagizwa na kusainiwa" },
-  pharmacy_preview_doctor_signed: { en: "Doctor signed", sw: "Imesainiwa na daktari" },
   pharmacy_preview_open_cta: { en: "Open pharmacy", sw: "Fungua duka la dawa" },
-  pharmacy_search_placeholder: {
-    en: "Search medicine or health item",
-    sw: "Tafuta dawa au bidhaa ya afya",
-  },
-  pharmacy_filters: { en: "Filters", sw: "Vichujio" },
-  pharmacy_preview_order_title: { en: "Prescription order", sw: "Agizo la dawa" },
-  pharmacy_preview_view_order: { en: "View order", sw: "Ona agizo" },
   nav_how_it_works: { en: "How it works", sw: "Jinsi inavyofanya kazi" },
   nav_doctors: { en: "Doctors", sw: "Madaktari" },
   nav_pharmacy: { en: "Pharmacy", sw: "Duka la dawa" },
@@ -637,8 +431,6 @@ const dict = {
   },
   doctor_email_label: { en: "Email", sw: "Barua pepe" },
   doctor_sign_in_cta: { en: "Sign in", sw: "Ingia" },
-  doctor_dashboard_title: { en: "Dashboard", sw: "Dashibodi" },
-  doctor_dashboard_signed_in_as: { en: "Signed in as", sw: "Umeingia kama" },
   doctor_dashboard_role: { en: "Role", sw: "Wadhifa" },
   doctor_dashboard_status: { en: "Status", sw: "Hali" },
   doctor_dashboard_no_profile: {
@@ -779,20 +571,7 @@ const dict = {
   pharmacy_subtotal: { en: "Subtotal", sw: "Jumla ndogo" },
   pharmacy_proceed_checkout: { en: "Proceed to checkout", sw: "Endelea kulipa" },
   pharmacy_cart_button: { en: "Cart", sw: "Kikapu" },
-  pharmacy_page_body_prefix: {
-    en: "Order everyday health items freely. Medicines marked",
-    sw: "Agiza bidhaa za afya za kila siku bila kizuizi. Dawa zilizowekwa alama",
-  },
-  pharmacy_requires_prescription: { en: "Requires prescription", sw: "Inahitaji dawa ya daktari" },
-  pharmacy_page_body_suffix: {
-    en: "only unlock after a doctor approves them during a consultation.",
-    sw: "hufunguliwa tu baada ya daktari kuziidhinisha wakati wa ushauri.",
-  },
   pharmacy_search_medicines_placeholder: { en: "Search medicines...", sw: "Tafuta dawa..." },
-  pharmacy_search_medicines_hint: {
-    en: "Search our full catalog by name, or pick a category above.",
-    sw: "Tafuta orodha yetu kamili kwa jina, au chagua aina hapo juu.",
-  },
   pharmacy_no_medicines_match: { en: "No medicines match", sw: "Hakuna dawa zinazolingana na" },
   pharmacy_catalog_empty_title: { en: "The pharmacy is opening soon", sw: "Duka la dawa linakaribia kufunguliwa" },
   pharmacy_catalog_empty_body: {
@@ -811,32 +590,6 @@ const dict = {
   pharmacy_badge_sale: { en: "Sale", sw: "Ofa" },
   pharmacy_add_to_cart: { en: "Add to cart", sw: "Ongeza kwenye kikapu" },
   pharmacy_in_cart: { en: "In cart", sw: "Kwenye kikapu" },
-  pharmacy_hero_price_label: { en: "From", sw: "Kuanzia" },
-  pharmacy_hero_label: { en: "Health essentials", sw: "Bidhaa za afya" },
-  pharmacy_hero_headline_accent: { en: "Shop", sw: "Nunua" },
-  pharmacy_hero_headline_rest: {
-    en: "trusted medicine and care supplies",
-    sw: "dawa na vifaa vya afya vinavyoaminika",
-  },
-  pharmacy_hero_body: {
-    en: "Everyday pain and fever relief, ready for pickup or delivery today. No appointment needed for over-the-counter medicines.",
-    sw: "Dawa za maumivu na homa za kila siku, tayari kuchukuliwa au kuletewa leo. Hakuna miadi inayohitajika kwa dawa zisizohitaji cheti.",
-  },
-  pharmacy_hero_cta: { en: "Shop pain relief", sw: "Nunua dawa za maumivu" },
-  pharmacy_hero_trust_badge: { en: "No prescription needed", sw: "Haihitaji dawa ya daktari" },
-  pharmacy_promo_shop_now: { en: "Shop now", sw: "Nunua sasa" },
-  pharmacy_promo_first_aid_body: {
-    en: "Sprays, salts, and wound care for small emergencies at home.",
-    sw: "Dawa za kunyunyizia, chumvi za maji, na huduma za majeraha nyumbani.",
-  },
-  pharmacy_promo_ors_body: {
-    en: "Restore fluids and electrolytes fast during an upset stomach.",
-    sw: "Rejesha maji na madini mwilini haraka wakati wa tumbo kuharisha.",
-  },
-  pharmacy_promo_vitamins_body: {
-    en: "Daily vitamins and supplements to support your immune system.",
-    sw: "Vitamini na virutubisho vya kila siku kuimarisha kinga ya mwili.",
-  },
   pharmacy_categories_title: { en: "Shop by category", sw: "Nunua kwa aina" },
   pharmacy_topbar_name: { en: "Afya24 pharmacy", sw: "Duka la dawa la Afya24" },
   pharmacy_topbar_tagline: {
@@ -844,57 +597,11 @@ const dict = {
     sw: "Bidhaa za matibabu, virutubisho, na utoaji wa dawa",
   },
   pharmacy_topbar_support: { en: "Support 24/7", sw: "Msaada saa 24/7" },
-  pharmacy_hero_headline: {
-    en: "Medical supplies delivered with care",
-    sw: "Bidhaa za matibabu zinazoletwa kwa uangalifu",
-  },
   pharmacy_hero_subtitle: {
     en: "Shop trusted medicines, supplements, wound care, and hospital tools from Afya24 pharmacy.",
     sw: "Nunua dawa za kuaminika, virutubisho, huduma za majeraha, na vifaa vya hospitali kutoka duka la dawa la Afya24.",
   },
-  pharmacy_hero_doctor_linked: {
-    en: "Doctor linked prescriptions",
-    sw: "Dawa zinazounganishwa na daktari",
-  },
-  pharmacy_best_pick_badge: { en: "Best pick", sw: "Chaguo bora" },
-  pharmacy_deal_of_day_title: { en: "Daily deal of the day", sw: "Ofa ya siku" },
-  pharmacy_deal_ends_in: { en: "Ends in", sw: "Inaisha baada ya" },
-  pharmacy_view_all_products: { en: "View all products", sw: "Ona bidhaa zote" },
-  pharmacy_equipment_banner_title: { en: "Hospital equipment", sw: "Vifaa vya hospitali" },
-  pharmacy_home_supplies_banner_title: {
-    en: "Home medical supplies",
-    sw: "Bidhaa za matibabu nyumbani",
-  },
-  pharmacy_shop_equipment_cta: { en: "Shop equipment", sw: "Nunua vifaa" },
-  pharmacy_view_devices_cta: { en: "View devices", sw: "Ona vifaa" },
-  pharmacy_best_selling_title: { en: "Best selling items", sw: "Bidhaa zinazouzwa zaidi" },
-  pharmacy_best_selling_subtitle: {
-    en: "Search medicines, supplements, devices, and hospital tools in the Afya24 catalog.",
-    sw: "Tafuta dawa, virutubisho, vifaa, na vifaa vya hospitali katika orodha ya Afya24.",
-  },
-  pharmacy_sale_badge: { en: "Sale", sw: "Ofa" },
   pharmacy_price_label: { en: "Price", sw: "Bei" },
-  pharmacy_items_count: { en: "{n} items", sw: "Bidhaa {n}" },
-  pharmacy_featured_prefix: { en: "Featured", sw: "Iliyochaguliwa" },
-  pharmacy_shop_category_cta: { en: "Shop category", sw: "Nunua aina hii" },
-  pharmacy_popular_title: { en: "Popular over-the-counter picks", sw: "Dawa maarufu zisizohitaji cheti" },
-  pharmacy_popular_body: {
-    en: "No prescription required. Add straight to your cart.",
-    sw: "Hazihitaji dawa ya daktari. Ongeza moja kwa moja kwenye kikapu.",
-  },
-  pharmacy_banner_prescription_title: { en: "Have a prescription to fill?", sw: "Una dawa ya daktari ya kuchukua?" },
-  pharmacy_banner_prescription_body: {
-    en: "Talk to a licensed doctor first. Once they approve it, your medicine unlocks here for pickup or delivery.",
-    sw: "Ongea na daktari mwenye leseni kwanza. Akiidhinisha, dawa yako itafunguliwa hapa kwa kuchukua au kuletewa.",
-  },
-  pharmacy_banner_prescription_cta: { en: "Talk to a doctor", sw: "Ongea na daktari" },
-  pharmacy_banner_chronic_title: { en: "Managing a chronic condition?", sw: "Unashughulikia ugonjwa sugu?" },
-  pharmacy_banner_chronic_body: {
-    en: "Refill blood pressure and diabetes medication on a schedule that works for you.",
-    sw: "Chukua tena dawa za shinikizo la damu na kisukari kwa ratiba inayokufaa.",
-  },
-  pharmacy_banner_chronic_cta: { en: "View chronic care medicines", sw: "Ona dawa za magonjwa sugu" },
-  pharmacy_all_medicines_title: { en: "All medicines", sw: "Dawa zote" },
   pharmacy_stock_out_full: { en: "Out of stock", sw: "Imeisha stoo" },
   pharmacy_status_ready_full: { en: "Ready for pickup", sw: "Tayari kuchukuliwa" },
   pharmacy_status_delivery_full: { en: "Out for delivery", sw: "Inasafirishwa" },
@@ -1252,14 +959,6 @@ const dict = {
     en: "Providers, services, appointments, payments, and operations at a glance.",
     sw: "Watoa huduma, huduma, miadi, malipo, na uendeshaji kwa muhtasari.",
   },
-  admin_nav_overview: { en: "Overview", sw: "Muhtasari" },
-  admin_nav_providers: { en: "Providers", sw: "Watoa huduma" },
-  admin_nav_services: { en: "Services & pricing", sw: "Huduma na bei" },
-  admin_nav_appointments: { en: "Appointments", sw: "Miadi" },
-  admin_nav_payments: { en: "Payments", sw: "Malipo" },
-  admin_nav_pharmacy: { en: "Pharmacy orders", sw: "Maagizo ya duka la dawa" },
-  admin_nav_labs: { en: "Labs", sw: "Maabara" },
-  admin_nav_audit: { en: "Audit log", sw: "Kumbukumbu za ukaguzi" },
   admin_kpi_appointments_today: { en: "Appointments today", sw: "Miadi ya leo" },
   admin_kpi_pending_payments: { en: "Pending payments", sw: "Malipo yanayosubiri" },
   admin_kpi_active_providers: { en: "Active providers", sw: "Watoa huduma amilifu" },
@@ -1267,7 +966,6 @@ const dict = {
   admin_kpi_open_labs: { en: "Open lab orders", sw: "Maagizo ya maabara yaliyo wazi" },
   admin_recent_activity: { en: "Recent activity", sw: "Shughuli za hivi karibuni" },
   admin_upcoming_appointments: { en: "Upcoming appointments", sw: "Miadi zijazo" },
-  admin_view_all: { en: "View all", sw: "Ona zote" },
   admin_search_providers_placeholder: {
     en: "Search providers by name or specialty",
     sw: "Tafuta watoa huduma kwa jina au utaalamu",
@@ -1275,15 +973,8 @@ const dict = {
   admin_col_provider: { en: "Provider", sw: "Mtoa huduma" },
   admin_col_specialty: { en: "Specialty", sw: "Utaalamu" },
   admin_col_status: { en: "Status", sw: "Hali" },
-  admin_col_license: { en: "License", sw: "Leseni" },
   admin_col_price: { en: "Price", sw: "Bei" },
-  admin_col_appointments_week: { en: "Appts this week", sw: "Miadi wiki hii" },
-  admin_col_languages: { en: "Languages", sw: "Lugha" },
-  admin_col_joined: { en: "Joined", sw: "Alijiunga" },
   admin_col_actions: { en: "Actions", sw: "Vitendo" },
-  admin_action_suspend: { en: "Suspend", sw: "Simamisha" },
-  admin_action_reactivate: { en: "Reactivate", sw: "Rejesha" },
-  admin_action_approve: { en: "Approve", sw: "Idhinisha" },
   admin_action_confirm: { en: "Confirm", sw: "Thibitisha" },
   admin_action_mark_failed: { en: "Mark failed", sw: "Weka kama imeshindwa" },
   admin_payments_empty: { en: "No payments yet.", sw: "Hakuna malipo bado." },
@@ -1306,7 +997,6 @@ const dict = {
   admin_filter_all_providers: { en: "All providers", sw: "Watoa huduma wote" },
   admin_no_results: { en: "No results match your filters.", sw: "Hakuna matokeo yanayolingana na vichujio vyako." },
   admin_col_amount: { en: "Amount", sw: "Kiasi" },
-  admin_col_method: { en: "Method", sw: "Njia ya malipo" },
   admin_payment_status_paid: { en: "Paid", sw: "Imelipwa" },
   admin_payment_status_pending: { en: "Pending", sw: "Inasubiri" },
   admin_payment_status_failed: { en: "Failed", sw: "Imeshindwa" },
@@ -1358,6 +1048,7 @@ const dict = {
   },
   admin_audit_prescription_signed: { en: "Prescription signed", sw: "Dawa imesainiwa" },
   admin_audit_lab_order_approved: { en: "Lab order approved", sw: "Agizo la maabara limeidhinishwa" },
+
 } as const;
 
 export type TranslationKey = keyof typeof dict;

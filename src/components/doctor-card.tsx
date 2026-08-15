@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Provider, Locale } from "@/lib/types";
 import { ConsultationModeIcons } from "@/components/consultation-mode-icons";
@@ -37,7 +36,14 @@ export function DoctorCard({
         <span className="relative shrink-0">
           {provider.photoUrl ? (
             <span className="relative size-14 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
-              <Image src={provider.photoUrl} alt="" fill sizes="56px" className="object-cover" />
+              {/* Plain <img> straight to storage -- see doctor-carousel-card
+                  for why this bypasses next/image's /_next/image proxy. */}
+              <img
+                src={provider.photoUrl}
+                alt=""
+                loading="lazy"
+                className="size-full object-cover"
+              />
             </span>
           ) : (
             <span

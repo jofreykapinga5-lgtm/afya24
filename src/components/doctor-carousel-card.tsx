@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Provider, Locale } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,18 @@ export function DoctorCarouselCard({
         <span className="relative shrink-0">
           {provider.photoUrl ? (
             <span className="relative size-16 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-white">
-              <Image src={provider.photoUrl} alt="" fill sizes="64px" className="object-cover" />
+              {/* Plain <img> straight to Supabase storage, not next/image's
+                  /_next/image proxy -- that proxy URL shape (same-origin
+                  request carrying an encoded external URL as a query param)
+                  matches common ad-blocker/tracker-blocker heuristics and
+                  was silently dropping this image in at least one real
+                  browser. */}
+              <img
+                src={provider.photoUrl}
+                alt=""
+                loading="lazy"
+                className="size-full object-cover"
+              />
             </span>
           ) : (
             <span

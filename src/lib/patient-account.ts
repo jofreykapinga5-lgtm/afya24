@@ -10,6 +10,7 @@ export async function createPatientAccountRecord(input: {
   fullName: string;
   phone: string;
   dateOfBirth: string;
+  gender?: "female" | "male" | "other";
   preferredLanguage?: Locale;
 }) {
   const service = createServiceClient();
@@ -24,6 +25,7 @@ export async function createPatientAccountRecord(input: {
         full_name: input.fullName,
         phone: input.phone,
         date_of_birth: input.dateOfBirth,
+        gender: input.gender ?? null,
         preferred_language: input.preferredLanguage ?? "sw",
       })
       .select("id")

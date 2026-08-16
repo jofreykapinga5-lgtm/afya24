@@ -36,6 +36,7 @@ export function PayForm({
   providerName,
   specialty,
   defaultPhone,
+  hospitalReferenceNumber,
 }: {
   appointmentId: string;
   mode: "voice" | "video";
@@ -45,6 +46,7 @@ export function PayForm({
   providerName: string;
   specialty: string;
   defaultPhone: string;
+  hospitalReferenceNumber: string;
 }) {
   const router = useRouter();
   const [channelProvider, setChannelProvider] = useState<SnippeChannelProvider>("mpesa");
@@ -149,6 +151,12 @@ export function PayForm({
             {t(mode === "voice" ? "doctor_booking_mode_voice" : "doctor_booking_mode_video", locale)}
           </span>
         </div>
+        {hospitalReferenceNumber && (
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#dfe8eb] pt-3">
+            <span className="text-xs text-muted-foreground">{t("payment_reference_label", locale)}</span>
+            <span className="font-mono text-sm font-semibold text-primary">{hospitalReferenceNumber}</span>
+          </div>
+        )}
       </div>
 
       <div aria-live="polite" key={stage} className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-300">

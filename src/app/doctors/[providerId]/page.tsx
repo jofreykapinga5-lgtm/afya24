@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Star, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Info, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getPatientSession } from "@/lib/patient-session";
@@ -90,8 +90,8 @@ export default async function DoctorBookingPage({
       </div>
 
       {!patientSession && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-pending/30 bg-pending-soft px-4 py-3.5 text-sm text-pending">
-          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-info/25 bg-info-soft px-4 py-3.5 text-sm text-info">
+          <Info className="mt-0.5 size-4 shrink-0" />
           <div>
             <p className="font-semibold">{t("doctor_booking_no_session_title", locale)}</p>
             <p className="mt-0.5 opacity-90">{t("doctor_booking_no_session_body", locale)}</p>

@@ -1,9 +1,11 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/service";
-import { getPatientSession } from "@/lib/patient-session";
+import { createPatientSession, getPatientSession } from "@/lib/patient-session";
+import { createPatientAccountRecord } from "@/lib/patient-account";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
+import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import type { ConsultationMode, Locale, QualificationResult } from "@/lib/types";
 
 export async function bookConsultation(input: {
@@ -17,22 +19,78 @@ export async function bookConsultation(input: {
     throw new Error("Your session expired. Please start the intake chat again.");
   }
 
+  return bookConsultationForPatient({
+    patientId: session.patientId,
+    providerId: input.providerId,
+    consultationMode: input.consultationMode,
+    locale: input.locale,
+    qualification: input.qualification,
+  });
+}
+
+// For a patient who skips Afya24's AI intake and books a doctor directly --
+// no qualification chat means no patient record or session exists yet, so
+// this creates both from the form fields (same shape as the AI flow's
+// createPatientAccountRecord) before booking exactly like the normal path.
+// The reference number this mints is still the patient's real, permanent
+// file number -- it's surfaced to them on the payment page rather than here,
+// since that's the moment the booking is actually confirmed as real.
+export async function bookConsultationDirect(input: {
+  providerId: string;
+  consultationMode: ConsultationMode;
+  locale: Locale;
+  fullName: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: "female" | "male" | "other";
+}): Promise<string> {
+  const fullName = input.fullName.trim();
+  const phone = input.phone.trim();
+
+  if (!fullName || !phone || !input.dateOfBirth) {
+    throw new Error("Full name, phone number, and date of birth are required.");
+  }
+
+  const record = await createPatientAccountRecord({
+    fullName,
+    phone: normalizeTanzanianPhoneToE164(phone),
+    dateOfBirth: input.dateOfBirth,
+    gender: input.gender,
+    preferredLanguage: input.locale,
+  });
+
+  await createPatientSession(record.patientId);
+
+  return bookConsultationForPatient({
+    patientId: record.patientId,
+    providerId: input.providerId,
+    consultationMode: input.consultationMode,
+    locale: input.locale,
+    qualification: null,
+  });
+}
+
+async function bookConsultationForPatient(input: {
+  patientId: string;
+  providerId: string;
+  consultationMode: ConsultationMode;
+  locale: Locale;
+  qualification: QualificationResult | null;
+}): Promise<string> {
   const service = createServiceClient();
   const defaultService = await getDefaultService(service);
 
   const { data: appointment, error: appointmentError } = await service
     .from("appointments")
     .insert({
-      patient_id: session.patientId,
+      patient_id: input.patientId,
       provider_id: input.providerId,
       service_id: defaultService.id,
       scheduled_at: new Date().toISOString(),
       status: "waiting",
-      // No payment gateway is integrated yet, so this starts pending rather
-      // than being marked paid automatically -- an admin confirms it for
-      // real from /admin/dashboard's Payments panel once payment actually
-      // comes in (e.g. an M-Pesa till reference), matching how a direct-pay
-      // platform with no live gateway has to reconcile payment today.
+      // Starts pending -- the patient is routed to /consultation/[id]/pay
+      // next (see booking-form.tsx / direct-booking-form.tsx), and the
+      // Snippe payment flow is what actually flips this to "paid".
       payment_status: "pending",
       price: defaultService.basePrice,
       currency: "TZS",
@@ -47,7 +105,7 @@ export async function bookConsultation(input: {
   const appointmentId = appointment.id as string;
 
   const { error: orderError } = await service.from("consultation_orders").insert({
-    patient_id: session.patientId,
+    patient_id: input.patientId,
     provider_id: input.providerId,
     service_id: defaultService.id,
     appointment_id: appointmentId,
@@ -76,7 +134,7 @@ export async function bookConsultation(input: {
   await service
     .from("files")
     .update({ appointment_id: appointmentId })
-    .eq("patient_id", session.patientId)
+    .eq("patient_id", input.patientId)
     .is("appointment_id", null);
 
   // The patient may have hard-refreshed between /qualification and here --

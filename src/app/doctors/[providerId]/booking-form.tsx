@@ -4,10 +4,21 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Phone, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { bookConsultation } from "../actions";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DobSelect } from "@/app/lookup/dob-select";
+import { bookConsultation, bookConsultationDirect } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import type { ConsultationMode, Locale, Provider } from "@/lib/types";
+
+type Gender = "female" | "male" | "other";
 
 const callModeCopy: Record<"voice" | "video", { titleKey: "doctor_booking_mode_voice" | "doctor_booking_mode_video"; detail: string }> = {
   voice: {
@@ -41,17 +52,9 @@ export function BookingForm({
   );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [gender, setGender] = useState<Gender | "">("");
 
-  function handleConfirm() {
-    setError(null);
-    if (availableCallModes.length === 0) {
-      setError("This doctor is not accepting voice or video calls right now.");
-      return;
-    }
-    if (!hasSession) {
-      setError(t("doctor_booking_no_session_body", locale));
-      return;
-    }
+  function bookWithSession() {
     startTransition(async () => {
       try {
         const appointmentId = await bookConsultation({
@@ -71,8 +74,49 @@ export function BookingForm({
     });
   }
 
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    if (availableCallModes.length === 0) {
+      setError("This doctor is not accepting voice or video calls right now.");
+      return;
+    }
+
+    if (hasSession) {
+      bookWithSession();
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const fullName = String(formData.get("fullName") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
+
+    if (!fullName || !phone || !gender || !dateOfBirth) {
+      setError(t("doctor_direct_booking_missing_fields", locale));
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const appointmentId = await bookConsultationDirect({
+          providerId: provider.id,
+          consultationMode: mode,
+          locale,
+          fullName,
+          phone,
+          dateOfBirth,
+          gender,
+        });
+        router.push(`/consultation/${appointmentId}/pay?mode=${mode}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("doctor_booking_error", locale));
+      }
+    });
+  }
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-card p-6">
       <p className="text-sm font-semibold">{t("doctor_booking_choose_mode", locale)}</p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -108,11 +152,61 @@ export function BookingForm({
         </p>
       )}
 
+      {!hasSession && (
+        <div className="mt-5 border-t border-border pt-5">
+          <p className="text-sm font-semibold">{t("doctor_direct_booking_title", locale)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("doctor_direct_booking_body", locale)}</p>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm sm:col-span-2">
+              <span className="font-medium">{t("doctor_direct_booking_name_label", locale)}</span>
+              <Input name="fullName" required autoComplete="name" />
+            </label>
+            <label className="grid gap-1.5 text-sm">
+              <span className="font-medium">{t("doctor_direct_booking_phone_label", locale)}</span>
+              <Input
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={t("doctor_direct_booking_phone_placeholder", locale)}
+                required
+              />
+            </label>
+            <label className="grid gap-1.5 text-sm">
+              <span className="font-medium">{t("doctor_direct_booking_gender_label", locale)}</span>
+              <Select
+                name="gender"
+                value={gender}
+                onValueChange={(value) => setGender((value as Gender | null) ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("doctor_direct_booking_gender_placeholder", locale)} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="female">{t("doctor_direct_booking_gender_female", locale)}</SelectItem>
+                  <SelectItem value="male">{t("doctor_direct_booking_gender_male", locale)}</SelectItem>
+                  <SelectItem value="other">{t("doctor_direct_booking_gender_other", locale)}</SelectItem>
+                </SelectContent>
+              </Select>
+            </label>
+            <div className="grid gap-1.5 text-sm sm:col-span-2">
+              <span className="font-medium">{t("doctor_direct_booking_dob_label", locale)}</span>
+              <DobSelect locale={locale} />
+            </div>
+          </div>
+
+          <p className="mt-3 text-xs text-muted-foreground">
+            {t("doctor_direct_booking_reference_note", locale)}
+          </p>
+        </div>
+      )}
+
       {error && <p className="mt-3 text-sm text-urgent">{error}</p>}
 
-      <Button size="lg" className="mt-4 w-full" disabled={pending || !hasSession} onClick={handleConfirm}>
+      <Button type="submit" size="lg" className="mt-4 w-full" disabled={pending}>
         {t("doctor_booking_confirm_cta", locale)}
       </Button>
-    </div>
+    </form>
   );
 }

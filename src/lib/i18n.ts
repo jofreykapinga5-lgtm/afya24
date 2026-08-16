@@ -738,6 +738,10 @@ const dict = {
   payment_phone_label: { en: "Phone number", sw: "Namba ya simu" },
   payment_phone_placeholder: { en: "0712 345 678", sw: "0712 345 678" },
   payment_pay_button: { en: "Pay now", sw: "Lipa sasa" },
+  payment_secure_note: {
+    en: "Your payment is processed securely",
+    sw: "Malipo yako yanafanywa kwa usalama",
+  },
   payment_pay_pending: { en: "Starting payment…", sw: "Inaanzisha malipo…" },
   payment_waiting_title: {
     en: "Waiting for payment confirmation",

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Smartphone, TriangleAlert } from "lucide-react";
+import { Lock, Phone, Smartphone, TriangleAlert, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -128,6 +128,8 @@ export function PayForm({
     });
   }
 
+  const ModeIcon = mode === "voice" ? Phone : Video;
+
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
       <p className="text-sm font-semibold">{t("payment_page_title", locale)}</p>
@@ -138,75 +140,96 @@ export function PayForm({
           {t("payment_summary_label", locale)} {providerName}
           {specialty ? ` · ${specialty}` : ""}
         </p>
-        <p className="mt-1 text-lg font-bold text-primary tabular-nums">
-          {currency} {price.toLocaleString()}
-        </p>
+        <div className="mt-1.5 flex items-end justify-between gap-3">
+          <p className="text-lg font-bold text-primary tabular-nums">
+            {currency} {price.toLocaleString()}
+          </p>
+          <span className="mb-0.5 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <ModeIcon className="size-3.5 shrink-0" />
+            {t(mode === "voice" ? "doctor_booking_mode_voice" : "doctor_booking_mode_video", locale)}
+          </span>
+        </div>
       </div>
 
-      {stage === "form" ? (
-        <>
-          <p className="mt-4 text-sm font-semibold">{t("payment_provider_label", locale)}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {PROVIDERS.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                variant={channelProvider === option.value ? "default" : "outline"}
-                className="h-auto justify-start gap-2 rounded-xl px-3 py-2.5 text-left"
-                onClick={() => setChannelProvider(option.value)}
-              >
-                <Smartphone className="size-4 shrink-0" />
-                <span className="text-sm font-semibold">{t(option.labelKey, locale)}</span>
-              </Button>
-            ))}
-          </div>
+      <div aria-live="polite" key={stage} className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-300">
+        {stage === "form" ? (
+          <>
+            <p className="mt-4 text-sm font-semibold">{t("payment_provider_label", locale)}</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {PROVIDERS.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  variant={channelProvider === option.value ? "default" : "outline"}
+                  className="h-auto justify-start gap-2 rounded-xl px-3 py-2.5 text-left"
+                  onClick={() => setChannelProvider(option.value)}
+                >
+                  <Smartphone className="size-4 shrink-0" />
+                  <span className="text-sm font-semibold">{t(option.labelKey, locale)}</span>
+                </Button>
+              ))}
+            </div>
 
-          <label className="mt-4 block text-sm font-semibold" htmlFor="payment-phone">
-            {t("payment_phone_label", locale)}
-          </label>
-          <Input
-            id="payment-phone"
-            className="mt-1.5"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            placeholder={t("payment_phone_placeholder", locale)}
-            inputMode="tel"
-          />
+            <label className="mt-4 block text-sm font-semibold" htmlFor="payment-phone">
+              {t("payment_phone_label", locale)}
+            </label>
+            <div className="relative mt-1.5">
+              <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="payment-phone"
+                className="h-11 rounded-xl pl-10"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder={t("payment_phone_placeholder", locale)}
+                inputMode="tel"
+              />
+            </div>
 
-          {error && <p className="mt-3 text-sm text-urgent">{error}</p>}
+            {error && <p className="mt-3 text-sm text-urgent">{error}</p>}
 
-          <Button size="lg" className="mt-4 w-full" disabled={pending} onClick={handlePay}>
-            {pending ? t("payment_pay_pending", locale) : t("payment_pay_button", locale)}
-          </Button>
-        </>
-      ) : stage === "waiting" ? (
-        <div className="mt-5 flex flex-col items-center gap-3 text-center">
-          <Loader2 className="size-8 animate-spin text-primary" />
-          <div>
-            <p className="font-semibold">{t("payment_waiting_title", locale)}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("payment_waiting_body", locale)}</p>
-          </div>
-          {showSlowNotice && (
-            <p className="mt-1 rounded-lg bg-pending-soft px-3 py-2 text-xs text-pending">
-              {t("payment_taking_longer", locale)}
+            <Button size="lg" className="mt-4 w-full" disabled={pending} onClick={handlePay}>
+              {pending ? t("payment_pay_pending", locale) : t("payment_pay_button", locale)}
+            </Button>
+
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="size-3.5 shrink-0 text-brand-teal" />
+              {t("payment_secure_note", locale)}
             </p>
-          )}
-          <Button variant="outline" className="mt-1 w-full" disabled={pending} onClick={handleCancel}>
-            {t("payment_cancel_button", locale)}
-          </Button>
-        </div>
-      ) : (
-        <div className="mt-5 flex flex-col items-center gap-3 text-center">
-          <TriangleAlert className="size-8 text-urgent" />
-          <div>
-            <p className="font-semibold">{t("payment_failed_title", locale)}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("payment_failed_body", locale)}</p>
+          </>
+        ) : stage === "waiting" ? (
+          <div className="mt-5 flex flex-col items-center gap-3 text-center">
+            <div className="relative flex size-14 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-primary/15 motion-safe:animate-ping" />
+              <span className="relative flex size-14 items-center justify-center rounded-full bg-primary-soft">
+                <Smartphone className="size-6 text-primary" />
+              </span>
+            </div>
+            <div>
+              <p className="font-semibold">{t("payment_waiting_title", locale)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("payment_waiting_body", locale)}</p>
+            </div>
+            {showSlowNotice && (
+              <p className="mt-1 rounded-lg bg-pending-soft px-3 py-2 text-xs text-pending">
+                {t("payment_taking_longer", locale)}
+              </p>
+            )}
+            <Button variant="ghost" className="mt-1 w-full text-muted-foreground" disabled={pending} onClick={handleCancel}>
+              {t("payment_cancel_button", locale)}
+            </Button>
           </div>
-          <Button className="mt-1 w-full" onClick={handleRetry}>
-            {t("payment_retry_button", locale)}
-          </Button>
-        </div>
-      )}
+        ) : (
+          <div className="mt-5 flex flex-col items-center gap-3 text-center">
+            <TriangleAlert className="size-8 text-urgent" />
+            <div>
+              <p className="font-semibold">{t("payment_failed_title", locale)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("payment_failed_body", locale)}</p>
+            </div>
+            <Button className="mt-1 w-full" onClick={handleRetry}>
+              {t("payment_retry_button", locale)}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -191,6 +191,7 @@ export async function initiateSnippePayment(input: {
     phone: normalizedPhone,
     firstName,
     lastName,
+    email: patientAuthEmailFromPhone(input.phone),
     webhookUrl: `${appBaseUrl()}/api/payments/snippe-webhook`,
     metadata: { appointment_id: input.appointmentId },
   });

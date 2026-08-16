@@ -57,6 +57,7 @@ export async function createSnippeCollectionPayment(input: {
   phone: string;
   firstName: string;
   lastName: string;
+  email: string;
   webhookUrl: string;
   metadata: Record<string, string>;
 }): Promise<{ reference: string; status: string; createdAt: string }> {
@@ -67,12 +68,13 @@ export async function createSnippeCollectionPayment(input: {
       idempotencyKey: input.idempotencyKey,
       body: JSON.stringify({
         payment_type: "mobile",
-        amount: { currency: "TZS", value: input.amountValue },
+        phone_number: input.phone,
+        details: { amount: input.amountValue, currency: "TZS" },
         channel: { provider: input.channelProvider },
         customer: {
-          phone: input.phone,
-          first_name: input.firstName,
-          last_name: input.lastName,
+          firstname: input.firstName,
+          lastname: input.lastName,
+          email: input.email,
         },
         webhook_url: input.webhookUrl,
         metadata: input.metadata,

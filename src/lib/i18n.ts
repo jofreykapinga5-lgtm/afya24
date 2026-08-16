@@ -1055,6 +1055,7 @@ const dict = {
   admin_payments_empty: { en: "No payments yet.", sw: "Hakuna malipo bado." },
   admin_action_deactivate: { en: "Deactivate", sw: "Zima" },
   admin_action_activate: { en: "Activate", sw: "Washa" },
+  admin_action_save: { en: "Save", sw: "Hifadhi" },
   admin_provider_status_active: { en: "Active", sw: "Hai" },
   admin_provider_status_pending: { en: "Pending", sw: "Inasubiri" },
   admin_provider_status_suspended: { en: "Suspended", sw: "Imesimamishwa" },

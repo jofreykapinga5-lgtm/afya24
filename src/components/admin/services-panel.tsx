@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { updateServicePrice, updateServiceStatus } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -23,12 +24,10 @@ export function ServicesPanel({
   locale,
   categories,
   services,
-  onToggleStatus,
 }: {
   locale: Locale;
   categories: ServiceCategory[];
   services: Service[];
-  onToggleStatus: (serviceId: string, serviceName: string, next: ServiceStatus) => void;
 }) {
   const categoryName = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
@@ -58,7 +57,9 @@ export function ServicesPanel({
                 <TableCell className="text-muted-foreground">
                   {categoryName.get(service.categoryId) ?? "-"}
                 </TableCell>
-                <TableCell className="tabular-nums">TZS {service.startingPrice}</TableCell>
+                <TableCell>
+                  <UpdatePriceForm serviceId={service.id} price={service.startingPrice} locale={locale} />
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {service.estimatedDuration} min
                 </TableCell>
@@ -71,21 +72,15 @@ export function ServicesPanel({
                   </StatusPill>
                 </TableCell>
                 <TableCell className="pr-4 text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      onToggleStatus(
-                        service.id,
-                        service.name,
-                        status === "active" ? "inactive" : "active"
-                      )
-                    }
-                  >
-                    {status === "active"
-                      ? t("admin_action_deactivate", locale)
-                      : t("admin_action_activate", locale)}
-                  </Button>
+                  <form action={updateServiceStatus}>
+                    <input type="hidden" name="serviceId" value={service.id} />
+                    <input type="hidden" name="status" value={status === "active" ? "inactive" : "active"} />
+                    <Button type="submit" size="sm" variant="outline">
+                      {status === "active"
+                        ? t("admin_action_deactivate", locale)
+                        : t("admin_action_activate", locale)}
+                    </Button>
+                  </form>
                 </TableCell>
               </TableRow>
             );
@@ -93,5 +88,34 @@ export function ServicesPanel({
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+function UpdatePriceForm({
+  serviceId,
+  price,
+  locale,
+}: {
+  serviceId: string;
+  price: number;
+  locale: Locale;
+}) {
+  return (
+    <form action={updateServicePrice} className="flex items-center gap-1.5">
+      <input type="hidden" name="serviceId" value={serviceId} />
+      <span className="text-xs text-muted-foreground">TZS</span>
+      <input
+        name="price"
+        type="number"
+        min={1}
+        step={1}
+        defaultValue={price}
+        aria-label="Price in TZS"
+        className="h-7 w-20 rounded-md border border-border bg-white px-1.5 text-xs tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      />
+      <Button type="submit" size="sm" variant="outline" className="h-7 px-2.5 text-xs">
+        {t("admin_action_save", locale)}
+      </Button>
+    </form>
   );
 }

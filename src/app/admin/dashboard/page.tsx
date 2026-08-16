@@ -23,19 +23,15 @@ import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
 import type { AppointmentPaymentRow } from "@/components/admin/payments-panel";
 import type { ProviderApplicationRow } from "@/components/admin/applications-panel";
-import {
-  appointments,
-  auditLogs,
-  labOrders,
-  serviceCategories,
-  services,
-} from "@/lib/mock-data";
+import { appointments, auditLogs, labOrders } from "@/lib/mock-data";
 import type {
   PharmacyCategory,
   PharmacyItem,
   PharmacyItemBadge,
   PharmacyItemStatus,
   PharmacyOrder,
+  Service,
+  ServiceCategory,
   StockStatus,
 } from "@/lib/types";
 import { signOut } from "../actions";
@@ -110,6 +106,21 @@ type DbPharmacyOrderRow = {
     availability_status: string;
     substitution_requested: boolean;
   }[];
+};
+
+type DbServiceRow = {
+  id: string;
+  category_id: string;
+  name: string;
+  description: string | null;
+  base_price: number | string;
+  status: string;
+};
+
+type DbServiceCategoryRow = {
+  id: string;
+  name: string;
+  description: string | null;
 };
 
 type DbProviderApplicationRow = {
@@ -199,6 +210,8 @@ export default async function AdminDashboardPage() {
   let paymentAppointments: PaymentAppointmentRow[] | null = null;
   let dbLabLocations: DbLabLocationRow[] | null = null;
   let dbApplications: DbProviderApplicationRow[] | null = null;
+  let dbServices: DbServiceRow[] | null = null;
+  let dbServiceCategories: DbServiceCategoryRow[] | null = null;
   let dbPharmacyItems: DbPharmacyItemRow[] | null = null;
   let dbPharmacyOrders: DbPharmacyOrderRow[] | null = null;
   const applicationFileUrls = new Map<string, string>();
@@ -209,33 +222,39 @@ export default async function AdminDashboardPage() {
       // Four independent tables -- was four sequential round trips before
       // this, one after another, even though none of them depend on each
       // other's result.
-      const [providersResult, appointmentsResult, labsResult, applicationsResult] = await Promise.all([
-        service
-          .from("providers")
-          .select(
-            "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
-          )
-          .order("created_at", { ascending: false }),
-        service
-          .from("appointments")
-          .select(
-            "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
-          )
-          .order("scheduled_at", { ascending: false })
-          .limit(50),
-        service
-          .from("lab_locations")
-          .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
-          .order("region", { ascending: true })
-          .order("name", { ascending: true }),
-        service
-          .from("provider_applications")
-          .select(
-            "id, full_name, email, phone, license_number, specialty, region, experience_years, languages, consultation_modes, bio, file_path, file_name, status, created_at"
-          )
-          .order("created_at", { ascending: false })
-          .limit(100),
-      ]);
+      const [providersResult, appointmentsResult, labsResult, applicationsResult, servicesResult, serviceCategoriesResult] =
+        await Promise.all([
+          service
+            .from("providers")
+            .select(
+              "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
+            )
+            .order("created_at", { ascending: false }),
+          service
+            .from("appointments")
+            .select(
+              "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
+            )
+            .order("scheduled_at", { ascending: false })
+            .limit(50),
+          service
+            .from("lab_locations")
+            .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
+            .order("region", { ascending: true })
+            .order("name", { ascending: true }),
+          service
+            .from("provider_applications")
+            .select(
+              "id, full_name, email, phone, license_number, specialty, region, experience_years, languages, consultation_modes, bio, file_path, file_name, status, created_at"
+            )
+            .order("created_at", { ascending: false })
+            .limit(100),
+          service
+            .from("services")
+            .select("id, category_id, name, description, base_price, status")
+            .order("name", { ascending: true }),
+          service.from("service_categories").select("id, name, description").order("sort_order", { ascending: true }),
+        ]);
 
       if (providersResult.error) {
         throw providersResult.error;
@@ -260,6 +279,18 @@ export default async function AdminDashboardPage() {
       }
 
       dbApplications = applicationsResult.data as DbProviderApplicationRow[];
+
+      if (servicesResult.error) {
+        throw servicesResult.error;
+      }
+
+      dbServices = servicesResult.data as DbServiceRow[];
+
+      if (serviceCategoriesResult.error) {
+        throw serviceCategoriesResult.error;
+      }
+
+      dbServiceCategories = serviceCategoriesResult.data as DbServiceCategoryRow[];
 
       const applicationFilePaths = dbApplications
         .map((application) => application.file_path)
@@ -383,6 +414,34 @@ export default async function AdminDashboardPage() {
           }),
         }))
       : [];
+
+  // Real, honest data -- same principle as realPayments below. Only one
+  // service exists in practice (see supabase/migrations/0006_seed_default_service.sql)
+  // but this stays generic rather than hardcoding that assumption.
+  const realServiceCategories: ServiceCategory[] = (dbServiceCategories ?? []).map((category) => ({
+    id: category.id,
+    name: category.name,
+    description: category.description ?? "",
+    // Not stored on the real table -- these two fields are only ever read
+    // by the patient-facing services grid, which still runs on mock data
+    // (a separate, pre-existing gap outside this fix's scope).
+    icon: "Stethoscope",
+    popularServices: [],
+  }));
+
+  const realServices: Service[] = (dbServices ?? []).map((row) => ({
+    id: row.id,
+    categoryId: row.category_id,
+    name: row.name,
+    description: row.description ?? "",
+    startingPrice: Number(row.base_price),
+    // Not stored on the real table -- every bookable service today offers
+    // both, matching what bookConsultation/booking-form actually let a
+    // patient pick from.
+    consultationModes: ["voice", "video"],
+    estimatedDuration: 20,
+    status: row.status as Service["status"],
+  }));
 
   const realLabLocations =
     dbLabLocations?.map((location) => ({
@@ -611,8 +670,8 @@ export default async function AdminDashboardPage() {
                   providers={mappedProviders}
                   providerMeta={mappedProviderMeta}
                   providerApplications={providerApplications}
-                  serviceCategories={serviceCategories}
-                  services={services}
+                  serviceCategories={realServiceCategories}
+                  services={realServices}
                   appointments={appointments}
                   payments={realPayments}
                   pharmacyItems={realPharmacyItems}

@@ -223,6 +223,90 @@ export async function updateProviderRating(formData: FormData) {
   revalidatePath("/doctors/[providerId]", "page");
 }
 
+// Every appointment shares this one service's base_price (see
+// src/lib/default-service.ts) -- there's no per-provider pricing yet, so
+// this is the single knob that changes what every patient pays across the
+// whole site. Revalidate everywhere it's read: the landing page and
+// /doctors listing (via mapProviderRow), the booking checkout, and the
+// payment page.
+export async function updateServicePrice(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const serviceId = formString(formData, "serviceId");
+  const price = Number(formString(formData, "price"));
+
+  if (!serviceId || !Number.isFinite(price) || price <= 0 || price > 100_000_000) {
+    throw new Error("A valid price greater than zero is required.");
+  }
+
+  const { data: existing, error: existingError } = await service
+    .from("services")
+    .select("id, name, base_price")
+    .eq("id", serviceId)
+    .single();
+
+  if (existingError || !existing) {
+    throw new Error(existingError?.message ?? "Service not found.");
+  }
+
+  const { error } = await service
+    .from("services")
+    .update({ base_price: price })
+    .eq("id", serviceId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "service_price_changed",
+    entity_type: "service",
+    entity_id: serviceId,
+    metadata_json: { name: existing.name, from: Number(existing.base_price), to: price },
+  });
+
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/");
+  revalidatePath("/doctors");
+  revalidatePath("/doctors/[providerId]", "page");
+}
+
+export async function updateServiceStatus(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const serviceId = formString(formData, "serviceId");
+  const status = formString(formData, "status");
+
+  if (!serviceId || !["active", "inactive"].includes(status)) {
+    throw new Error("Invalid service status request.");
+  }
+
+  const { data: existing, error: existingError } = await service
+    .from("services")
+    .select("id, name")
+    .eq("id", serviceId)
+    .single();
+
+  if (existingError || !existing) {
+    throw new Error(existingError?.message ?? "Service not found.");
+  }
+
+  const { error } = await service.from("services").update({ status }).eq("id", serviceId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "service_price_changed",
+    entity_type: "service",
+    entity_id: serviceId,
+    metadata_json: { name: existing.name, status },
+  });
+
+  revalidatePath("/admin/dashboard");
+}
+
 export async function updateProviderAvailabilityByAdmin(formData: FormData) {
   const { adminUserId, service } = await requireAdmin();
   const providerId = formString(formData, "providerId");

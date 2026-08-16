@@ -42,7 +42,6 @@ import type {
   ProviderStatus,
   Service,
   ServiceCategory,
-  ServiceStatus,
 } from "@/lib/types";
 
 let clientLogSeq = 0;
@@ -114,7 +113,6 @@ export function AdminDashboard({
 }) {
   const [activeTab, setActiveTab] = useState<AdminTab>(allowedTabs[0] ?? "overview");
   const [providerMetaState, setProviderMetaState] = useState(providerMeta);
-  const [serviceState, setServiceState] = useState(services);
   const [labLocationState, setLabLocationState] = useState(labLocations);
   const [auditState, setAuditState] = useState(auditLogs);
 
@@ -157,13 +155,6 @@ export function AdminDashboard({
       current.map((meta) => (meta.providerId === providerId ? { ...meta, status: next } : meta))
     );
     logActivity("provider_status_changed", `${providerName} set to ${next}`);
-  }
-
-  function handleServiceStatusChange(serviceId: string, serviceName: string, next: ServiceStatus) {
-    setServiceState((current) =>
-      current.map((service) => (service.id === serviceId ? { ...service, status: next } : service))
-    );
-    logActivity("service_price_changed", `${serviceName} marked ${next}`);
   }
 
   function handleToggleLabLocation(locationId: string, name: string, next: LabLocationStatus) {
@@ -443,12 +434,7 @@ export function AdminDashboard({
         </TabsContent>
 
         <TabsContent value="services" className="mt-0">
-          <ServicesPanel
-            locale={locale}
-            categories={serviceCategories}
-            services={serviceState}
-            onToggleStatus={handleServiceStatusChange}
-          />
+          <ServicesPanel locale={locale} categories={serviceCategories} services={services} />
         </TabsContent>
 
         <TabsContent value="appointments" className="mt-0">
@@ -456,7 +442,7 @@ export function AdminDashboard({
             locale={locale}
             appointments={appointments}
             providers={providers}
-            services={serviceState}
+            services={services}
           />
         </TabsContent>
 

@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { StatusPill } from "@/components/admin/status-pill";
-import { isUuid, ProviderStatusForm, ProvidersPanel } from "@/components/admin/providers-panel";
+import { ProviderStatusForm, ProvidersPanel } from "@/components/admin/providers-panel";
 import { ServicesPanel } from "@/components/admin/services-panel";
 import { AppointmentsPanel } from "@/components/admin/appointments-panel";
 import { PaymentsPanel, type AppointmentPaymentRow } from "@/components/admin/payments-panel";
@@ -30,10 +30,8 @@ import { adminAuditActionKey, appointmentStatusKey, t, type TranslationKey } fro
 import type {
   AdminProviderMeta,
   Appointment,
-  AuditActionType,
   AuditLogEntry,
   LabLocation,
-  LabLocationStatus,
   LabOrder,
   Locale,
   PharmacyOrder,
@@ -43,8 +41,6 @@ import type {
   Service,
   ServiceCategory,
 } from "@/lib/types";
-
-let clientLogSeq = 0;
 
 export type AdminTab =
   | "overview"
@@ -112,9 +108,6 @@ export function AdminDashboard({
   auditLogs: AuditLogEntry[];
 }) {
   const [activeTab, setActiveTab] = useState<AdminTab>(allowedTabs[0] ?? "overview");
-  const [providerMetaState, setProviderMetaState] = useState(providerMeta);
-  const [labLocationState, setLabLocationState] = useState(labLocations);
-  const [auditState, setAuditState] = useState(auditLogs);
 
   useEffect(() => {
     function syncHashToTab() {
@@ -135,41 +128,12 @@ export function AdminDashboard({
     }
   }
 
-  function logActivity(action: AuditActionType, entityLabel: string) {
-    clientLogSeq += 1;
-    setAuditState((current) => [
-      {
-        id: `audit-client-${clientLogSeq}`,
-        actorName: "You",
-        actorRole: "admin",
-        action,
-        entityLabel,
-        createdAt: "Just now",
-      },
-      ...current,
-    ]);
-  }
-
-  function handleProviderStatusChange(providerId: string, providerName: string, next: ProviderStatus) {
-    setProviderMetaState((current) =>
-      current.map((meta) => (meta.providerId === providerId ? { ...meta, status: next } : meta))
-    );
-    logActivity("provider_status_changed", `${providerName} set to ${next}`);
-  }
-
-  function handleToggleLabLocation(locationId: string, name: string, next: LabLocationStatus) {
-    setLabLocationState((current) =>
-      current.map((location) => (location.id === locationId ? { ...location, status: next } : location))
-    );
-    logActivity("lab_location_updated", `${name} marked ${next}`);
-  }
-
   const providerRows = useMemo(() => {
-    const metaByProvider = new Map(providerMetaState.map((meta) => [meta.providerId, meta]));
+    const metaByProvider = new Map(providerMeta.map((meta) => [meta.providerId, meta]));
     return providers
       .map((provider) => ({ provider, meta: metaByProvider.get(provider.id) }))
       .filter((row): row is { provider: Provider; meta: AdminProviderMeta } => Boolean(row.meta));
-  }, [providerMetaState, providers]);
+  }, [providerMeta, providers]);
 
   const ops = useMemo(() => {
     const appointmentsToday = appointments.filter((appointment) =>
@@ -179,16 +143,16 @@ export function AdminDashboard({
     const liveAppointments = appointments.filter((appointment) => appointment.status === "in_progress").length;
     const pendingPayments = payments.filter((payment) => payment.status === "pending").length;
     const failedPayments = payments.filter((payment) => payment.status === "failed").length;
-    const activeProviders = providerMetaState.filter((meta) => meta.status === "active").length;
-    const pendingProviders = providerMetaState.filter((meta) => meta.status === "pending").length;
-    const suspendedProviders = providerMetaState.filter((meta) => meta.status === "suspended").length;
+    const activeProviders = providerMeta.filter((meta) => meta.status === "active").length;
+    const pendingProviders = providerMeta.filter((meta) => meta.status === "pending").length;
+    const suspendedProviders = providerMeta.filter((meta) => meta.status === "suspended").length;
     const openPharmacyOrders = pharmacyOrders.filter(
       (order) => order.status !== "delivered" && order.status !== "completed"
     ).length;
     const pharmacySubstitutions = pharmacyOrders.filter((order) => order.substitutionRequested).length;
     const openLabOrders = labOrders.filter((order) => order.status !== "results_ready").length;
     const labWhatsappPending = labOrders.filter((order) => order.whatsappDeliveryStatus !== "delivered").length;
-    const activeLabLocations = labLocationState.filter((location) => location.status === "active").length;
+    const activeLabLocations = labLocations.filter((location) => location.status === "active").length;
 
     return {
       appointmentsToday,
@@ -205,7 +169,7 @@ export function AdminDashboard({
       labWhatsappPending,
       activeLabLocations,
     };
-  }, [appointments, labLocationState, labOrders, payments, pharmacyOrders, providerMetaState]);
+  }, [appointments, labLocations, labOrders, payments, pharmacyOrders, providerMeta]);
 
   const providerQueue = providerRows
     .filter(({ meta }) => meta.status !== "active")
@@ -327,12 +291,7 @@ export function AdminDashboard({
               />
               <div className="divide-y divide-border rounded-xl border border-border bg-background">
                 {providerQueue.map(({ provider, meta }) => (
-                  <ProviderAccessRow
-                    key={provider.id}
-                    provider={provider}
-                    meta={meta}
-                    onStatusChange={handleProviderStatusChange}
-                  />
+                  <ProviderAccessRow key={provider.id} provider={provider} meta={meta} />
                 ))}
               </div>
             </div>
@@ -344,7 +303,7 @@ export function AdminDashboard({
                 onClick={() => selectTab("audit")}
               />
               <div className="divide-y divide-border rounded-xl border border-border bg-background">
-                {auditState.slice(0, 5).map((entry) => (
+                {auditLogs.slice(0, 5).map((entry) => (
                   <div key={entry.id} className="px-4 py-3 text-sm">
                     <p className="font-medium">
                       {t(adminAuditActionKey[entry.action] as TranslationKey, locale)}
@@ -420,13 +379,7 @@ export function AdminDashboard({
         </TabsContent>
 
         <TabsContent value="providers" className="mt-0">
-          <ProvidersPanel
-            locale={locale}
-            providers={providers}
-            meta={providerMetaState}
-            appointments={appointments}
-            onStatusChange={handleProviderStatusChange}
-          />
+          <ProvidersPanel locale={locale} providers={providers} meta={providerMeta} appointments={appointments} />
         </TabsContent>
 
         <TabsContent value="applications" className="mt-0">
@@ -455,16 +408,11 @@ export function AdminDashboard({
         </TabsContent>
 
         <TabsContent value="labs" className="mt-0">
-          <LabsPanel
-            locale={locale}
-            labOrders={labOrders}
-            labLocations={labLocationState}
-            onToggleLocation={handleToggleLabLocation}
-          />
+          <LabsPanel locale={locale} labOrders={labOrders} labLocations={labLocations} />
         </TabsContent>
 
         <TabsContent value="audit" className="mt-0">
-          <AuditPanel locale={locale} entries={auditState} />
+          <AuditPanel locale={locale} entries={auditLogs} />
         </TabsContent>
       </Tabs>
     </div>
@@ -562,22 +510,7 @@ function CapabilityCard({
   );
 }
 
-function ProviderAccessRow({
-  provider,
-  meta,
-  onStatusChange,
-}: {
-  provider: Provider;
-  meta: AdminProviderMeta;
-  onStatusChange: (providerId: string, providerName: string, next: ProviderStatus) => void;
-}) {
-  const action =
-    meta.status === "pending"
-      ? { label: "Approve", next: "active" as const, variant: "default" as const }
-      : meta.status === "suspended"
-        ? { label: "Reactivate", next: "active" as const, variant: "outline" as const }
-        : { label: "Suspend", next: "suspended" as const, variant: "destructive" as const };
-
+function ProviderAccessRow({ provider, meta }: { provider: Provider; meta: AdminProviderMeta }) {
   return (
     <div className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="min-w-0">
@@ -592,17 +525,7 @@ function ProviderAccessRow({
           <span>{provider.nextAvailableAt}</span>
         </div>
       </div>
-      {isUuid(provider.id) ? (
-        <ProviderStatusForm providerId={provider.id} status={meta.status} />
-      ) : (
-        <Button
-          size="sm"
-          variant={action.variant}
-          onClick={() => onStatusChange(provider.id, provider.name, action.next)}
-        >
-          {action.label}
-        </Button>
-      )}
+      <ProviderStatusForm providerId={provider.id} status={meta.status} />
     </div>
   );
 }

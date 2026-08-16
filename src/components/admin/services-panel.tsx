@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { updateServicePrice, updateServiceStatus } from "@/app/admin/actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   Table,
   TableBody,
@@ -75,11 +75,11 @@ export function ServicesPanel({
                   <form action={updateServiceStatus}>
                     <input type="hidden" name="serviceId" value={service.id} />
                     <input type="hidden" name="status" value={status === "active" ? "inactive" : "active"} />
-                    <Button type="submit" size="sm" variant="outline">
+                    <SubmitButton size="sm" variant="outline">
                       {status === "active"
                         ? t("admin_action_deactivate", locale)
                         : t("admin_action_activate", locale)}
-                    </Button>
+                    </SubmitButton>
                   </form>
                 </TableCell>
               </TableRow>
@@ -105,6 +105,7 @@ function UpdatePriceForm({
       <input type="hidden" name="serviceId" value={serviceId} />
       <span className="text-xs text-muted-foreground">TZS</span>
       <input
+        key={price}
         name="price"
         type="number"
         min={1}
@@ -113,9 +114,9 @@ function UpdatePriceForm({
         aria-label="Price in TZS"
         className="h-7 w-20 rounded-md border border-border bg-white px-1.5 text-xs tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       />
-      <Button type="submit" size="sm" variant="outline" className="h-7 px-2.5 text-xs">
+      <SubmitButton size="sm" variant="outline" className="h-7 px-2.5 text-xs">
         {t("admin_action_save", locale)}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

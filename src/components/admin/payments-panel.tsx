@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { confirmAppointmentPayment, markAppointmentPaymentFailed } from "@/app/admin/actions";
 import { adminPaymentStatusKey, t, type TranslationKey } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -79,15 +79,13 @@ export function PaymentsPanel({ locale, payments }: { locale: Locale; payments: 
                     <div className="flex justify-end gap-2">
                       <form action={confirmAppointmentPayment}>
                         <input type="hidden" name="appointmentId" value={payment.id} />
-                        <Button type="submit" size="sm">
-                          {t("admin_action_confirm", locale)}
-                        </Button>
+                        <SubmitButton size="sm">{t("admin_action_confirm", locale)}</SubmitButton>
                       </form>
                       <form action={markAppointmentPaymentFailed}>
                         <input type="hidden" name="appointmentId" value={payment.id} />
-                        <Button type="submit" size="sm" variant="outline">
+                        <SubmitButton size="sm" variant="outline">
                           {t("admin_action_mark_failed", locale)}
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </div>
                   ) : null}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { createLabLocation, updateLabLocationStatus } from "@/app/admin/actions";
 import {
   Table,
@@ -53,12 +53,10 @@ export function LabsPanel({
   locale,
   labOrders,
   labLocations,
-  onToggleLocation,
 }: {
   locale: Locale;
   labOrders: LabOrder[];
   labLocations: LabLocation[];
-  onToggleLocation: (locationId: string, name: string, next: LabLocationStatus) => void;
 }) {
   const locationName = useMemo(
     () => new Map(labLocations.map((location) => [location.id, location.name])),
@@ -134,9 +132,9 @@ export function LabsPanel({
           <LabField label="Longitude">
             <Input name="longitude" type="number" step="any" placeholder="33.4500" required />
           </LabField>
-          <Button type="submit" className="h-8 rounded-lg bg-[#01b7bb] text-white hover:bg-[#019ea2]">
+          <SubmitButton className="h-8 rounded-lg bg-[#01b7bb] text-white hover:bg-[#019ea2]">
             Add lab
-          </Button>
+          </SubmitButton>
           <div className="grid gap-3 lg:col-span-6 lg:grid-cols-2">
             <LabField label="Phone">
               <Input name="phone" placeholder="+255..." />
@@ -179,22 +177,11 @@ export function LabsPanel({
                         name="status"
                         value={location.status === "active" ? "inactive" : "active"}
                       />
-                      <Button
-                        type="submit"
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          onToggleLocation(
-                            location.id,
-                            location.name,
-                            location.status === "active" ? "inactive" : "active"
-                          )
-                        }
-                      >
+                      <SubmitButton size="sm" variant="outline">
                         {location.status === "active"
                           ? t("admin_action_deactivate", locale)
                           : t("admin_action_activate", locale)}
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </TableCell>
                 </TableRow>

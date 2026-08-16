@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { updateProviderApplicationStatus } from "@/app/admin/actions";
 import {
   Table,
@@ -139,14 +139,13 @@ function ApplicationStatusButton({
     <form action={updateProviderApplicationStatus}>
       <input type="hidden" name="applicationId" value={id} />
       <input type="hidden" name="status" value={status} />
-      <Button
-        type="submit"
+      <SubmitButton
         size="sm"
         variant={status === "rejected" ? "destructive" : status === "approved" ? "default" : "outline"}
         className="h-8 rounded-full px-3 text-xs"
       >
         {label}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

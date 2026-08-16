@@ -38,6 +38,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   createPharmacyItem,
   deletePharmacyItem,
@@ -316,14 +317,13 @@ export function PharmacyPanel({
                         />
                         <form action={deletePharmacyItem}>
                           <input type="hidden" name="itemId" value={product.id} />
-                          <Button
-                            type="submit"
+                          <SubmitButton
                             size="icon-sm"
                             variant="destructive"
                             aria-label={`Delete ${product.medicineName}`}
                           >
                             <Trash2 className="size-3.5" />
-                          </Button>
+                          </SubmitButton>
                         </form>
                       </div>
                     </TableCell>
@@ -421,14 +421,13 @@ function ItemStatusForm({
     <form action={setPharmacyItemStatus}>
       <input type="hidden" name="itemId" value={itemId} />
       <input type="hidden" name="status" value={next} />
-      <Button
-        type="submit"
+      <SubmitButton
         size="sm"
         variant="outline"
         aria-label={currentStatus === "hidden" ? "Publish product" : "Hide product"}
       >
         {currentStatus === "hidden" ? "Publish" : "Hide"}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

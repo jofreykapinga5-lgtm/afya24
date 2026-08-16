@@ -39,6 +39,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   type AdminActionState,
   createProviderAccount,
@@ -82,40 +83,24 @@ export function ProvidersPanel({
   providers,
   meta,
   appointments,
-  onStatusChange,
 }: {
   locale: Locale;
   providers: Provider[];
   meta: AdminProviderMeta[];
   appointments: Appointment[];
-  onStatusChange: (providerId: string, providerName: string, next: ProviderStatus) => void;
 }) {
   const [query, setQuery] = useState("");
   const [createState, createAction, createPending] = useActionState(
     createProviderAccount,
     initialCreateProviderState
   );
-  const [deletedProviderIds, setDeletedProviderIds] = useState<string[]>([]);
-  const [availability, setAvailability] = useState<Record<string, { availableNow: boolean; note: string }>>(
-    () =>
-      Object.fromEntries(
-        providers.map((provider) => [
-          provider.id,
-          {
-            availableNow: provider.isAvailableNow,
-            note: provider.nextAvailableAt,
-          },
-        ])
-      )
-  );
 
   const rows = useMemo(() => {
     const metaById = new Map(meta.map((m) => [m.providerId, m]));
     return providers
-      .filter((provider) => !deletedProviderIds.includes(provider.id))
       .map((provider) => ({ provider, meta: metaById.get(provider.id) }))
       .filter(({ meta }) => meta !== undefined) as { provider: Provider; meta: AdminProviderMeta }[];
-  }, [deletedProviderIds, providers, meta]);
+  }, [providers, meta]);
 
   const filtered = rows.filter(({ provider }) => {
     const needle = query.trim().toLowerCase();
@@ -137,21 +122,6 @@ export function ProvidersPanel({
 
   function providerSessionCount(providerId: string) {
     return appointments.filter((appointment) => appointment.providerId === providerId).length;
-  }
-
-  function deleteLocalProvider(providerId: string) {
-    setDeletedProviderIds((current) => [...current, providerId]);
-  }
-
-  function updateAvailability(providerId: string, patch: Partial<{ availableNow: boolean; note: string }>) {
-    setAvailability((current) => ({
-      ...current,
-      [providerId]: {
-        availableNow: current[providerId]?.availableNow ?? false,
-        note: current[providerId]?.note ?? "Set availability",
-        ...patch,
-      },
-    }));
   }
 
   return (
@@ -284,11 +254,8 @@ export function ProvidersPanel({
               </TableRow>
             ) : (
               filtered.map(({ provider, meta }) => {
-                const currentAvailability = availability[provider.id] ?? {
-                  availableNow: provider.isAvailableNow,
-                  note: provider.nextAvailableAt,
-                };
-                const nextAvailableNow = !currentAvailability.availableNow;
+                const nextAvailableNow = !provider.isAvailableNow;
+                const availabilityFormId = `availability-${provider.id}`;
                 const sessionCount = providerSessionCount(provider.id);
                 const canDelete = sessionCount === 0;
 
@@ -314,24 +281,18 @@ export function ProvidersPanel({
                           <DoctorDetail label="Modes">{provider.consultationModes.join(", ")}</DoctorDetail>
                           <DoctorDetail label="Bio">{provider.bio}</DoctorDetail>
                           <DoctorDetail label="Rating shown on doctor card">
-                            {isUuid(provider.id) ? (
-                              <UpdateRatingForm
-                                providerId={provider.id}
-                                rating={provider.rating}
-                                reviewCount={provider.reviewCount}
-                              />
-                            ) : (
-                              <span>
-                                {provider.rating.toFixed(1)} ({provider.reviewCount} reviews)
-                              </span>
-                            )}
+                            <UpdateRatingForm
+                              providerId={provider.id}
+                              rating={provider.rating}
+                              reviewCount={provider.reviewCount}
+                            />
                           </DoctorDetail>
                           <DoctorDetail label="Availability note">
                             <Input
-                              value={currentAvailability.note}
-                              onChange={(event) =>
-                                updateAvailability(provider.id, { note: event.target.value })
-                              }
+                              key={provider.nextAvailableAt}
+                              name="availabilityNote"
+                              form={availabilityFormId}
+                              defaultValue={provider.nextAvailableAt}
                             />
                           </DoctorDetail>
                           <DoctorSessions
@@ -343,38 +304,31 @@ export function ProvidersPanel({
                     <TableCell className="min-w-40 text-muted-foreground">{provider.specialty}</TableCell>
                     <TableCell className="min-w-48">
                       <div className="grid gap-2">
-                        <StatusPill tone={currentAvailability.availableNow ? "positive" : "neutral"}>
-                          {currentAvailability.availableNow ? "Available now" : "Not available"}
+                        <StatusPill tone={provider.isAvailableNow ? "positive" : "neutral"}>
+                          {provider.isAvailableNow ? "Available now" : "Not available"}
                         </StatusPill>
                         <p className="max-w-44 truncate text-xs text-muted-foreground">
-                          {currentAvailability.note}
+                          {provider.nextAvailableAt}
                         </p>
-                        <form action={updateProviderAvailabilityByAdmin} className="grid gap-2">
+                        <form id={availabilityFormId} action={updateProviderAvailabilityByAdmin} className="grid gap-2">
                           <input type="hidden" name="providerId" value={provider.id} />
-                          <input type="hidden" name="availabilityNote" value={currentAvailability.note} />
                           {provider.consultationModes.map((mode) => (
                             <input key={mode} type="hidden" name="consultationModes" value={mode} />
                           ))}
                           {nextAvailableNow ? (
                             <input type="hidden" name="availableNow" value="on" />
                           ) : null}
-                          <Button
-                            type="submit"
+                          <SubmitButton
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              updateAvailability(provider.id, {
-                                availableNow: nextAvailableNow,
-                              })
-                            }
                             aria-label={
-                              currentAvailability.availableNow
+                              provider.isAvailableNow
                                 ? `${provider.name} is already online. Set offline.`
                                 : `Set ${provider.name} online.`
                             }
                           >
-                            {currentAvailability.availableNow ? "Already online - set offline" : "Set online"}
-                          </Button>
+                            {provider.isAvailableNow ? "Already online - set offline" : "Set online"}
+                          </SubmitButton>
                         </form>
                       </div>
                     </TableCell>
@@ -393,73 +347,33 @@ export function ProvidersPanel({
                     </TableCell>
                     <TableCell className="pr-4">
                       <div className="flex justify-end gap-1.5">
-                        {isUuid(provider.id) ? (
-                          <ProviderStatusForm providerId={provider.id} status={meta.status} />
-                        ) : meta.status === "suspended" ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onStatusChange(provider.id, provider.name, "active")}
-                          >
-                            Enable
-                          </Button>
-                        ) : meta.status === "pending" ? (
-                          <Button
-                            size="sm"
-                            onClick={() => onStatusChange(provider.id, provider.name, "active")}
-                          >
-                            Enable
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => onStatusChange(provider.id, provider.name, "suspended")}
-                          >
-                            Disable
-                          </Button>
-                        )}
-
-                        {isUuid(provider.id) ? (
-                          <DeleteProviderForm
-                            providerId={provider.id}
-                            providerName={provider.name}
-                            canDelete={canDelete}
-                          />
-                        ) : (
-                          <Button
-                            size="icon-sm"
-                            variant="destructive"
-                            disabled={!canDelete}
-                            onClick={() => deleteLocalProvider(provider.id)}
-                            aria-label={canDelete ? "Delete doctor" : "Doctor has sessions. Disable instead."}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        )}
+                        <ProviderStatusForm providerId={provider.id} status={meta.status} />
+                        <DeleteProviderForm
+                          providerId={provider.id}
+                          providerName={provider.name}
+                          canDelete={canDelete}
+                        />
                       </div>
 
-                      {isUuid(provider.id) ? (
-                        <details className="mt-2 text-left">
-                          <summary className="cursor-pointer list-none text-xs font-medium text-primary hover:underline">
-                            Reset access
-                          </summary>
-                          <form action={resetProviderPassword} className="mt-2 flex w-48 gap-2">
-                            <input type="hidden" name="providerId" value={provider.id} />
-                            <Input
-                              name="password"
-                              type="password"
-                              minLength={8}
-                              placeholder="New password"
-                              className="h-7"
-                              required
-                            />
-                            <Button type="submit" size="sm" variant="outline">
-                              Save
-                            </Button>
-                          </form>
-                        </details>
-                      ) : null}
+                      <details className="mt-2 text-left">
+                        <summary className="cursor-pointer list-none text-xs font-medium text-primary hover:underline">
+                          Reset access
+                        </summary>
+                        <form action={resetProviderPassword} className="mt-2 flex w-48 gap-2">
+                          <input type="hidden" name="providerId" value={provider.id} />
+                          <Input
+                            name="password"
+                            type="password"
+                            minLength={8}
+                            placeholder="New password"
+                            className="h-7"
+                            required
+                          />
+                          <SubmitButton size="sm" variant="outline">
+                            Save
+                          </SubmitButton>
+                        </form>
+                      </details>
                     </TableCell>
                   </TableRow>
                 );
@@ -540,9 +454,9 @@ function UpdateRatingForm({
         className="h-7 w-16 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       />
       <span className="text-xs text-muted-foreground">reviews</span>
-      <Button type="submit" size="sm" variant="outline" className="ml-1 h-7 px-2.5 text-xs">
+      <SubmitButton size="sm" variant="outline" className="ml-1 h-7 px-2.5 text-xs">
         Save
-      </Button>
+      </SubmitButton>
     </form>
   );
 }
@@ -562,9 +476,9 @@ export function ProviderStatusForm({
     <form action={updateProviderStatus}>
       <input type="hidden" name="providerId" value={providerId} />
       <input type="hidden" name="status" value={nextStatus} />
-      <Button type="submit" size="sm" variant={variant}>
+      <SubmitButton size="sm" variant={variant}>
         {label}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

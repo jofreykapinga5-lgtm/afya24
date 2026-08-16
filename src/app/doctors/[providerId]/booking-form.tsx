@@ -60,7 +60,7 @@ export function BookingForm({
           locale,
           qualification: qualificationResult,
         });
-        router.push(`/consultation/${appointmentId}?mode=${mode}`);
+        router.push(`/consultation/${appointmentId}/pay?mode=${mode}`);
       } catch (err) {
         // Show the real reason instead of a generic "try again" -- the fix
         // is usually specific (session expired, no doctors available, a

@@ -669,6 +669,34 @@ const dict = {
     en: "Waiting for the other person to join…",
     sw: "Inasubiri mtu mwingine ajiunge…",
   },
+  video_reconnecting: {
+    en: "Reconnecting…",
+    sw: "Inaunganisha tena…",
+  },
+  video_poor_connection: {
+    en: "Weak connection",
+    sw: "Mtandao dhaifu",
+  },
+  video_connection_lost_title: {
+    en: "Connection lost",
+    sw: "Muunganisho umekatika",
+  },
+  video_connection_lost_body: {
+    en: "Your network dropped the call. Check your connection and reconnect.",
+    sw: "Mtandao wako umekatisha simu. Angalia muunganisho wako kisha uunganishe tena.",
+  },
+  video_reconnect_action: {
+    en: "Reconnect",
+    sw: "Unganisha tena",
+  },
+  video_reconnecting_action: {
+    en: "Reconnecting…",
+    sw: "Inaunganisha…",
+  },
+  video_reconnect_failed: {
+    en: "Couldn't reconnect. Check your network and try again.",
+    sw: "Imeshindwa kuunganisha tena. Angalia mtandao wako kisha ujaribu tena.",
+  },
   consultation_couldnt_start: {
     en: "Couldn't start the call.",
     sw: "Imeshindwa kuanzisha simu.",
@@ -690,6 +718,48 @@ const dict = {
   error_access_window_expired: {
     en: "Your 24-hour access window for this visit has ended. Please book a new consultation.",
     sw: "Muda wako wa saa 24 wa kufikia ziara hii umeisha. Tafadhali weka miadi mpya ya ushauri.",
+  },
+  error_payment_required: {
+    en: "Payment is required before you can join this consultation.",
+    sw: "Malipo yanahitajika kabla ya kujiunga na ushauri huu.",
+  },
+  payment_complete_link: { en: "Complete payment", sw: "Kamilisha malipo" },
+  payment_page_title: { en: "Pay for your consultation", sw: "Lipia ushauri wako" },
+  payment_page_body: {
+    en: "Your doctor will be ready once payment is confirmed.",
+    sw: "Daktari wako atakuwa tayari mara malipo yatakapothibitishwa.",
+  },
+  payment_summary_label: { en: "Consultation with", sw: "Ushauri na" },
+  payment_provider_label: { en: "Mobile money provider", sw: "Mtoa huduma wa pesa za simu" },
+  payment_provider_mpesa: { en: "M-Pesa", sw: "M-Pesa" },
+  payment_provider_airtel: { en: "Airtel Money", sw: "Airtel Money" },
+  payment_provider_halotel: { en: "Halotel", sw: "Halotel" },
+  payment_provider_mixx: { en: "Mixx by Yas", sw: "Mixx by Yas" },
+  payment_phone_label: { en: "Phone number", sw: "Namba ya simu" },
+  payment_phone_placeholder: { en: "0712 345 678", sw: "0712 345 678" },
+  payment_pay_button: { en: "Pay now", sw: "Lipa sasa" },
+  payment_pay_pending: { en: "Starting payment…", sw: "Inaanzisha malipo…" },
+  payment_waiting_title: {
+    en: "Waiting for payment confirmation",
+    sw: "Inasubiri uthibitisho wa malipo",
+  },
+  payment_waiting_body: {
+    en: "Approve the payment prompt on your phone to continue.",
+    sw: "Idhinisha ombi la malipo kwenye simu yako ili kuendelea.",
+  },
+  payment_taking_longer: {
+    en: "This is taking longer than usual. Check your phone for the payment prompt, or try again.",
+    sw: "Hii inachukua muda mrefu kuliko kawaida. Angalia simu yako kwa ombi la malipo, au jaribu tena.",
+  },
+  payment_failed_title: { en: "Payment didn't go through", sw: "Malipo hayajakamilika" },
+  payment_failed_body: {
+    en: "Your payment wasn't completed. You can try again.",
+    sw: "Malipo yako hayajakamilika. Unaweza kujaribu tena.",
+  },
+  payment_retry_button: { en: "Try again", sw: "Jaribu tena" },
+  payment_already_paid: {
+    en: "This consultation is already paid for.",
+    sw: "Ushauri huu tayari umeshalipiwa.",
   },
   legal_last_updated: { en: "Last updated August 2026", sw: "Ilisasishwa mwisho Agosti 2026" },
   terms_title: { en: "Terms of Service", sw: "Vigezo vya Huduma" },
@@ -1041,6 +1111,8 @@ const dict = {
   admin_audit_service_price_changed: { en: "Service price changed", sw: "Bei ya huduma imebadilishwa" },
   admin_audit_payment_confirmed: { en: "Payment confirmed", sw: "Malipo yamethibitishwa" },
   admin_audit_payment_marked_failed: { en: "Payment marked failed", sw: "Malipo yametajwa kushindwa" },
+  admin_audit_payment_gateway_completed: { en: "Payment completed (gateway)", sw: "Malipo yamekamilika (mfumo wa malipo)" },
+  admin_audit_payment_gateway_failed: { en: "Payment failed (gateway)", sw: "Malipo yameshindwa (mfumo wa malipo)" },
   admin_audit_lab_location_updated: { en: "Lab location updated", sw: "Eneo la maabara limesasishwa" },
   admin_audit_pharmacy_order_status_changed: {
     en: "Pharmacy order status changed",
@@ -1175,6 +1247,8 @@ export const adminAuditActionKey: Record<string, TranslationKey> = {
   service_price_changed: "admin_audit_service_price_changed",
   payment_confirmed: "admin_audit_payment_confirmed",
   payment_marked_failed: "admin_audit_payment_marked_failed",
+  payment_gateway_completed: "admin_audit_payment_gateway_completed",
+  payment_gateway_failed: "admin_audit_payment_gateway_failed",
   lab_location_updated: "admin_audit_lab_location_updated",
   pharmacy_order_status_changed: "admin_audit_pharmacy_order_status_changed",
   prescription_signed: "admin_audit_prescription_signed",

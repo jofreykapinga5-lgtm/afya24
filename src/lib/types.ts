@@ -328,6 +328,8 @@ export type AuditActionType =
   | "service_price_changed"
   | "payment_confirmed"
   | "payment_marked_failed"
+  | "payment_gateway_completed"
+  | "payment_gateway_failed"
   | "lab_location_updated"
   | "pharmacy_order_status_changed"
   | "prescription_signed"

@@ -3,21 +3,24 @@
 import { useEffect, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
-import { Track, VideoPresets } from "livekit-client";
-import type { AudioCaptureOptions, RoomOptions, VideoCaptureOptions } from "livekit-client";
+import { ConnectionQuality, ConnectionState, DisconnectReason, Track, VideoPresets } from "livekit-client";
+import type { AudioCaptureOptions, RoomConnectOptions, RoomOptions, VideoCaptureOptions } from "livekit-client";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useConnectionQualityIndicator,
+  useConnectionState,
   useLocalParticipant,
   useRoomContext,
   useTracks,
 } from "@livekit/components-react";
-import { Mic, MicOff, PhoneOff, ShieldCheck, Video, VideoOff } from "lucide-react";
+import { Mic, MicOff, PhoneOff, ShieldCheck, TriangleAlert, Video, VideoOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VideoTile } from "./video-tile";
 import { upgradeToFullAccount } from "@/app/consultation/actions";
 import { useAppStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 
 const AUDIO_CAPTURE_DEFAULTS = {
@@ -46,6 +49,23 @@ const ROOM_OPTIONS = {
     degradationPreference: "balanced",
   },
 } satisfies RoomOptions;
+
+// Defaults (15s each) assume decent connectivity; patients here are
+// explicitly expected to be on variable-quality mobile networks (see
+// DESIGN.md), so both the initial join and any automatic reconnect attempt
+// get more room before LiveKit gives up.
+const CONNECT_OPTIONS = {
+  peerConnectionTimeout: 30_000,
+  websocketTimeout: 30_000,
+} satisfies RoomConnectOptions;
+
+// LiveKit already retries a dropped connection automatically for close to a
+// minute (see DefaultReconnectPolicy) -- the gap was that nothing told the
+// user this was happening, so a network blip looked like a frozen/broken
+// call instead of "hang on, reconnecting."
+function isReconnectingState(state: ConnectionState) {
+  return state === ConnectionState.Reconnecting || state === ConnectionState.SignalReconnecting;
+}
 
 function useElapsedSeconds(active: boolean) {
   const [seconds, setSeconds] = useState(0);
@@ -114,16 +134,34 @@ function CallStage() {
   const remoteTrack = tracks.find((track) => !track.participant.isLocal);
   const primary = remoteTrack ?? localTrack;
   const elapsed = useElapsedSeconds(Boolean(remoteTrack));
+  const connectionState = useConnectionState();
+  const reconnecting = isReconnectingState(connectionState);
+  // useConnectionQualityIndicator() with no argument needs a ParticipantContext
+  // to fall back to -- CallStage doesn't render inside one (it's a direct
+  // LiveKitRoom child, not wrapped in <ParticipantTile>), so it throws
+  // "No participant provided" without passing one explicitly.
+  const { localParticipant } = useLocalParticipant();
+  const { quality } = useConnectionQualityIndicator({ participant: localParticipant });
+  const poorConnection =
+    !reconnecting && (quality === ConnectionQuality.Poor || quality === ConnectionQuality.Lost);
 
   return (
     <div className="relative flex-1 overflow-hidden bg-slate-950">
       {primary ? (
-        <VideoTile trackRef={primary} className="absolute inset-0 size-full rounded-none" />
+        <VideoTile
+          trackRef={primary}
+          className={cn("absolute inset-0 size-full rounded-none transition-opacity", reconnecting && "opacity-40")}
+        />
       ) : null}
 
-      <div className="absolute inset-x-0 top-4 flex justify-center px-4">
+      <div className="absolute inset-x-0 top-4 flex flex-col items-center gap-2 px-4">
         <div className="flex items-center gap-2 rounded-full bg-black/50 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-md">
-          {remoteTrack ? (
+          {reconnecting ? (
+            <>
+              <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              {t("video_reconnecting", locale)}
+            </>
+          ) : remoteTrack ? (
             <>
               <span className="max-w-40 truncate">
                 {remoteTrack.participant.name || remoteTrack.participant.identity}
@@ -137,6 +175,13 @@ function CallStage() {
             </>
           )}
         </div>
+
+        {poorConnection ? (
+          <div className="flex items-center gap-1.5 rounded-full bg-urgent/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-md">
+            <TriangleAlert className="size-3" />
+            {t("video_poor_connection", locale)}
+          </div>
+        ) : null}
       </div>
 
       {remoteTrack && localTrack ? (
@@ -241,38 +286,93 @@ export function CallRoom({
   token,
   initialVideoEnabled = true,
   showAccountUpgrade = false,
+  onReconnect,
 }: {
   serverUrl: string;
   token: string;
   initialVideoEnabled?: boolean;
   showAccountUpgrade?: boolean;
+  // Re-requests a fresh join token for this same appointment (the parent
+  // page owns that fetch). Absent for the very rare caller that can't offer
+  // one -- the ended screen just skips the reconnect button in that case.
+  onReconnect?: () => Promise<{ serverUrl: string; token: string }>;
 }) {
   const locale = useAppStore((state) => state.locale);
+  const [connection, setConnection] = useState({ serverUrl, token, attempt: 0 });
   const [ended, setEnded] = useState(false);
+  const [disconnectReason, setDisconnectReason] = useState<DisconnectReason | undefined>(undefined);
+  const [reconnectPending, setReconnectPending] = useState(false);
+  const [reconnectError, setReconnectError] = useState<string | null>(null);
+
+  // A manual hangup (the PhoneOff button, or the other side leaving)
+  // reports CLIENT_INITIATED; everything else here is the network dropping
+  // the connection out from under the call. Those two cases need very
+  // different messaging -- "call ended" reads as broken when what actually
+  // happened is the signal died mid-consultation.
+  const droppedByNetwork = ended && disconnectReason !== DisconnectReason.CLIENT_INITIATED;
+
+  async function handleReconnect() {
+    if (!onReconnect) return;
+    setReconnectPending(true);
+    setReconnectError(null);
+    try {
+      const fresh = await onReconnect();
+      setConnection((current) => ({ ...fresh, attempt: current.attempt + 1 }));
+      setDisconnectReason(undefined);
+      setEnded(false);
+    } catch (err) {
+      setReconnectError(err instanceof Error ? err.message : t("video_reconnect_failed", locale));
+    } finally {
+      setReconnectPending(false);
+    }
+  }
 
   if (ended) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10 text-center">
         <div>
-          <p className="font-semibold">{t("video_call_ended", locale)}</p>
-          {!showAccountUpgrade && (
-            <p className="text-sm text-muted-foreground">{t("video_close_window", locale)}</p>
+          <p className="font-semibold">
+            {droppedByNetwork ? t("video_connection_lost_title", locale) : t("video_call_ended", locale)}
+          </p>
+          {droppedByNetwork ? (
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              {t("video_connection_lost_body", locale)}
+            </p>
+          ) : (
+            !showAccountUpgrade && (
+              <p className="text-sm text-muted-foreground">{t("video_close_window", locale)}</p>
+            )
           )}
         </div>
-        {showAccountUpgrade && <AccountUpgradeForm locale={locale} />}
+
+        {droppedByNetwork && onReconnect ? (
+          <div className="grid gap-2">
+            <Button onClick={handleReconnect} disabled={reconnectPending}>
+              {reconnectPending ? t("video_reconnecting_action", locale) : t("video_reconnect_action", locale)}
+            </Button>
+            {reconnectError ? <p className="text-sm text-urgent">{reconnectError}</p> : null}
+          </div>
+        ) : null}
+
+        {!droppedByNetwork && showAccountUpgrade && <AccountUpgradeForm locale={locale} />}
       </div>
     );
   }
 
   return (
     <LiveKitRoom
-      serverUrl={serverUrl}
-      token={token}
+      key={connection.attempt}
+      serverUrl={connection.serverUrl}
+      token={connection.token}
       connect
       audio={AUDIO_CAPTURE_DEFAULTS}
       video={initialVideoEnabled ? VIDEO_CAPTURE_DEFAULTS : false}
       options={ROOM_OPTIONS}
-      onDisconnected={() => setEnded(true)}
+      connectOptions={CONNECT_OPTIONS}
+      onDisconnected={(reason) => {
+        setDisconnectReason(reason);
+        setEnded(true);
+      }}
       className="flex flex-1 flex-col bg-slate-950"
     >
       <CallStage />

@@ -74,17 +74,26 @@ async function joinRoom(appointmentId: string, locale: Locale) {
     );
   }
 
-  // Once a patient has paid for a visit, they can rejoin it (dropped call,
-  // doctor running late, a follow-up message) for 24 hours from when it was
-  // booked -- scheduled_at is set once at booking and never touched again,
-  // so it's a stable anchor. Providers are never subject to this: payment
-  // timing is a patient-side concern, not a reason to lock a doctor out of
-  // their own appointment. Left deliberately unchanged for payment_status
-  // "pending"/"failed" -- there's no live payment gateway yet (see
-  // bookConsultation's comment), so admins reconcile payment manually and a
-  // hard block here would risk locking out someone who has genuinely paid
-  // but whose confirmation hasn't been entered yet.
-  if (isPatient && appointment.payment_status === "paid") {
+  // Payment is now collected before a patient ever reaches this route (see
+  // consultation/[appointmentId]/pay) -- this is the server-side enforcement
+  // of that, not just a UI nicety, since a patient could otherwise hit this
+  // endpoint directly for an appointment they never paid for. Providers are
+  // never subject to this -- payment timing is a patient-side concern, not
+  // a reason to lock a doctor out of their own appointment. `code` lets the
+  // client distinguish this from other 403s and link back to /pay instead
+  // of showing a dead-end error.
+  if (isPatient && appointment.payment_status !== "paid") {
+    return NextResponse.json(
+      { error: t("error_payment_required", locale), code: "PAYMENT_REQUIRED" },
+      { status: 403 }
+    );
+  }
+
+  // Once a patient has paid, they can rejoin (dropped call, doctor running
+  // late, a follow-up message) for 24 hours from when the visit was booked
+  // -- scheduled_at is set once at booking and never touched again, so it's
+  // a stable anchor. Providers are never subject to this either.
+  if (isPatient) {
     const hoursSinceBooked =
       (Date.now() - new Date(appointment.scheduled_at).getTime()) / (1000 * 60 * 60);
     if (hoursSinceBooked > PATIENT_ACCESS_WINDOW_HOURS) {

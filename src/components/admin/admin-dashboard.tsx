@@ -254,7 +254,7 @@ export function AdminDashboard({
       )}
 
       <Tabs value={activeTab} onValueChange={(value) => selectTab(value as AdminTab)}>
-        <TabsContent value="overview" className="mt-0 space-y-4">
+        <TabsContent value="overview" className="mt-0 space-y-4" keepMounted>
           <div className="grid gap-3 lg:grid-cols-3">
             <CapabilityCard
               icon={UserPlus}
@@ -378,19 +378,19 @@ export function AdminDashboard({
           </div>
         </TabsContent>
 
-        <TabsContent value="providers" className="mt-0">
+        <TabsContent value="providers" className="mt-0" keepMounted>
           <ProvidersPanel locale={locale} providers={providers} meta={providerMeta} appointments={appointments} />
         </TabsContent>
 
-        <TabsContent value="applications" className="mt-0">
+        <TabsContent value="applications" className="mt-0" keepMounted>
           <ApplicationsPanel applications={providerApplications} />
         </TabsContent>
 
-        <TabsContent value="services" className="mt-0">
+        <TabsContent value="services" className="mt-0" keepMounted>
           <ServicesPanel locale={locale} categories={serviceCategories} services={services} />
         </TabsContent>
 
-        <TabsContent value="appointments" className="mt-0">
+        <TabsContent value="appointments" className="mt-0" keepMounted>
           <AppointmentsPanel
             locale={locale}
             appointments={appointments}
@@ -399,19 +399,19 @@ export function AdminDashboard({
           />
         </TabsContent>
 
-        <TabsContent value="payments" className="mt-0">
+        <TabsContent value="payments" className="mt-0" keepMounted>
           <PaymentsPanel locale={locale} payments={payments} />
         </TabsContent>
 
-        <TabsContent value="pharmacy" className="mt-0">
+        <TabsContent value="pharmacy" className="mt-0" keepMounted>
           <PharmacyPanel locale={locale} products={pharmacyItems} orders={pharmacyOrders} />
         </TabsContent>
 
-        <TabsContent value="labs" className="mt-0">
+        <TabsContent value="labs" className="mt-0" keepMounted>
           <LabsPanel locale={locale} labOrders={labOrders} labLocations={labLocations} />
         </TabsContent>
 
-        <TabsContent value="audit" className="mt-0">
+        <TabsContent value="audit" className="mt-0" keepMounted>
           <AuditPanel locale={locale} entries={auditLogs} />
         </TabsContent>
       </Tabs>

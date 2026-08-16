@@ -270,3 +270,46 @@ export async function checkSnippePaymentStatus(
   if (fresh?.payment_status === "failed") return "failed";
   return "pending";
 }
+
+// Lets a patient back out of a stuck "waiting for payment" state -- Snippe
+// doesn't reflect an on-phone cancellation right away (it just stays
+// "pending" until the ~10-minute session naturally expires), so without this
+// the patient would be stuck watching a spinner. Marks the attempt "failed"
+// locally (source: "patient_cancelled") so initiateSnippePayment's 60s
+// reuse window doesn't hand back this same dead reference on the next Pay
+// click -- a real retry fires a fresh STK push instead of silently no-oping.
+export async function cancelSnippePayment(appointmentId: string): Promise<void> {
+  const session = await getPatientSession();
+  if (!session) {
+    throw new Error("Your session expired. Please start the intake chat again.");
+  }
+
+  const service = createServiceClient();
+  const { data: appointment } = await service
+    .from("appointments")
+    .select("id")
+    .eq("id", appointmentId)
+    .eq("patient_id", session.patientId)
+    .maybeSingle();
+
+  if (!appointment) {
+    throw new Error("Not authorized for this appointment.");
+  }
+
+  const { data: payment } = await service
+    .from("payments")
+    .select("reference")
+    .eq("appointment_id", appointmentId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!payment?.reference) return;
+
+  await applySnippePaymentResult({
+    reference: payment.reference,
+    snippeStatus: "voided",
+    source: "patient_cancelled",
+  });
+}

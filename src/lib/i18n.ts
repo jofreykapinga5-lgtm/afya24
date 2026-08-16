@@ -757,6 +757,7 @@ const dict = {
     sw: "Malipo yako hayajakamilika. Unaweza kujaribu tena.",
   },
   payment_retry_button: { en: "Try again", sw: "Jaribu tena" },
+  payment_cancel_button: { en: "Cancel and try again", sw: "Ghairi na ujaribu tena" },
   payment_already_paid: {
     en: "This consultation is already paid for.",
     sw: "Ushauri huu tayari umeshalipiwa.",

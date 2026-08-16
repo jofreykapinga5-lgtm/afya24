@@ -6,6 +6,7 @@ import { Loader2, Smartphone, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  cancelSnippePayment,
   checkSnippePaymentStatus,
   initiateSnippePayment,
   type ConsultationPaymentStatus,
@@ -115,6 +116,18 @@ export function PayForm({
     setStage("form");
   }
 
+  function handleCancel() {
+    startTransition(async () => {
+      try {
+        await cancelSnippePayment(appointmentId);
+      } catch {
+        // Best-effort -- even if this fails, letting the patient back to
+        // the form is still better than leaving them stuck on the spinner.
+      }
+      setStage("form");
+    });
+  }
+
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
       <p className="text-sm font-semibold">{t("payment_page_title", locale)}</p>
@@ -178,6 +191,9 @@ export function PayForm({
               {t("payment_taking_longer", locale)}
             </p>
           )}
+          <Button variant="outline" className="mt-1 w-full" disabled={pending} onClick={handleCancel}>
+            {t("payment_cancel_button", locale)}
+          </Button>
         </div>
       ) : (
         <div className="mt-5 flex flex-col items-center gap-3 text-center">

@@ -19,7 +19,7 @@ function toLocalStatus(snippeStatus: SnippePaymentStatus): "paid" | "failed" | n
 export async function applySnippePaymentResult(input: {
   reference: string;
   snippeStatus: SnippePaymentStatus;
-  source: "webhook" | "poll_fallback";
+  source: "webhook" | "poll_fallback" | "patient_cancelled";
 }): Promise<{ applied: boolean; appointmentId: string | null }> {
   const localStatus = toLocalStatus(input.snippeStatus);
   if (!localStatus) {

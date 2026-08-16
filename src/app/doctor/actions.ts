@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 
 export type AvailabilityActionState = {
   status: "idle" | "success" | "error";
@@ -119,7 +120,7 @@ async function requireDoctorProvider() {
     throw new Error("Active provider profile not found.");
   }
 
-  return { service, providerId: provider.id };
+  return { service, providerId: provider.id, userId: user.id };
 }
 
 function selectedModes(formData: FormData) {
@@ -139,6 +140,7 @@ function imageExtension(type: string) {
 export async function updateDoctorPublicProfile(formData: FormData) {
   const { service, providerId } = await requireDoctorProvider();
   const bio = String(formData.get("bio") ?? "").trim();
+  const phoneInput = String(formData.get("phone") ?? "").trim();
   const image = formData.get("image");
   let photoUrl: string | null = null;
 
@@ -168,8 +170,12 @@ export async function updateDoctorPublicProfile(formData: FormData) {
     photoUrl = data.publicUrl;
   }
 
-  const updates: { bio: string | null; photo_url?: string } = {
+  const updates: { bio: string | null; phone: string | null; photo_url?: string } = {
     bio: bio || null,
+    // Used for the patient-facing post-payment connect screen's phone-call
+    // and WhatsApp options (src/app/consultation/[appointmentId]/connect) --
+    // stored in E.164 so both tel: and wa.me links can build off it directly.
+    phone: phoneInput ? normalizeTanzanianPhoneToE164(phoneInput) : null,
   };
 
   if (photoUrl) {
@@ -232,34 +238,96 @@ export async function updateProviderAvailability(
   }
 }
 
+// Self-service password change -- distinct from admin's resetProviderPassword
+// (that one lets an admin reset a doctor's password on their behalf without
+// knowing the old one). This requires the doctor to re-enter their current
+// password first, verified via a real sign-in attempt, before Supabase Auth
+// will let them set a new one.
+export async function updateDoctorPassword(
+  _previousState: AvailabilityActionState,
+  formData: FormData
+): Promise<AvailabilityActionState> {
+  try {
+    const currentPassword = String(formData.get("currentPassword") ?? "");
+    const newPassword = String(formData.get("newPassword") ?? "");
+
+    if (newPassword.length < 8) {
+      return { status: "error", message: "New password must be at least 8 characters." };
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
+      throw new Error("Not signed in.");
+    }
+
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+
+    if (verifyError) {
+      return { status: "error", message: "Current password is incorrect." };
+    }
+
+    const { userId } = await requireDoctorProvider();
+    const service = createServiceClient();
+    const { error } = await service.auth.admin.updateUserById(userId, { password: newPassword });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { status: "success", message: "Password updated." };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("updateDoctorPassword failed", error);
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Could not update password. Try again.",
+    };
+  }
+}
+
+const EAT_OFFSET_MS = 3 * 60 * 60 * 1000; // Africa/Nairobi-style fixed UTC+3, no DST -- matches Afya24's only market.
+
 export async function createAvailabilitySlot(formData: FormData) {
   const { service, providerId } = await requireDoctorProvider();
-  const startsAt = String(formData.get("startsAt") ?? "");
-  const endsAt = String(formData.get("endsAt") ?? "");
+  const startTime = String(formData.get("startTime") ?? "");
+  const endTime = String(formData.get("endTime") ?? "");
   const slotType = String(formData.get("slotType") ?? "available");
   const note = String(formData.get("note") ?? "").trim();
 
-  if (!startsAt || !endsAt || !["available", "break", "time_off"].includes(slotType)) {
-    throw new Error("Start, end, and slot type are required.");
+  if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
+    throw new Error("Start time and end time are required.");
+  }
+  if (!["available", "break", "time_off"].includes(slotType)) {
+    throw new Error("A valid type is required.");
   }
 
-  // The datetime pickers already floor at "now" client-side, but that's
-  // only a browser-native guard -- enforce it here too since a slot dated
-  // in the past would just silently never show up on the storefront (which
-  // only ever queries upcoming slots), with no obvious signal to the doctor
-  // about why.
-  if (new Date(startsAt).getTime() < Date.now()) {
-    throw new Error("Start time can't be in the past.");
-  }
+  // Doctors set this every day, for today only -- asking them to also pick
+  // a date turned into the actual source of bad entries (ranges that
+  // silently crossed midnight backwards, e.g. "14:59 to 3:59"). Today's date
+  // is always Tanzania's calendar day, not the server's, hence the fixed
+  // offset rather than `new Date()` directly.
+  const todayEat = new Date(Date.now() + EAT_OFFSET_MS).toISOString().slice(0, 10);
+  const startsAt = new Date(`${todayEat}T${startTime}:00+03:00`);
+  const endsAt = new Date(`${todayEat}T${endTime}:00+03:00`);
 
-  if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
-    throw new Error("End time must be after the start time.");
+  if (endsAt.getTime() <= startsAt.getTime()) {
+    throw new Error("End time must be after the start time. For an overnight window, add it as two entries.");
+  }
+  if (endsAt.getTime() < Date.now()) {
+    throw new Error("This time has already passed today.");
   }
 
   const { error } = await service.from("provider_availability_slots").insert({
     provider_id: providerId,
-    starts_at: new Date(startsAt).toISOString(),
-    ends_at: new Date(endsAt).toISOString(),
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
     slot_type: slotType,
     status: slotType === "available" ? "open" : "cancelled",
     consultation_modes: selectedModes(formData),

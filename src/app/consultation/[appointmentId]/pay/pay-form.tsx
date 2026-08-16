@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Phone, Smartphone, TriangleAlert, Video } from "lucide-react";
+import { Lock, Phone, Smartphone, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +29,6 @@ type Stage = "form" | "waiting" | "failed";
 
 export function PayForm({
   appointmentId,
-  mode,
   locale,
   price,
   currency,
@@ -39,7 +38,6 @@ export function PayForm({
   hospitalReferenceNumber,
 }: {
   appointmentId: string;
-  mode: "voice" | "video";
   locale: Locale;
   price: number;
   currency: string;
@@ -73,7 +71,7 @@ export function PayForm({
       if (cancelled) return;
 
       if (status === "paid") {
-        router.push(`/consultation/${appointmentId}?mode=${mode}`);
+        router.push(`/consultation/${appointmentId}/connect`);
         return;
       }
       if (status === "failed") {
@@ -89,7 +87,7 @@ export function PayForm({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [stage, appointmentId, mode, router]);
+  }, [stage, appointmentId, router]);
 
   function handlePay() {
     setError(null);
@@ -102,7 +100,7 @@ export function PayForm({
       try {
         const result = await initiateSnippePayment({ appointmentId, channelProvider, phone });
         if (result.alreadyPaid) {
-          router.push(`/consultation/${appointmentId}?mode=${mode}`);
+          router.push(`/consultation/${appointmentId}/connect`);
           return;
         }
         setShowSlowNotice(false);
@@ -130,8 +128,6 @@ export function PayForm({
     });
   }
 
-  const ModeIcon = mode === "voice" ? Phone : Video;
-
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
       <p className="text-sm font-semibold">{t("payment_page_title", locale)}</p>
@@ -142,15 +138,9 @@ export function PayForm({
           {t("payment_summary_label", locale)} {providerName}
           {specialty ? ` · ${specialty}` : ""}
         </p>
-        <div className="mt-1.5 flex items-end justify-between gap-3">
-          <p className="text-lg font-bold text-primary tabular-nums">
-            {currency} {price.toLocaleString()}
-          </p>
-          <span className="mb-0.5 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-            <ModeIcon className="size-3.5 shrink-0" />
-            {t(mode === "voice" ? "doctor_booking_mode_voice" : "doctor_booking_mode_video", locale)}
-          </span>
-        </div>
+        <p className="mt-1.5 text-lg font-bold text-primary tabular-nums">
+          {currency} {price.toLocaleString()}
+        </p>
         {hospitalReferenceNumber && (
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#dfe8eb] pt-3">
             <span className="text-xs text-muted-foreground">{t("payment_reference_label", locale)}</span>

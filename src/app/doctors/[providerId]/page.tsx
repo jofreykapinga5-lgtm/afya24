@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Info, Star } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getPatientSession } from "@/lib/patient-session";
@@ -88,24 +88,6 @@ export default async function DoctorBookingPage({
           </div>
         </div>
       </div>
-
-      {!patientSession && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-info/25 bg-info-soft px-4 py-3.5 text-sm text-info">
-          <Info className="mt-0.5 size-4 shrink-0" />
-          <div>
-            <p className="font-semibold">{t("doctor_booking_no_session_title", locale)}</p>
-            <p className="mt-0.5 opacity-90">{t("doctor_booking_no_session_body", locale)}</p>
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-              <Link href="/" className="font-medium underline underline-offset-2">
-                {t("start_assessment_cta", locale)}
-              </Link>
-              <Link href="/lookup" className="font-medium underline underline-offset-2">
-                {t("reference_lookup_link", locale)}
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="mt-6">
         <BookingForm provider={provider} locale={locale} hasSession={Boolean(patientSession)} />

@@ -26,6 +26,7 @@ import {
 } from "../actions";
 import { DoctorAvailabilityForm } from "./availability-form";
 import { DoctorDashboardMobileMenu, type DoctorMobileMenuItem } from "./mobile-menu";
+import { DoctorPasswordForm } from "./password-form";
 import { DoctorProfileForm } from "./profile-form";
 import { DoctorVideoQueue } from "./video-queue";
 
@@ -35,6 +36,7 @@ type ProviderRow = {
   specialty: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   profile_status: string;
   available_now?: boolean | null;
   availability_note?: string | null;
@@ -93,11 +95,6 @@ function statusClass(status: string) {
 
 export default async function DoctorDashboardPage() {
   const locale = await getServerLocale();
-  // Floors the datetime-local pickers below so a doctor can't accidentally
-  // schedule a block in the past (the landing page only ever shows upcoming
-  // slots, so a past one would just silently never appear -- confusing to
-  // debug from the dashboard side).
-  const minScheduleValue = new Date().toISOString().slice(0, 16);
   const supabase = await createClient();
   const {
     data: { user },
@@ -125,7 +122,7 @@ export default async function DoctorDashboardPage() {
   const { data: provider } = profile?.role === "doctor"
     ? await service
         .from("providers")
-        .select("id, full_name, specialty, bio, photo_url, profile_status, available_now, availability_note, consultation_modes")
+        .select("id, full_name, specialty, bio, photo_url, phone, profile_status, available_now, availability_note, consultation_modes")
         .eq("user_id", user.id)
         .maybeSingle<ProviderRow>()
     : { data: null };
@@ -214,6 +211,7 @@ export default async function DoctorDashboardPage() {
   const specialty = provider?.specialty ?? "Provider profile pending";
   const doctorBio = provider?.bio ?? "";
   const doctorPhotoUrl = provider?.photo_url ?? "";
+  const doctorPhone = provider?.phone ?? "";
   const initialVideoQueueItems = videoAppointments.map((appointment) => {
     const summary = appointment.ai_summaries?.[0];
     const patientOnline = patientOnlineByAppointmentId.get(appointment.id) ?? false;
@@ -366,9 +364,17 @@ export default async function DoctorDashboardPage() {
                   )}
 
                   {canManageAvailability ? (
-                    <DoctorProfileForm bio={doctorBio} photoUrl={doctorPhotoUrl} />
+                    <DoctorProfileForm bio={doctorBio} photoUrl={doctorPhotoUrl} phone={doctorPhone} />
                   ) : null}
                 </article>
+
+                {canManageAvailability ? (
+                  <article className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
+                    <p className="text-sm font-bold text-[#071923]">Password</p>
+                    <p className="mt-1 text-sm text-[#64747c]">Change your sign-in password.</p>
+                    <DoctorPasswordForm />
+                  </article>
+                ) : null}
               </section>
 
               <section id="availability" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
@@ -400,7 +406,7 @@ export default async function DoctorDashboardPage() {
                   <div>
                     <p className="text-sm font-bold text-[#071923]">Schedule blocks</p>
                     <p className="mt-1 text-sm text-[#64747c]">
-                      Add available time, breaks, or time off.
+                      Set today&apos;s available hours, breaks, or time off. Add a new block each day.
                     </p>
                   </div>
                   <CalendarClock className="size-5 text-[#01b7bb]" />
@@ -408,23 +414,11 @@ export default async function DoctorDashboardPage() {
 
                 {canManageAvailability ? (
                   <form action={createAvailabilitySlot} className="mt-5 grid gap-3 rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb] lg:grid-cols-[1fr_1fr_0.7fr_1fr_auto] lg:items-end">
-                    <Field label="Start">
-                      <Input
-                        name="startsAt"
-                        type="datetime-local"
-                        min={minScheduleValue}
-                        required
-                        className="rounded-xl bg-white"
-                      />
+                    <Field label="Start time">
+                      <Input name="startTime" type="time" required className="rounded-xl bg-white" />
                     </Field>
-                    <Field label="End">
-                      <Input
-                        name="endsAt"
-                        type="datetime-local"
-                        min={minScheduleValue}
-                        required
-                        className="rounded-xl bg-white"
-                      />
+                    <Field label="End time">
+                      <Input name="endTime" type="time" required className="rounded-xl bg-white" />
                     </Field>
                     <Field label="Type">
                       <select

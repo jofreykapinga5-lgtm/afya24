@@ -539,18 +539,10 @@ const dict = {
     sw: "Hatukuweza kuanza ushauri wako. Tafadhali jaribu tena.",
   },
   doctor_booking_no_session_title: {
-    en: "Booking directly with this doctor",
-    sw: "Kuweka miadi moja kwa moja na daktari huyu",
-  },
-  doctor_booking_no_session_body: {
-    en: "Fill in your details below to continue, or describe what's going on to Afya24 first, or look yourself up if you're a returning patient.",
-    sw: "Jaza maelezo yako hapa chini kuendelea, au mwambie Afya24 kinachoendelea kwanza, au jitafute kama wewe ni mgonjwa wa zamani.",
+    en: "Start with Afya24 first",
+    sw: "Anza na Afya24 kwanza",
   },
   doctor_direct_booking_title: { en: "Your details", sw: "Maelezo yako" },
-  doctor_direct_booking_body: {
-    en: "Skipping the Afya24 chat? We just need a few details to create your patient file before booking.",
-    sw: "Unaruka mazungumzo ya Afya24? Tunahitaji maelezo machache kuunda faili lako la mgonjwa kabla ya kuweka miadi.",
-  },
   doctor_direct_booking_name_label: { en: "Full name", sw: "Jina kamili" },
   doctor_direct_booking_phone_label: { en: "Phone number", sw: "Namba ya simu" },
   doctor_direct_booking_phone_placeholder: { en: "0712 345 678", sw: "0712 345 678" },
@@ -563,10 +555,6 @@ const dict = {
   doctor_direct_booking_missing_fields: {
     en: "Please fill in your name, phone number, sex, and date of birth.",
     sw: "Tafadhali jaza jina lako, namba ya simu, jinsia, na tarehe ya kuzaliwa.",
-  },
-  doctor_direct_booking_reference_note: {
-    en: "We'll create your patient reference number once payment is confirmed. Keep it safe -- you'll use it to access your file again.",
-    sw: "Tutaunda namba yako ya rejea ya mgonjwa mara malipo yatakapothibitishwa. Itunze salama -- utaitumia kufikia faili lako tena.",
   },
   pharmacy_checkout_no_session_body: {
     en: "Checkout needs a patient file. Describe what's going on to Afya24, or look yourself up if you're a returning patient, then come back to check out.",
@@ -753,6 +741,22 @@ const dict = {
   },
   payment_summary_label: { en: "Consultation with", sw: "Ushauri na" },
   payment_reference_label: { en: "Your reference number", sw: "Namba yako ya rejea" },
+  connect_title: { en: "How would you like to connect?", sw: "Ungependa kuunganishwa vipi?" },
+  connect_body: {
+    en: "Payment confirmed. Choose how to reach your doctor.",
+    sw: "Malipo yamethibitishwa. Chagua jinsi ya kumfikia daktari wako.",
+  },
+  connect_option_voice_detail: { en: "In-app audio call, camera stays off.", sw: "Simu ya sauti ndani ya programu, kamera imezimwa." },
+  connect_option_video_detail: { en: "In-app video call with audio.", sw: "Simu ya video ndani ya programu na sauti." },
+  connect_option_call_title: { en: "Phone call", sw: "Piga simu" },
+  connect_option_call_detail: { en: "Call the doctor's phone directly.", sw: "Piga simu moja kwa moja kwa daktari." },
+  connect_option_whatsapp_title: { en: "WhatsApp", sw: "WhatsApp" },
+  connect_option_whatsapp_detail: { en: "Message the doctor on WhatsApp.", sw: "Tuma ujumbe kwa daktari kupitia WhatsApp." },
+  connect_no_options_title: { en: "No connection method available", sw: "Hakuna njia ya kuunganisha inayopatikana" },
+  connect_no_options_body: {
+    en: "This doctor hasn't set up any way to connect yet. Please contact Afya24 support.",
+    sw: "Daktari huyu hajaweka njia yoyote ya kuunganisha bado. Tafadhali wasiliana na msaada wa Afya24.",
+  },
   payment_provider_label: { en: "Mobile money provider", sw: "Mtoa huduma wa pesa za simu" },
   payment_provider_mpesa: { en: "M-Pesa", sw: "M-Pesa" },
   payment_provider_airtel: { en: "Airtel Money", sw: "Airtel Money" },

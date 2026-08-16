@@ -313,3 +313,36 @@ export async function cancelSnippePayment(appointmentId: string): Promise<void> 
     source: "patient_cancelled",
   });
 }
+
+// Called from /consultation/[id]/connect when the patient picks in-app
+// voice or video -- corrects the "video" placeholder bookConsultation wrote
+// at booking time (see doctors/actions.ts) to what they actually chose, so
+// the doctor's video queue and the account-dashboard "join" link both agree
+// with reality. Never called for phone-call/WhatsApp picks -- those bypass
+// LiveKit entirely, so there's nothing here to correct.
+export async function selectConnectionMode(appointmentId: string, mode: "voice" | "video") {
+  const session = await getPatientSession();
+  if (!session) {
+    throw new Error("Your session expired. Please start the intake chat again.");
+  }
+
+  const service = createServiceClient();
+  const { data: appointment } = await service
+    .from("appointments")
+    .select("id, payment_status")
+    .eq("id", appointmentId)
+    .eq("patient_id", session.patientId)
+    .maybeSingle();
+
+  if (!appointment) {
+    throw new Error("Not authorized for this appointment.");
+  }
+  if (appointment.payment_status !== "paid") {
+    throw new Error("Payment is required before you can join this consultation.");
+  }
+
+  await service
+    .from("consultation_orders")
+    .update({ consultation_mode: mode })
+    .eq("appointment_id", appointmentId);
+}

@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,20 +15,9 @@ import { DobSelect } from "@/app/lookup/dob-select";
 import { bookConsultation, bookConsultationDirect } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
-import type { ConsultationMode, Locale, Provider } from "@/lib/types";
+import type { Locale, Provider } from "@/lib/types";
 
 type Gender = "female" | "male" | "other";
-
-const callModeCopy: Record<"voice" | "video", { titleKey: "doctor_booking_mode_voice" | "doctor_booking_mode_video"; detail: string }> = {
-  voice: {
-    titleKey: "doctor_booking_mode_voice",
-    detail: "LiveKit audio call, camera stays off.",
-  },
-  video: {
-    titleKey: "doctor_booking_mode_video",
-    detail: "LiveKit video call with audio.",
-  },
-};
 
 export function BookingForm({
   provider,
@@ -42,14 +30,6 @@ export function BookingForm({
 }) {
   const router = useRouter();
   const qualificationResult = useAppStore((state) => state.qualificationResult);
-  const availableCallModes = provider.consultationModes.filter(
-    (providerMode): providerMode is "voice" | "video" => providerMode === "voice" || providerMode === "video"
-  );
-  const [mode, setMode] = useState<ConsultationMode>(
-    availableCallModes.includes("video")
-      ? "video"
-      : (availableCallModes[0] ?? "video")
-  );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [gender, setGender] = useState<Gender | "">("");
@@ -59,11 +39,10 @@ export function BookingForm({
       try {
         const appointmentId = await bookConsultation({
           providerId: provider.id,
-          consultationMode: mode,
           locale,
           qualification: qualificationResult,
         });
-        router.push(`/consultation/${appointmentId}/pay?mode=${mode}`);
+        router.push(`/consultation/${appointmentId}/pay`);
       } catch (err) {
         // Show the real reason instead of a generic "try again" -- the fix
         // is usually specific (session expired, no doctors available, a
@@ -77,10 +56,6 @@ export function BookingForm({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    if (availableCallModes.length === 0) {
-      setError("This doctor is not accepting voice or video calls right now.");
-      return;
-    }
 
     if (hasSession) {
       bookWithSession();
@@ -101,14 +76,13 @@ export function BookingForm({
       try {
         const appointmentId = await bookConsultationDirect({
           providerId: provider.id,
-          consultationMode: mode,
           locale,
           fullName,
           phone,
           dateOfBirth,
           gender,
         });
-        router.push(`/consultation/${appointmentId}/pay?mode=${mode}`);
+        router.push(`/consultation/${appointmentId}/pay`);
       } catch (err) {
         setError(err instanceof Error ? err.message : t("doctor_booking_error", locale));
       }
@@ -117,45 +91,9 @@ export function BookingForm({
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-card p-6">
-      <p className="text-sm font-semibold">{t("doctor_booking_choose_mode", locale)}</p>
-
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {availableCallModes.length > 0 ? availableCallModes.map((callMode) => {
-          const Icon = callMode === "voice" ? Phone : Video;
-          const copy = callModeCopy[callMode];
-
-          return (
-            <Button
-              key={callMode}
-              type="button"
-              variant={mode === callMode ? "default" : "outline"}
-              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
-              onClick={() => setMode(callMode)}
-            >
-              <Icon className="size-4 shrink-0" />
-              <span>
-                <span className="block font-semibold">{t(copy.titleKey, locale)}</span>
-                <span className="block text-xs opacity-75">{copy.detail}</span>
-              </span>
-            </Button>
-          );
-        }) : (
-          <p className="rounded-xl bg-[#f8fbfd] px-4 py-3 text-sm text-muted-foreground ring-1 ring-[#dfe8eb]">
-            This doctor is not accepting voice or video calls right now.
-          </p>
-        )}
-      </div>
-
-      {qualificationResult && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          {t("doctor_booking_summary_note", locale)}
-        </p>
-      )}
-
       {!hasSession && (
-        <div className="mt-5 border-t border-border pt-5">
+        <div>
           <p className="text-sm font-semibold">{t("doctor_direct_booking_title", locale)}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{t("doctor_direct_booking_body", locale)}</p>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm sm:col-span-2">
@@ -195,11 +133,13 @@ export function BookingForm({
               <DobSelect locale={locale} />
             </div>
           </div>
-
-          <p className="mt-3 text-xs text-muted-foreground">
-            {t("doctor_direct_booking_reference_note", locale)}
-          </p>
         </div>
+      )}
+
+      {qualificationResult && (
+        <p className={!hasSession ? "mt-4 text-xs text-muted-foreground" : "text-xs text-muted-foreground"}>
+          {t("doctor_booking_summary_note", locale)}
+        </p>
       )}
 
       {error && <p className="mt-3 text-sm text-urgent">{error}</p>}

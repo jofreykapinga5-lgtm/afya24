@@ -6,11 +6,10 @@ import { createPatientAccountRecord } from "@/lib/patient-account";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
-import type { ConsultationMode, Locale, QualificationResult } from "@/lib/types";
+import type { Locale, QualificationResult } from "@/lib/types";
 
 export async function bookConsultation(input: {
   providerId: string;
-  consultationMode: ConsultationMode;
   locale: Locale;
   qualification: QualificationResult | null;
 }): Promise<string> {
@@ -22,7 +21,6 @@ export async function bookConsultation(input: {
   return bookConsultationForPatient({
     patientId: session.patientId,
     providerId: input.providerId,
-    consultationMode: input.consultationMode,
     locale: input.locale,
     qualification: input.qualification,
   });
@@ -37,7 +35,6 @@ export async function bookConsultation(input: {
 // since that's the moment the booking is actually confirmed as real.
 export async function bookConsultationDirect(input: {
   providerId: string;
-  consultationMode: ConsultationMode;
   locale: Locale;
   fullName: string;
   phone: string;
@@ -64,7 +61,6 @@ export async function bookConsultationDirect(input: {
   return bookConsultationForPatient({
     patientId: record.patientId,
     providerId: input.providerId,
-    consultationMode: input.consultationMode,
     locale: input.locale,
     qualification: null,
   });
@@ -73,7 +69,6 @@ export async function bookConsultationDirect(input: {
 async function bookConsultationForPatient(input: {
   patientId: string;
   providerId: string;
-  consultationMode: ConsultationMode;
   locale: Locale;
   qualification: QualificationResult | null;
 }): Promise<string> {
@@ -109,7 +104,12 @@ async function bookConsultationForPatient(input: {
     provider_id: input.providerId,
     service_id: defaultService.id,
     appointment_id: appointmentId,
-    consultation_mode: input.consultationMode,
+    // Placeholder -- the patient doesn't choose how to connect until the
+    // /consultation/[id]/connect screen, after payment. selectConnectionMode
+    // below corrects this once they actually pick in-app voice or video; it's
+    // left untouched if they pick a phone call or WhatsApp instead, since
+    // those never create a video_session or need to appear in any queue.
+    consultation_mode: "video",
     subtotal: defaultService.basePrice,
     fees: 0,
     total: defaultService.basePrice,

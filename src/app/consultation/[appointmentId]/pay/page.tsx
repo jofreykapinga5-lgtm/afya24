@@ -15,13 +15,10 @@ type AppointmentRow = {
 
 export default async function ConsultationPaymentPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ appointmentId: string }>;
-  searchParams: Promise<{ mode?: string }>;
 }) {
   const { appointmentId } = await params;
-  const { mode } = await searchParams;
   const locale = await getServerLocale();
   const session = await getPatientSession();
 
@@ -40,10 +37,8 @@ export default async function ConsultationPaymentPage({
     redirect("/qualification");
   }
 
-  const callMode = mode === "voice" ? "voice" : "video";
-
   if (appointment.payment_status === "paid") {
-    redirect(`/consultation/${appointmentId}?mode=${callMode}`);
+    redirect(`/consultation/${appointmentId}/connect`);
   }
 
   const { data: patient } = await service
@@ -56,7 +51,6 @@ export default async function ConsultationPaymentPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
       <PayForm
         appointmentId={appointmentId}
-        mode={callMode}
         locale={locale}
         price={Number(appointment.price)}
         currency={appointment.currency}

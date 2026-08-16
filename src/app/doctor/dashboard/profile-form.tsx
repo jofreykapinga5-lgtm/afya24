@@ -3,15 +3,18 @@
 import Image from "next/image";
 import { ImageUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateDoctorPublicProfile } from "../actions";
 
 export function DoctorProfileForm({
   bio,
   photoUrl,
+  phone,
 }: {
   bio: string;
   photoUrl: string;
+  phone: string;
 }) {
   return (
     <form action={updateDoctorPublicProfile} className="mt-5 grid gap-4">
@@ -36,6 +39,21 @@ export function DoctorProfileForm({
           <span className="text-xs text-[#64747c]">JPG, PNG, or WebP under 5 MB.</span>
         </label>
       </div>
+
+      <label className="grid gap-1.5 text-sm">
+        <span className="font-bold text-[#071923]">Phone number</span>
+        <Input
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          defaultValue={phone}
+          placeholder="0712 345 678"
+          className="rounded-xl border-[#d8e5e3] bg-[#f8fbfd]"
+        />
+        <span className="text-xs text-[#64747c]">
+          Shown to patients only after they&apos;ve paid, for phone-call and WhatsApp options.
+        </span>
+      </label>
 
       <label className="grid gap-1.5 text-sm">
         <span className="font-bold text-[#071923]">Public bio</span>

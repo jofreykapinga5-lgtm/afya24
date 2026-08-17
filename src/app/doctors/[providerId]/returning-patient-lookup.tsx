@@ -4,14 +4,14 @@ import { useState } from "react";
 import { ChevronDown, Search, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PinOrDobFields } from "@/app/lookup/pin-or-dob-fields";
+import { DobSelect } from "@/app/lookup/dob-select";
 import { lookupPatient } from "@/app/lookup/actions";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
 // Lets a returning patient re-establish their session (reference number +
-// PIN/DOB, same verification as /lookup) right here instead of filling in
-// the manual details form below -- the redirectTo hidden field sends
+// date of birth, same verification as /lookup) right here instead of
+// filling in the manual details form below -- the redirectTo hidden field sends
 // lookupPatient back to this exact booking page. A resolved session there
 // is enough on its own: BookingForm reads it server-side next render and
 // skips the manual fields entirely (see hasSession there).
@@ -67,7 +67,10 @@ export function ReturningPatientLookup({
             />
           </div>
 
-          <PinOrDobFields locale={locale} />
+          <div className="space-y-1.5">
+            <span className="text-sm font-bold text-[#071923]">{t("lookup_dob_label", locale)}</span>
+            <DobSelect locale={locale} />
+          </div>
 
           <Button
             type="submit"

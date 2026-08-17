@@ -479,15 +479,6 @@ const dict = {
     en: "Too many attempts for this reference number. Please try again later.",
     sw: "Majaribio mengi sana kwa nambari hii ya rejea. Tafadhali jaribu tena baadaye.",
   },
-  lookup_pin_label: { en: "PIN", sw: "PIN" },
-  lookup_use_dob_instead: {
-    en: "I don't have a PIN — use my date of birth",
-    sw: "Sina PIN — tumia tarehe yangu ya kuzaliwa",
-  },
-  lookup_use_pin_instead: {
-    en: "Use my PIN instead",
-    sw: "Tumia PIN yangu badala yake",
-  },
   error_confirm_link_invalid: {
     en: "That confirmation link is invalid or has expired.",
     sw: "Kiungo hicho cha uthibitisho si sahihi au kimeisha muda.",
@@ -1002,34 +993,6 @@ const dict = {
   qualification_fallback_error: {
     en: "Please fill in all fields.",
     sw: "Tafadhali jaza sehemu zote.",
-  },
-  qualification_pin_title: {
-    en: "Set a PIN to protect your file",
-    sw: "Weka PIN kulinda faili yako",
-  },
-  qualification_pin_body: {
-    en: "Use this next time you look yourself up, instead of your date of birth.",
-    sw: "Itumie wakati mwingine unapojitafuta, badala ya tarehe yako ya kuzaliwa.",
-  },
-  qualification_pin_label: { en: "4-digit PIN", sw: "PIN ya tarakimu 4" },
-  qualification_pin_confirm_label: { en: "Confirm PIN", sw: "Thibitisha PIN" },
-  qualification_pin_save_cta: { en: "Save PIN", sw: "Hifadhi PIN" },
-  qualification_pin_skip_cta: { en: "Skip for now", sw: "Ruka kwa sasa" },
-  qualification_pin_mismatch_error: {
-    en: "PINs don't match.",
-    sw: "PIN hazifanani.",
-  },
-  qualification_pin_invalid_error: {
-    en: "PIN must be 4 to 6 digits.",
-    sw: "PIN lazima iwe na tarakimu 4 hadi 6.",
-  },
-  qualification_pin_saved: {
-    en: "PIN saved. Keep it somewhere safe.",
-    sw: "PIN imehifadhiwa. Iweke mahali salama.",
-  },
-  qualification_pin_error: {
-    en: "Couldn't save your PIN. You can still use your date of birth to look yourself up later.",
-    sw: "Imeshindwa kuhifadhi PIN yako. Bado unaweza kutumia tarehe yako ya kuzaliwa kujitafuta baadaye.",
   },
   urgency_low_label: {
     en: "Low urgency",

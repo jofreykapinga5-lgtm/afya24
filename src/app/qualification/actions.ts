@@ -1,9 +1,7 @@
 "use server";
 
 import { createPatientAccountRecord } from "@/lib/patient-account";
-import { createPatientSession, getPatientSession } from "@/lib/patient-session";
-import { hashPin, isValidPin } from "@/lib/patient-pin";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createPatientSession } from "@/lib/patient-session";
 import type { Locale } from "@/lib/types";
 
 // Recovery path for when the AI chat's createPatientAccount tool call never
@@ -26,29 +24,4 @@ export async function createPatientAccountFallback(input: {
   const record = await createPatientAccountRecord(input);
   await createPatientSession(record.patientId, BOOKING_SESSION_TTL_SECONDS);
   return record;
-}
-
-// Sets the PIN a patient will use for return-visit lookup instead of date of
-// birth (src/app/lookup/actions.ts). Requires an already-established session
-// -- this only runs after account creation, from a plain Server Action, so
-// (unlike the chat route's tool) it can just read the session cookie
-// directly rather than needing the claim-token exchange.
-export async function setPatientPin(pin: string) {
-  const session = await getPatientSession();
-  if (!session) {
-    throw new Error("Your session expired. Please start the intake chat again.");
-  }
-  if (!isValidPin(pin)) {
-    throw new Error("PIN must be 4 to 6 digits.");
-  }
-
-  const service = createServiceClient();
-  const { error } = await service
-    .from("patients")
-    .update({ pin_hash: hashPin(pin) })
-    .eq("id", session.patientId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
 }

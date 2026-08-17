@@ -27,7 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DobSelect } from "@/app/lookup/dob-select";
-import { createPatientAccountFallback, setPatientPin } from "./actions";
+import { createPatientAccountFallback } from "./actions";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
 import type { QualificationResult, UrgencyLevel } from "@/lib/types";
@@ -226,36 +226,6 @@ export default function QualificationPage() {
 
   const [fallbackPending, startFallbackTransition] = useTransition();
   const [fallbackError, setFallbackError] = useState<string | null>(null);
-
-  const [pinValue, setPinValue] = useState("");
-  const [pinConfirmValue, setPinConfirmValue] = useState("");
-  const [pinError, setPinError] = useState<string | null>(null);
-  const [pinSaved, setPinSaved] = useState(false);
-  const [pinHandled, setPinHandled] = useState(false);
-  const [pinPending, startPinTransition] = useTransition();
-
-  function handleSavePin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!/^\d{4,6}$/.test(pinValue)) {
-      setPinError(t("qualification_pin_invalid_error", locale));
-      return;
-    }
-    if (pinValue !== pinConfirmValue) {
-      setPinError(t("qualification_pin_mismatch_error", locale));
-      return;
-    }
-
-    setPinError(null);
-    startPinTransition(async () => {
-      try {
-        await setPatientPin(pinValue);
-        setPinSaved(true);
-        setPinHandled(true);
-      } catch {
-        setPinError(t("qualification_pin_error", locale));
-      }
-    });
-  }
 
   function handleFallbackSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -559,26 +529,6 @@ export default function QualificationPage() {
                       fallbackPending={fallbackPending}
                       onSubmit={handleFallbackSubmit}
                     />
-                  )}
-
-                  {accountResult && !pinHandled && (
-                    <PinSetupCard
-                      locale={locale}
-                      pinValue={pinValue}
-                      pinConfirmValue={pinConfirmValue}
-                      onPinChange={setPinValue}
-                      onPinConfirmChange={setPinConfirmValue}
-                      pinError={pinError}
-                      pinPending={pinPending}
-                      onSubmit={handleSavePin}
-                      onSkip={() => setPinHandled(true)}
-                    />
-                  )}
-
-                  {pinSaved && (
-                    <p className="rounded-2xl bg-[#f4faf9] px-4 py-3 text-center text-sm font-medium text-[#087a7b]">
-                      {t("qualification_pin_saved", locale)}
-                    </p>
                   )}
 
                   <Button
@@ -1033,75 +983,6 @@ function AttachmentsSummary({ attachments }: { attachments: IntakeAttachment[] }
         ))}
       </div>
     </section>
-  );
-}
-
-function PinSetupCard({
-  locale,
-  pinValue,
-  pinConfirmValue,
-  onPinChange,
-  onPinConfirmChange,
-  pinError,
-  pinPending,
-  onSubmit,
-  onSkip,
-}: {
-  locale: "en" | "sw";
-  pinValue: string;
-  pinConfirmValue: string;
-  onPinChange: (value: string) => void;
-  onPinConfirmChange: (value: string) => void;
-  pinError: string | null;
-  pinPending: boolean;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onSkip: () => void;
-}) {
-  return (
-    <div className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-      <div className="flex items-center gap-2">
-        <ShieldCheck className="size-4 text-[#087a7b]" />
-        <p className="text-sm font-bold text-[#071923]">{t("qualification_pin_title", locale)}</p>
-      </div>
-      <p className="mt-1 text-sm text-[#60717a]">{t("qualification_pin_body", locale)}</p>
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="pinValue" className="text-sm font-medium">
-            {t("qualification_pin_label", locale)}
-          </label>
-          <Input
-            id="pinValue"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={pinValue}
-            onChange={(event) => onPinChange(event.target.value.replace(/\D/g, ""))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="pinConfirmValue" className="text-sm font-medium">
-            {t("qualification_pin_confirm_label", locale)}
-          </label>
-          <Input
-            id="pinConfirmValue"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={pinConfirmValue}
-            onChange={(event) => onPinConfirmChange(event.target.value.replace(/\D/g, ""))}
-          />
-        </div>
-        {pinError && <p className="text-sm text-urgent sm:col-span-2">{pinError}</p>}
-        <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={pinPending} className="h-11 flex-1 rounded-full">
-            {t("qualification_pin_save_cta", locale)}
-          </Button>
-          <Button type="button" variant="outline" onClick={onSkip} className="h-11 rounded-full">
-            {t("qualification_pin_skip_cta", locale)}
-          </Button>
-        </div>
-      </form>
-    </div>
   );
 }
 

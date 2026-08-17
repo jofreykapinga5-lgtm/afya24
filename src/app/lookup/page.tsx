@@ -6,7 +6,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { lookupPatient } from "./actions";
-import { PinOrDobFields } from "./pin-or-dob-fields";
+import { DobSelect } from "./dob-select";
 
 export default async function LookupPage({
   searchParams,
@@ -60,7 +60,10 @@ export default async function LookupPage({
                 />
               </div>
 
-              <PinOrDobFields locale={locale} />
+              <div className="space-y-1.5">
+                <span className="text-sm font-bold text-[#071923]">{t("lookup_dob_label", locale)}</span>
+                <DobSelect locale={locale} />
+              </div>
 
               <Button
                 type="submit"

@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, PhoneCall, MessageCircle, Video } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CircleCheck, Phone, PhoneCall, MessageCircle, Video } from "lucide-react";
 import { selectConnectionMode } from "../../actions";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -44,84 +43,119 @@ export function ConnectOptions({
   const hasAnyOption = canVoice || canVideo || Boolean(providerPhone);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
-      <p className="text-sm font-semibold">{t("connect_title", locale)}</p>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
+      <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-bold text-[#087a7b]">
+        <CircleCheck className="size-3.5" />
+        {t("connect_payment_confirmed_badge", locale)}
+      </span>
+      <p className="text-sm font-bold text-[#071923]">{t("connect_title", locale)}</p>
+      <p className="mt-1 text-sm text-[#60717a]">
         {t("connect_body", locale)}
         {providerName ? ` ${providerName}.` : ""}
       </p>
 
       {hasAnyOption ? (
-        <div className="mt-4 grid gap-2">
+        <div className="mt-4 grid gap-2.5">
           {canVoice && (
-            <Button
-              type="button"
-              variant="outline"
+            <ConnectOption
+              icon={<Phone className="size-4.5" />}
+              title={t("doctor_booking_mode_voice", locale)}
+              detail={t("connect_option_voice_detail", locale)}
               disabled={pending}
-              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
               onClick={() => joinInApp("voice")}
-            >
-              <Phone className="size-4 shrink-0" />
-              <span>
-                <span className="block font-semibold">{t("doctor_booking_mode_voice", locale)}</span>
-                <span className="block text-xs opacity-75">{t("connect_option_voice_detail", locale)}</span>
-              </span>
-            </Button>
+            />
           )}
           {canVideo && (
-            <Button
-              type="button"
-              variant="outline"
+            <ConnectOption
+              icon={<Video className="size-4.5" />}
+              title={t("doctor_booking_mode_video", locale)}
+              detail={t("connect_option_video_detail", locale)}
               disabled={pending}
-              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
               onClick={() => joinInApp("video")}
-            >
-              <Video className="size-4 shrink-0" />
-              <span>
-                <span className="block font-semibold">{t("doctor_booking_mode_video", locale)}</span>
-                <span className="block text-xs opacity-75">{t("connect_option_video_detail", locale)}</span>
-              </span>
-            </Button>
+            />
           )}
           {telHref && (
-            <Button
-              type="button"
-              variant="outline"
-              nativeButton={false}
-              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
-              render={<a href={telHref} />}
-            >
-              <PhoneCall className="size-4 shrink-0" />
-              <span>
-                <span className="block font-semibold">{t("connect_option_call_title", locale)}</span>
-                <span className="block text-xs opacity-75">{t("connect_option_call_detail", locale)}</span>
-              </span>
-            </Button>
+            <ConnectOption
+              icon={<PhoneCall className="size-4.5" />}
+              title={t("connect_option_call_title", locale)}
+              detail={t("connect_option_call_detail", locale)}
+              href={telHref}
+            />
           )}
           {whatsappHref && (
-            <Button
-              type="button"
-              variant="outline"
-              nativeButton={false}
-              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
-              render={<a href={whatsappHref} target="_blank" rel="noreferrer" />}
-            >
-              <MessageCircle className="size-4 shrink-0 text-[#25D366]" />
-              <span>
-                <span className="block font-semibold">{t("connect_option_whatsapp_title", locale)}</span>
-                <span className="block text-xs opacity-75">{t("connect_option_whatsapp_detail", locale)}</span>
-              </span>
-            </Button>
+            <ConnectOption
+              icon={<MessageCircle className="size-4.5" />}
+              iconClassName="bg-[#e6f9ee] text-[#25D366]"
+              title={t("connect_option_whatsapp_title", locale)}
+              detail={t("connect_option_whatsapp_detail", locale)}
+              href={whatsappHref}
+              external
+            />
           )}
         </div>
       ) : (
-        <div className="mt-4 rounded-xl bg-pending-soft px-4 py-3 text-sm text-pending">
+        <div className="mt-4 rounded-2xl bg-pending-soft px-4 py-3 text-sm text-pending">
           <p className="font-semibold">{t("connect_no_options_title", locale)}</p>
           <p className="mt-0.5 opacity-90">{t("connect_no_options_body", locale)}</p>
         </div>
       )}
 
-      {error && <p className="mt-3 text-sm text-urgent">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-3 rounded-xl bg-[#fff4f0] px-4 py-3 text-sm text-[#9b2c12]">
+          {error}
+        </p>
+      )}
     </div>
+  );
+}
+
+function ConnectOption({
+  icon,
+  iconClassName,
+  title,
+  detail,
+  disabled,
+  onClick,
+  href,
+  external,
+}: {
+  icon: React.ReactNode;
+  iconClassName?: string;
+  title: string;
+  detail: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  href?: string;
+  external?: boolean;
+}) {
+  const content = (
+    <>
+      <span
+        className={`flex size-11 shrink-0 items-center justify-center rounded-2xl ${iconClassName ?? "bg-[#e8f7f4] text-[#01b7bb]"}`}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-semibold text-[#071923]">{title}</span>
+        <span className="block text-xs text-[#60717a]">{detail}</span>
+      </span>
+    </>
+  );
+
+  const className =
+    "flex w-full items-center gap-3.5 rounded-2xl bg-[#f8fbfd] p-3.5 text-left outline-none ring-1 ring-[#dfe8eb] transition-all duration-200 hover:-translate-y-0.5 hover:ring-[#01b7bb]/50 active:translate-y-0 active:scale-[0.99] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/40 disabled:pointer-events-none disabled:opacity-50";
+
+  if (href) {
+    return (
+      <a href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className={className}>
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} className={className}>
+      {content}
+    </button>
   );
 }

@@ -29,7 +29,25 @@ const navLinks: { href: string; labelKey: TranslationKey }[] = [
   { href: "#health-tips", labelKey: "nav_health_tips" },
 ];
 
-const headerHiddenPrefixes = ["/account", "/admin", "/auth", "/consultation", "/doctor"];
+const headerHiddenPrefixes = ["/account", "/admin", "/auth"];
+
+// Staff-only doctor sign-in/dashboard/apply pages -- "/doctor" as a plain
+// prefix would also swallow "/doctors" (the patient-facing listing and
+// booking flow, which is meant to keep the header now). Matched separately
+// so patients keep the header through doctor selection, payment, connect,
+// and the video call itself, while staff surfaces stay header-free per
+// the "no staff sign-in in the patient navbar" rule.
+function isStaffDoctorPath(pathname: string) {
+  return pathname === "/doctor" || pathname.startsWith("/doctor/");
+}
+
+// The doctor-selection-through-video-call flow (/doctors, /consultation) is
+// a focused task, not general browsing -- search, the hamburger's marketing
+// nav, and the account menu don't belong mid-booking or mid-payment. Just
+// enough presence to feel like the same site: logo and language.
+function isFlowPage(pathname: string) {
+  return pathname.startsWith("/doctors") || pathname.startsWith("/consultation");
+}
 
 function firstName(fullName: string) {
   return fullName.replace(/^Dr\.\s*/i, "").split(" ")[0] || fullName;
@@ -89,8 +107,29 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
     closeSearch();
   }
 
-  if (headerHiddenPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+  if (headerHiddenPrefixes.some((prefix) => pathname.startsWith(prefix)) || isStaffDoctorPath(pathname)) {
     return null;
+  }
+
+  if (isFlowPage(pathname)) {
+    return (
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/brand/afya24-logo-header.png"
+              alt="Afya24"
+              width={220}
+              height={70}
+              priority
+              style={{ width: "auto" }}
+              className="h-8"
+            />
+          </Link>
+          <LanguageToggle />
+        </div>
+      </header>
+    );
   }
 
   function navHref(href: string) {

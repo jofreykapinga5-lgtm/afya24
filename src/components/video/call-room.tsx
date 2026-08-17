@@ -229,9 +229,15 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
   if (success) {
     return (
       <div className="mx-auto grid w-full max-w-sm gap-3 text-center">
-        <ShieldCheck className="mx-auto size-8 text-[#087a7b]" />
-        <p className="font-semibold">{t("consultation_upgrade_success", locale)}</p>
-        <Button className="mt-2" nativeButton={false} render={<Link href="/account/dashboard" />}>
+        <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e8f7f4] text-[#01b7bb]">
+          <ShieldCheck className="size-7" />
+        </span>
+        <p className="font-bold text-[#071923]">{t("consultation_upgrade_success", locale)}</p>
+        <Button
+          className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          nativeButton={false}
+          render={<Link href="/account/dashboard" />}
+        >
           {t("consultation_upgrade_go_to_account", locale)}
         </Button>
       </div>
@@ -239,15 +245,17 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-sm text-left">
+    <div className="mx-auto w-full max-w-sm rounded-[1.75rem] bg-white p-6 text-left shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0]">
       <div className="text-center">
-        <ShieldCheck className="mx-auto size-8 text-[#087a7b]" />
-        <p className="mt-2 font-semibold">{t("consultation_upgrade_title", locale)}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{t("consultation_upgrade_body", locale)}</p>
+        <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e8f7f4] text-[#01b7bb]">
+          <ShieldCheck className="size-7" />
+        </span>
+        <p className="mt-3 font-bold text-[#071923]">{t("consultation_upgrade_title", locale)}</p>
+        <p className="mt-1 text-sm text-[#60717a]">{t("consultation_upgrade_body", locale)}</p>
       </div>
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
         <div className="space-y-1.5">
-          <label htmlFor="upgradePassword" className="text-sm font-medium">
+          <label htmlFor="upgradePassword" className="text-sm font-semibold text-[#071923]">
             {t("consultation_upgrade_password_label", locale)}
           </label>
           <Input
@@ -257,10 +265,11 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            className="rounded-xl bg-[#f8fbfd]"
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="upgradePasswordConfirm" className="text-sm font-medium">
+          <label htmlFor="upgradePasswordConfirm" className="text-sm font-semibold text-[#071923]">
             {t("consultation_upgrade_password_confirm_label", locale)}
           </label>
           <Input
@@ -270,10 +279,19 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
             required
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
+            className="rounded-xl bg-[#f8fbfd]"
           />
         </div>
-        {error && <p className="text-sm text-urgent">{error}</p>}
-        <Button type="submit" disabled={pending} className="h-11 w-full">
+        {error && (
+          <p role="alert" className="rounded-xl bg-[#fff4f0] px-4 py-3 text-sm text-[#9b2c12]">
+            {error}
+          </p>
+        )}
+        <Button
+          type="submit"
+          disabled={pending}
+          className="h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+        >
           {t("consultation_upgrade_cta", locale)}
         </Button>
       </form>
@@ -329,25 +347,29 @@ export function CallRoom({
 
   if (ended) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f7fbfb] px-4 py-10 text-center">
         <div>
-          <p className="font-semibold">
+          <p className="font-bold text-[#071923]">
             {droppedByNetwork ? t("video_connection_lost_title", locale) : t("video_call_ended", locale)}
           </p>
           {droppedByNetwork ? (
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            <p className="mt-1 max-w-sm text-sm text-[#60717a]">
               {t("video_connection_lost_body", locale)}
             </p>
           ) : (
             !showAccountUpgrade && (
-              <p className="text-sm text-muted-foreground">{t("video_close_window", locale)}</p>
+              <p className="text-sm text-[#60717a]">{t("video_close_window", locale)}</p>
             )
           )}
         </div>
 
         {droppedByNetwork && onReconnect ? (
           <div className="grid gap-2">
-            <Button onClick={handleReconnect} disabled={reconnectPending}>
+            <Button
+              onClick={handleReconnect}
+              disabled={reconnectPending}
+              className="h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+            >
               {reconnectPending ? t("video_reconnecting_action", locale) : t("video_reconnect_action", locale)}
             </Button>
             {reconnectError ? <p className="text-sm text-urgent">{reconnectError}</p> : null}

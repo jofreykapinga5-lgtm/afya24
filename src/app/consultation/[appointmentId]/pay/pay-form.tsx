@@ -129,22 +129,22 @@ export function PayForm({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
-      <p className="text-sm font-semibold">{t("payment_page_title", locale)}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{t("payment_page_body", locale)}</p>
+    <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
+      <p className="text-sm font-bold text-[#071923]">{t("payment_page_title", locale)}</p>
+      <p className="mt-1 text-sm text-[#60717a]">{t("payment_page_body", locale)}</p>
 
-      <div className="mt-4 rounded-xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-        <p className="text-xs text-muted-foreground">
+      <div className="mt-4 rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
+        <p className="text-xs text-[#60717a]">
           {t("payment_summary_label", locale)} {providerName}
           {specialty ? ` · ${specialty}` : ""}
         </p>
-        <p className="mt-1.5 text-lg font-bold text-primary tabular-nums">
+        <p className="mt-1.5 text-lg font-bold tabular-nums text-[#083273]">
           {currency} {price.toLocaleString()}
         </p>
         {hospitalReferenceNumber && (
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#dfe8eb] pt-3">
-            <span className="text-xs text-muted-foreground">{t("payment_reference_label", locale)}</span>
-            <span className="font-mono text-sm font-semibold text-primary">{hospitalReferenceNumber}</span>
+            <span className="text-xs text-[#60717a]">{t("payment_reference_label", locale)}</span>
+            <span className="font-mono text-sm font-semibold text-[#083273]">{hospitalReferenceNumber}</span>
           </div>
         )}
       </div>
@@ -152,30 +152,37 @@ export function PayForm({
       <div aria-live="polite" key={stage} className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-300">
         {stage === "form" ? (
           <>
-            <p className="mt-4 text-sm font-semibold">{t("payment_provider_label", locale)}</p>
+            <p className="mt-4 text-sm font-bold text-[#071923]">{t("payment_provider_label", locale)}</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {PROVIDERS.map((option) => (
-                <Button
-                  key={option.value}
-                  type="button"
-                  variant={channelProvider === option.value ? "default" : "outline"}
-                  className="h-auto justify-start gap-2 rounded-xl px-3 py-2.5 text-left"
-                  onClick={() => setChannelProvider(option.value)}
-                >
-                  <Smartphone className="size-4 shrink-0" />
-                  <span className="text-sm font-semibold">{t(option.labelKey, locale)}</span>
-                </Button>
-              ))}
+              {PROVIDERS.map((option) => {
+                const active = channelProvider === option.value;
+                return (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant="outline"
+                    onClick={() => setChannelProvider(option.value)}
+                    className={
+                      active
+                        ? "h-auto justify-start gap-2 rounded-xl border-transparent bg-[#01b7bb] px-3 py-2.5 text-left text-white hover:bg-[#019ea2]"
+                        : "h-auto justify-start gap-2 rounded-xl bg-[#f8fbfd] px-3 py-2.5 text-left text-[#071923] hover:border-[#01b7bb]/40 hover:bg-[#f1fbfa]"
+                    }
+                  >
+                    <Smartphone className="size-4 shrink-0" />
+                    <span className="text-sm font-semibold">{t(option.labelKey, locale)}</span>
+                  </Button>
+                );
+              })}
             </div>
 
-            <label className="mt-4 block text-sm font-semibold" htmlFor="payment-phone">
+            <label className="mt-4 block text-sm font-bold text-[#071923]" htmlFor="payment-phone">
               {t("payment_phone_label", locale)}
             </label>
             <div className="relative mt-1.5">
-              <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#8a969c]" />
               <Input
                 id="payment-phone"
-                className="h-11 rounded-xl pl-10"
+                className="h-11 rounded-xl bg-[#f8fbfd] pl-10"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder={t("payment_phone_placeholder", locale)}
@@ -183,46 +190,60 @@ export function PayForm({
               />
             </div>
 
-            {error && <p className="mt-3 text-sm text-urgent">{error}</p>}
+            {error && (
+              <p role="alert" className="mt-3 rounded-xl bg-[#fff4f0] px-4 py-3 text-sm text-[#9b2c12]">
+                {error}
+              </p>
+            )}
 
-            <Button size="lg" className="mt-4 w-full" disabled={pending} onClick={handlePay}>
+            <Button
+              size="lg"
+              disabled={pending}
+              onClick={handlePay}
+              className="mt-4 h-12 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+            >
               {pending ? t("payment_pay_pending", locale) : t("payment_pay_button", locale)}
             </Button>
 
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="size-3.5 shrink-0 text-brand-teal" />
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-[#60717a]">
+              <Lock className="size-3.5 shrink-0 text-[#01b7bb]" />
               {t("payment_secure_note", locale)}
             </p>
           </>
         ) : stage === "waiting" ? (
           <div className="mt-5 flex flex-col items-center gap-3 text-center">
-            <div className="relative flex size-14 items-center justify-center">
-              <span className="absolute inset-0 rounded-full bg-primary/15 motion-safe:animate-ping" />
-              <span className="relative flex size-14 items-center justify-center rounded-full bg-primary-soft">
-                <Smartphone className="size-6 text-primary" />
+            <div className="relative flex size-16 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-[#01b7bb]/15 motion-safe:animate-ping" />
+              <span className="relative flex size-16 items-center justify-center rounded-full bg-[#e8f7f4]">
+                <Smartphone className="size-6 text-[#01b7bb]" />
               </span>
             </div>
             <div>
-              <p className="font-semibold">{t("payment_waiting_title", locale)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t("payment_waiting_body", locale)}</p>
+              <p className="font-bold text-[#071923]">{t("payment_waiting_title", locale)}</p>
+              <p className="mt-1 text-sm text-[#60717a]">{t("payment_waiting_body", locale)}</p>
             </div>
             {showSlowNotice && (
               <p className="mt-1 rounded-lg bg-pending-soft px-3 py-2 text-xs text-pending">
                 {t("payment_taking_longer", locale)}
               </p>
             )}
-            <Button variant="ghost" className="mt-1 w-full text-muted-foreground" disabled={pending} onClick={handleCancel}>
+            <Button variant="ghost" className="mt-1 w-full text-[#60717a]" disabled={pending} onClick={handleCancel}>
               {t("payment_cancel_button", locale)}
             </Button>
           </div>
         ) : (
           <div className="mt-5 flex flex-col items-center gap-3 text-center">
-            <TriangleAlert className="size-8 text-urgent" />
+            <span className="flex size-16 items-center justify-center rounded-full bg-[#fff4f0]">
+              <TriangleAlert className="size-7 text-[#9b2c12]" />
+            </span>
             <div>
-              <p className="font-semibold">{t("payment_failed_title", locale)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t("payment_failed_body", locale)}</p>
+              <p className="font-bold text-[#071923]">{t("payment_failed_title", locale)}</p>
+              <p className="mt-1 text-sm text-[#60717a]">{t("payment_failed_body", locale)}</p>
             </div>
-            <Button className="mt-1 w-full" onClick={handleRetry}>
+            <Button
+              onClick={handleRetry}
+              className="mt-1 h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+            >
               {t("payment_retry_button", locale)}
             </Button>
           </div>

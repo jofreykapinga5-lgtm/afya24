@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
+import { Reveal } from "@/components/motion/reveal";
 import { PayForm } from "./pay-form";
 
 type AppointmentRow = {
@@ -48,17 +49,21 @@ export default async function ConsultationPaymentPage({
     .maybeSingle();
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
-      <PayForm
-        appointmentId={appointmentId}
-        locale={locale}
-        price={Number(appointment.price)}
-        currency={appointment.currency}
-        providerName={appointment.providers?.full_name ?? ""}
-        specialty={appointment.providers?.specialty ?? ""}
-        defaultPhone={patient?.phone ?? ""}
-        hospitalReferenceNumber={patient?.hospital_reference_number ?? ""}
-      />
+    <main className="flex min-h-[calc(100dvh-3.5rem)] flex-1 flex-col justify-center bg-[#f7fbfb] px-4 py-10">
+      <div className="mx-auto w-full max-w-md">
+        <Reveal>
+          <PayForm
+            appointmentId={appointmentId}
+            locale={locale}
+            price={Number(appointment.price)}
+            currency={appointment.currency}
+            providerName={appointment.providers?.full_name ?? ""}
+            specialty={appointment.providers?.specialty ?? ""}
+            defaultPhone={patient?.phone ?? ""}
+            hospitalReferenceNumber={patient?.hospital_reference_number ?? ""}
+          />
+        </Reveal>
+      </div>
     </main>
   );
 }

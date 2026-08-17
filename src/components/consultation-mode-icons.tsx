@@ -9,14 +9,14 @@ const modeIcon: Record<ConsultationMode, typeof MessageCircle> = {
 
 export function ConsultationModeIcons({ modes }: { modes: ConsultationMode[] }) {
   return (
-    <div className="flex items-center gap-1.5 text-muted-foreground">
+    <div className="flex items-center gap-1.5">
       {modes.map((mode) => {
         const Icon = modeIcon[mode];
         return (
           <span
             key={mode}
             title={mode}
-            className="inline-flex size-6 items-center justify-center rounded-full bg-secondary"
+            className="inline-flex size-6 items-center justify-center rounded-full bg-[#e8f7f4] text-[#01b7bb]"
           >
             <Icon className="size-3.5" />
           </span>

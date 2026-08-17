@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Stethoscope } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { DoctorCard } from "@/components/doctor-card";
+import { Reveal } from "@/components/motion/reveal";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 
@@ -78,42 +79,57 @@ export default async function DoctorsPage({
   // "who's available" matters as much as "who's the right specialty."
   results = [...results].sort((a, b) => Number(b.isAvailableNow) - Number(a.isAvailableNow));
 
+  const revealDelays = [0, 60, 120, 180] as const;
+
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
-      <Link
-        href="/"
-        className="mb-6 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <ArrowLeft className="size-3.5" />
-        {t("back_to_home", locale)}
-      </Link>
+    <main className="min-h-[calc(100dvh-3.5rem)] flex-1 bg-[#f7fbfb]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-[#60717a] outline-none transition-colors hover:text-[#071923] focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <ArrowLeft className="size-3.5" />
+          {t("back_to_home", locale)}
+        </Link>
 
-      <h1 className="text-2xl font-semibold tracking-tight">{t("doctors_page_title", locale)}</h1>
-      <p className="mt-1 max-w-[60ch] text-sm text-muted-foreground">
-        {specialtyFallbackUsed
-          ? t("doctors_page_specialty_fallback", locale).replace("{specialty}", specialty ?? "")
-          : specialty
-            ? t("doctors_page_specialty_results", locale)
-                .replace("{n}", String(results.length))
-                .replace("{specialty}", specialty)
-            : query
-              ? t("doctors_page_search_results", locale)
-                  .replace("{n}", String(results.length))
-                  .replace("{q}", q ?? "")
-              : t("doctors_page_body", locale).replace("{n}", String(providers.length))}
-      </p>
+        <Reveal variant="fade">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#e8f7f4] text-[#01b7bb]">
+              <Stethoscope className="size-5" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-[#071923] sm:text-3xl">
+                {t("doctors_page_title", locale)}
+              </h1>
+              <p className="mt-1 max-w-[60ch] text-sm text-[#60717a]">
+                {specialtyFallbackUsed
+                  ? t("doctors_page_specialty_fallback", locale).replace("{specialty}", specialty ?? "")
+                  : specialty
+                    ? t("doctors_page_specialty_results", locale)
+                        .replace("{n}", String(results.length))
+                        .replace("{specialty}", specialty)
+                    : query
+                      ? t("doctors_page_search_results", locale)
+                          .replace("{n}", String(results.length))
+                          .replace("{q}", q ?? "")
+                      : t("doctors_page_body", locale).replace("{n}", String(providers.length))}
+              </p>
+            </div>
+          </div>
+        </Reveal>
 
-      {results.length > 0 ? (
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((provider, index) => (
-            <DoctorCard key={provider.id} provider={provider} tintIndex={index} locale={locale} />
-          ))}
-        </div>
-      ) : (
-        <p className="mt-8 text-sm text-muted-foreground">
-          {t("doctors_page_no_results", locale)}
-        </p>
-      )}
+        {results.length > 0 ? (
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {results.map((provider, index) => (
+              <Reveal key={provider.id} delay={revealDelays[index % revealDelays.length]}>
+                <DoctorCard provider={provider} tintIndex={index} locale={locale} />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-8 text-sm text-[#60717a]">{t("doctors_page_no_results", locale)}</p>
+        )}
+      </div>
     </main>
   );
 }

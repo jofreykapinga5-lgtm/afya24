@@ -529,7 +529,13 @@ const dict = {
   doctor_booking_mode_voice: { en: "Voice call", sw: "Simu ya sauti" },
   doctor_booking_mode_video: { en: "Video call", sw: "Simu ya video" },
   doctor_booking_price_label: { en: "Consultation fee", sw: "Ada ya ushauri" },
+  doctor_licensed_badge: { en: "Licensed doctor", sw: "Daktari mwenye leseni" },
   doctor_booking_confirm_cta: { en: "Start consultation", sw: "Anza ushauri" },
+  doctor_booking_confirm_pending: { en: "Starting...", sw: "Inaanza..." },
+  doctor_booking_trust_note: {
+    en: "Your details create a secure patient file, used only for this consultation.",
+    sw: "Maelezo yako yanaunda faili salama la mgonjwa, linalotumika kwa ushauri huu tu.",
+  },
   doctor_booking_summary_note: {
     en: "Your Afya24 intake summary will be shared with the doctor.",
     sw: "Muhtasari wako wa Afya24 utashirikiwa na daktari.",
@@ -741,6 +747,7 @@ const dict = {
   },
   payment_summary_label: { en: "Consultation with", sw: "Ushauri na" },
   payment_reference_label: { en: "Your reference number", sw: "Namba yako ya rejea" },
+  connect_payment_confirmed_badge: { en: "Payment confirmed", sw: "Malipo yamethibitishwa" },
   connect_title: { en: "How would you like to connect?", sw: "Ungependa kuunganishwa vipi?" },
   connect_body: {
     en: "Payment confirmed. Choose how to reach your doctor.",

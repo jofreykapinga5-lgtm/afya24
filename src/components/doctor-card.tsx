@@ -31,7 +31,7 @@ export function DoctorCard({
   };
 
   return (
-    <article className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-18px_rgba(8,50,115,0.28)]">
+    <article className="flex flex-col rounded-2xl bg-white p-5 shadow-[0_20px_50px_-38px_rgba(8,50,115,0.4)] ring-1 ring-[#e5eef0] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_-32px_rgba(8,50,115,0.35)]">
       <div className="flex items-start gap-3.5">
         <span className="relative shrink-0">
           {provider.photoUrl ? (
@@ -54,14 +54,14 @@ export function DoctorCard({
           )}
           {provider.isAvailableNow && (
             <span
-              className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-card bg-emerald-500"
+              className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-white bg-emerald-500"
               aria-hidden="true"
             />
           )}
         </span>
         <div className="min-w-0 flex-1 pt-0.5">
-          <p className="truncate font-semibold text-foreground">{provider.name}</p>
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">{provider.specialty}</p>
+          <p className="truncate font-semibold text-[#071923]">{provider.name}</p>
+          <p className="mt-0.5 truncate text-sm text-[#60717a]">{provider.specialty}</p>
           <StarRating
             rating={provider.rating}
             reviewCount={provider.reviewCount}
@@ -78,31 +78,36 @@ export function DoctorCard({
         {provider.languages.map((lang) => (
           <span
             key={lang}
-            className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-medium text-primary ring-1 ring-primary/10"
+            className="rounded-full bg-[#e8f7f4] px-2.5 py-0.5 text-[11px] font-medium text-[#087a7b] ring-1 ring-[#01b7bb]/10"
           >
             {languageLabel[lang]}
           </span>
         ))}
       </div>
 
-      <div className="mt-3.5 flex items-center justify-between border-t border-border pt-3.5">
+      <div className="mt-3.5 flex items-center justify-between border-t border-[#eef2f3] pt-3.5">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a969c]">
             {t("availability_next", locale)}
           </p>
-          <p className="mt-0.5 text-sm font-semibold text-foreground">{provider.nextAvailableAt}</p>
+          <p className="mt-0.5 text-sm font-semibold text-[#071923]">{provider.nextAvailableAt}</p>
         </div>
         <ConsultationModeIcons modes={provider.consultationModes} />
       </div>
 
       <div className="mt-3.5 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a969c]">
             {t("doctor_card_from", locale)}
           </p>
-          <p className="mt-0.5 text-base font-bold tabular-nums text-primary">TZS {provider.price}</p>
+          <p className="mt-0.5 text-base font-bold tabular-nums text-[#083273]">TZS {provider.price}</p>
         </div>
-        <Button size="sm" className="h-9 shrink-0 rounded-full px-4 font-semibold" nativeButton={false} render={<Link href={`/doctors/${provider.id}`} />}>
+        <Button
+          size="sm"
+          className="h-9 shrink-0 rounded-full bg-[#01b7bb] px-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          nativeButton={false}
+          render={<Link href={`/doctors/${provider.id}`} />}
+        >
           {t("doctor_card_view", locale)}
         </Button>
       </div>

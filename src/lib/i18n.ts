@@ -452,8 +452,8 @@ const dict = {
     sw: "Kikao hiki cha utafutaji kimeisha muda",
   },
   lookup_expired_body: {
-    en: "For your privacy, lookup sessions only last a few minutes. Please look yourself up again.",
-    sw: "Kwa faragha yako, vikao vya utafutaji hudumu dakika chache tu. Tafadhali jitafute tena.",
+    en: "For your privacy, lookup sessions expire after a while. Please look yourself up again.",
+    sw: "Kwa faragha yako, vikao vya utafutaji huisha muda baada ya muda fulani. Tafadhali jitafute tena.",
   },
   lookup_back_to_lookup: { en: "Back to lookup", sw: "Rudi kutafuta" },
   lookup_end_session: { en: "End session", sw: "Maliza kikao" },
@@ -957,10 +957,6 @@ const dict = {
   qualification_not_emergency_body: {
     en: "Based on what you described, please seek immediate in-person care or call emergency services now. Afya24 is not equipped to handle emergencies.",
     sw: "Kulingana na ulivyoelezea, tafadhali tafuta huduma ya haraka ya ana kwa ana au piga simu huduma za dharura sasa hivi. Afya24 haiwezi kushughulikia dharura.",
-  },
-  qualification_reference_number_label: {
-    en: "Your reference number",
-    sw: "Nambari yako ya rejea",
   },
   qualification_setting_up_account: {
     en: "Setting up your file…",

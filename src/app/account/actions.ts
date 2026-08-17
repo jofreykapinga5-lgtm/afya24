@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { generateReferenceNumber } from "@/lib/reference-number";
 import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -61,27 +60,19 @@ export async function signUp(formData: FormData) {
 
   // Patient row is created with the service-role client (same convention as
   // the reference-number lookup flow) rather than an extra RLS insert policy
-  // -- keeps "who can write to patients" in one place. Retry a few times on
-  // the rare chance the generated reference number collides.
-  let lastError: string | null = null;
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const { error: insertError } = await service.from("patients").insert({
-      user_id: userId,
-      hospital_reference_number: generateReferenceNumber(),
-      full_name: fullName,
-      phone,
-    });
-    if (!insertError) {
-      lastError = null;
-      break;
-    }
-    lastError = insertError.message;
-    if (insertError.code !== "23505") break;
-  }
+  // -- keeps "who can write to patients" in one place. No reference number
+  // yet -- that's only assigned once this patient's first consultation
+  // payment is confirmed (see lib/patient-account.ts's
+  // ensurePatientReferenceNumber), same as every other account-creation path.
+  const { error: insertError } = await service.from("patients").insert({
+    user_id: userId,
+    full_name: fullName,
+    phone,
+  });
 
-  if (lastError) {
+  if (insertError) {
     await service.auth.admin.deleteUser(userId);
-    redirect(`${signupErrorPath}${encodeURIComponent(lastError)}`);
+    redirect(`${signupErrorPath}${encodeURIComponent(insertError.message)}`);
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword({

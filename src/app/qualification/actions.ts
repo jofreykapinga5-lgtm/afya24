@@ -9,8 +9,6 @@ import type { Locale } from "@/lib/types";
 // is a plain Server Action, not a streamed response, so unlike the chat
 // route's tool it CAN set the session cookie directly -- no claim-token
 // exchange needed here.
-const BOOKING_SESSION_TTL_SECONDS = 2 * 60 * 60;
-
 export async function createPatientAccountFallback(input: {
   fullName: string;
   phone: string;
@@ -22,6 +20,6 @@ export async function createPatientAccountFallback(input: {
   }
 
   const record = await createPatientAccountRecord(input);
-  await createPatientSession(record.patientId, BOOKING_SESSION_TTL_SECONDS);
+  await createPatientSession(record.patientId);
   return record;
 }

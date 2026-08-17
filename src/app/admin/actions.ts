@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { actionErrorMessage, formString, requireAdmin } from "@/lib/admin/auth";
+import { ensurePatientReferenceNumber } from "@/lib/patient-account";
 import type { ProviderStatus } from "@/lib/types";
 
 export type AdminActionState = {
@@ -495,7 +496,7 @@ async function setAppointmentPaymentStatus(
 
   const { data: appointment, error: fetchError } = await service
     .from("appointments")
-    .select("id, patients(hospital_reference_number)")
+    .select("id, patient_id")
     .eq("id", appointmentId)
     .maybeSingle();
 
@@ -512,12 +513,12 @@ async function setAppointmentPaymentStatus(
     throw new Error(error.message);
   }
 
-  // patients is a genuine many-to-one FK (appointments.patient_id -> patients.id)
-  // and PostgREST embeds it as a single object -- confirmed against the real
-  // API response, not just the untyped client's generic inferred shape.
-  const patientReference = (
-    appointment.patients as unknown as { hospital_reference_number: string } | null
-  )?.hospital_reference_number;
+  // A manually-confirmed payment mints the patient's reference number the
+  // same as a real Snippe confirmation would -- see
+  // lib/payments/reconcile.ts's applySnippePaymentResult for the primary
+  // path this mirrors.
+  const patientReference =
+    status === "paid" ? await ensurePatientReferenceNumber(service, appointment.patient_id) : undefined;
 
   await service.from("audit_logs").insert({
     actor_user_id: adminUserId,

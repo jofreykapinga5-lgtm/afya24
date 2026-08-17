@@ -35,7 +35,6 @@ export function PayForm({
   providerName,
   specialty,
   defaultPhone,
-  hospitalReferenceNumber,
 }: {
   appointmentId: string;
   locale: Locale;
@@ -44,7 +43,6 @@ export function PayForm({
   providerName: string;
   specialty: string;
   defaultPhone: string;
-  hospitalReferenceNumber: string;
 }) {
   const router = useRouter();
   const [channelProvider, setChannelProvider] = useState<SnippeChannelProvider>("mpesa");
@@ -53,6 +51,12 @@ export function PayForm({
   const [error, setError] = useState<string | null>(null);
   const [showSlowNotice, setShowSlowNotice] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Only exists once payment succeeds -- see the reference-number-after-
+  // payment redesign in lib/patient-account.ts's ensurePatientReferenceNumber.
+  // No longer a prop: this page can only ever render pre-payment (the server
+  // page redirects to /connect once paid), so there'd never be anything to
+  // pass in.
+  const [paidReferenceNumber, setPaidReferenceNumber] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const waitingSinceRef = useRef<number | null>(null);
 
@@ -71,11 +75,12 @@ export function PayForm({
       }
       if (cancelled) return;
 
-      if (status === "paid") {
+      if (status.status === "paid") {
+        setPaidReferenceNumber(status.hospitalReferenceNumber);
         setStage("success");
         return;
       }
-      if (status === "failed") {
+      if (status.status === "failed") {
         setStage("failed");
         return;
       }
@@ -91,9 +96,9 @@ export function PayForm({
   }, [stage, appointmentId, router]);
 
   function handleCopyReference() {
-    if (!hospitalReferenceNumber) return;
+    if (!paidReferenceNumber) return;
     navigator.clipboard
-      .writeText(hospitalReferenceNumber)
+      .writeText(paidReferenceNumber)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -118,6 +123,7 @@ export function PayForm({
         return;
       }
       if (result.alreadyPaid) {
+        setPaidReferenceNumber(result.hospitalReferenceNumber);
         setStage("success");
         return;
       }
@@ -249,13 +255,13 @@ export function PayForm({
               <p className="font-bold text-[#071923]">{t("payment_success_title", locale)}</p>
               <p className="mt-1 text-sm text-[#60717a]">{t("payment_success_body", locale)}</p>
             </div>
-            {hospitalReferenceNumber && (
+            {paidReferenceNumber && (
               <div className="mt-1 w-full rounded-2xl bg-[#f8fbfd] px-4 py-3 ring-1 ring-[#dfe8eb]">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a969c]">
                   {t("payment_reference_label", locale)}
                 </p>
                 <p className="mt-0.5 break-all font-mono text-lg font-bold tabular-nums text-[#083273]">
-                  {hospitalReferenceNumber}
+                  {paidReferenceNumber}
                 </p>
                 <Button
                   type="button"

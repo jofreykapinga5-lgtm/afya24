@@ -1,5 +1,6 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
+import { ensurePatientReferenceNumber } from "@/lib/patient-account";
 import type { SnippePaymentStatus } from "./snippe";
 
 // Shared by the webhook handler and the client-poll fallback so neither can
@@ -20,10 +21,10 @@ export async function applySnippePaymentResult(input: {
   reference: string;
   snippeStatus: SnippePaymentStatus;
   source: "webhook" | "poll_fallback" | "patient_cancelled";
-}): Promise<{ applied: boolean; appointmentId: string | null }> {
+}): Promise<{ applied: boolean; appointmentId: string | null; hospitalReferenceNumber: string | null }> {
   const localStatus = toLocalStatus(input.snippeStatus);
   if (!localStatus) {
-    return { applied: false, appointmentId: null };
+    return { applied: false, appointmentId: null, hospitalReferenceNumber: null };
   }
 
   const service = createServiceClient();
@@ -35,7 +36,7 @@ export async function applySnippePaymentResult(input: {
     .update({ status: localStatus, gateway_status: input.snippeStatus })
     .eq("reference", input.reference)
     .eq("status", "pending")
-    .select("id, appointment_id")
+    .select("id, appointment_id, patient_id")
     .maybeSingle();
 
   if (paymentError) {
@@ -46,7 +47,7 @@ export async function applySnippePaymentResult(input: {
     // Already settled by the other path, or the reference doesn't exist
     // yet (a webhook arriving before initiateSnippePayment finished writing
     // it) -- either way, nothing more to do from here.
-    return { applied: false, appointmentId: null };
+    return { applied: false, appointmentId: null, hospitalReferenceNumber: null };
   }
 
   const appointmentId = payment.appointment_id as string;
@@ -66,6 +67,14 @@ export async function applySnippePaymentResult(input: {
     .eq("appointment_id", appointmentId)
     .eq("status", "pending");
 
+  // A paid consultation is the moment a patient's file becomes real -- this
+  // is where their permanent reference number gets minted (see
+  // ensurePatientReferenceNumber's own comment for why it's idempotent).
+  const hospitalReferenceNumber =
+    localStatus === "paid"
+      ? await ensurePatientReferenceNumber(service, payment.patient_id as string)
+      : null;
+
   await service.from("audit_logs").insert({
     actor_user_id: null,
     action: localStatus === "paid" ? "payment_gateway_completed" : "payment_gateway_failed",
@@ -78,5 +87,5 @@ export async function applySnippePaymentResult(input: {
     },
   });
 
-  return { applied: true, appointmentId };
+  return { applied: true, appointmentId, hospitalReferenceNumber };
 }

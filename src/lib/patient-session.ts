@@ -2,15 +2,16 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-// Short-lived signed session for patients who looked themselves up by
-// hospital reference number. Patients have no Supabase Auth account in v1
-// (see DATA-MODEL.md), so this is the only thing scoping "am I allowed to
-// see this patient's appointment/prescriptions" for the rest of the request.
-// Keep the TTL short -- this is meant to last one lookup session, not persist
-// like a login.
-
+// Signed session for patients, who have no Supabase Auth account in v1 (see
+// DATA-MODEL.md) -- this is the only thing scoping "am I allowed to see this
+// patient's appointment/prescriptions" for the rest of the request. Used for
+// both a fresh booking (AI chat or direct) and a returning-patient /lookup.
+// One flat 24-hour TTL everywhere: long enough that a booking session
+// realistically never expires mid-flow (payment, video call, coming back
+// later the same day), short enough that a shared/public device doesn't
+// stay signed in indefinitely.
 const COOKIE_NAME = "afya24_patient_session";
-const TTL_SECONDS = 30 * 60;
+const TTL_SECONDS = 24 * 60 * 60;
 
 function secretKey() {
   const secret = process.env.PATIENT_SESSION_SECRET;

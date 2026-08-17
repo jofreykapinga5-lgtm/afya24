@@ -58,7 +58,7 @@ type PaymentAppointmentRow = {
   payment_status: string;
   price: number | string | null;
   currency: string | null;
-  patients: { full_name: string; hospital_reference_number: string } | null;
+  patients: { full_name: string; hospital_reference_number: string | null } | null;
   providers: { full_name: string } | null;
 };
 
@@ -97,7 +97,7 @@ type DbPharmacyOrderRow = {
   fulfillment_method: string;
   total_amount: number | string;
   created_at: string;
-  patients: { hospital_reference_number: string } | null;
+  patients: { hospital_reference_number: string | null } | null;
   pharmacy_order_items: {
     id: string;
     pharmacy_item_id: string;
@@ -396,7 +396,7 @@ export default async function AdminDashboardPage() {
     // the untyped client's generic (and here, misleading) inferred shape.
     patientName: (appointment.patients as unknown as { full_name: string } | null)?.full_name ?? "Patient",
     patientReference:
-      (appointment.patients as unknown as { hospital_reference_number: string } | null)
+      (appointment.patients as unknown as { hospital_reference_number: string | null } | null)
         ?.hospital_reference_number ?? "—",
     providerName: (appointment.providers as unknown as { full_name: string } | null)?.full_name ?? "Doctor",
   }));
@@ -500,7 +500,7 @@ export default async function AdminDashboardPage() {
   const realPharmacyOrders: PharmacyOrder[] = (dbPharmacyOrders ?? []).map((order) => ({
     id: order.id,
     patientReference:
-      (order.patients as unknown as { hospital_reference_number: string } | null)
+      (order.patients as unknown as { hospital_reference_number: string | null } | null)
         ?.hospital_reference_number ?? "—",
     prescriptionId: "",
     items: (order.pharmacy_order_items ?? []).map((orderItem) => ({

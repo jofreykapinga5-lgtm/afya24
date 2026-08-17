@@ -34,7 +34,6 @@ import type { QualificationResult, UrgencyLevel } from "@/lib/types";
 
 interface AccountResult {
   patientId: string;
-  hospitalReferenceNumber: string;
   claimToken: string;
 }
 
@@ -43,7 +42,6 @@ interface PatientDraft {
   phone?: string;
   dateOfBirth?: string;
   preferredLanguage?: string;
-  hospitalReferenceNumber?: string;
 }
 
 type AttachmentKind = "image" | "pdf" | "audio";
@@ -153,10 +151,9 @@ export default function QualificationPage() {
   }, [messages]);
 
   // Once account creation succeeds -- either via the AI tool or the fallback
-  // form below -- we hold the reference number here so both paths converge
-  // on the same UI state.
+  // form below -- both paths converge on the same UI state through this.
   const [fallbackAccountResult, setFallbackAccountResult] = useState<{
-    hospitalReferenceNumber: string;
+    patientId: string;
     fullName?: string;
     phone?: string;
     dateOfBirth?: string;
@@ -184,9 +181,8 @@ export default function QualificationPage() {
     return {
       ...draft,
       ...(fallbackAccountResult ?? {}),
-      hospitalReferenceNumber: accountResult?.hospitalReferenceNumber,
     };
-  }, [accountResult?.hospitalReferenceNumber, fallbackAccountResult, messages]);
+  }, [fallbackAccountResult, messages]);
 
   const [sessionEstablished, setSessionEstablished] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -249,7 +245,7 @@ export default function QualificationPage() {
           preferredLanguage: locale,
         });
         setFallbackAccountResult({
-          hospitalReferenceNumber: record.hospitalReferenceNumber,
+          patientId: record.patientId,
           fullName,
           phone,
           dateOfBirth,
@@ -688,7 +684,7 @@ function PatientIntakeCard({
   locale: "en" | "sw";
   compact?: boolean;
 }) {
-  const fileReady = Boolean(patient.hospitalReferenceNumber);
+  const fileReady = Boolean(patient.fullName && patient.phone && patient.dateOfBirth);
   const initials = patient.fullName
     ?.split(" ")
     .filter(Boolean)
@@ -716,12 +712,6 @@ function PatientIntakeCard({
       <div className="mt-5 grid gap-3">
         <PatientField label={locale === "sw" ? "Simu" : "Phone"} value={patient.phone} locale={locale} />
         <PatientField label={locale === "sw" ? "Tarehe ya kuzaliwa" : "Date of birth"} value={patient.dateOfBirth} locale={locale} />
-        <PatientField
-          label={t("qualification_reference_number_label", locale)}
-          value={patient.hospitalReferenceNumber}
-          locale={locale}
-          mono
-        />
       </div>
 
       <div className="mt-5 rounded-2xl bg-[#f4faf9] p-4 ring-1 ring-[#dfe8eb]">

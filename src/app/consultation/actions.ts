@@ -6,6 +6,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getPatientSession } from "@/lib/patient-session";
 import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
+import { ensurePatientReferenceNumber } from "@/lib/patient-account";
 import {
   createSnippeCollectionPayment,
   getSnippePaymentStatus,
@@ -106,7 +107,7 @@ function appBaseUrl() {
 // through the same lib/payments/reconcile.ts helper, so this action only
 // ever needs to get a payment *started*, not confirmed.
 export type InitiatePaymentResult =
-  | { ok: true; alreadyPaid: boolean; reference: string | null }
+  | { ok: true; alreadyPaid: boolean; reference: string | null; hospitalReferenceNumber: string | null }
   | { ok: false; message: string };
 
 // Returns a result object rather than throwing -- confirmed twice now (a
@@ -143,7 +144,8 @@ export async function initiateSnippePayment(input: {
       return { ok: false, message: "Not authorized for this appointment." };
     }
     if (appointment.payment_status === "paid") {
-      return { ok: true, alreadyPaid: true, reference: null };
+      const hospitalReferenceNumber = await ensurePatientReferenceNumber(service, appointment.patient_id);
+      return { ok: true, alreadyPaid: true, reference: null, hospitalReferenceNumber };
     }
 
     const since = new Date(Date.now() - PENDING_PAYMENT_REUSE_WINDOW_MS).toISOString();
@@ -166,7 +168,7 @@ export async function initiateSnippePayment(input: {
     // A previous attempt already has a live reference -- don't start a
     // second one just because the patient re-opened the pay page.
     if (recentPending?.reference) {
-      return { ok: true, alreadyPaid: false, reference: recentPending.reference };
+      return { ok: true, alreadyPaid: false, reference: recentPending.reference, hospitalReferenceNumber: null };
     }
 
     let paymentRowId: string;
@@ -213,7 +215,7 @@ export async function initiateSnippePayment(input: {
 
     await service.from("payments").update({ reference: result.reference }).eq("id", paymentRowId);
 
-    return { ok: true, alreadyPaid: false, reference: result.reference };
+    return { ok: true, alreadyPaid: false, reference: result.reference, hospitalReferenceNumber: null };
   } catch (error) {
     console.error("initiateSnippePayment failed", error);
     return {
@@ -223,7 +225,10 @@ export async function initiateSnippePayment(input: {
   }
 }
 
-export type ConsultationPaymentStatus = "pending" | "paid" | "failed";
+export type ConsultationPaymentStatus =
+  | { status: "pending" }
+  | { status: "paid"; hospitalReferenceNumber: string | null }
+  | { status: "failed" };
 
 // The webhook usually wins this race (near-instant), but this action never
 // assumes it arrived -- it calls Snippe directly whenever the local status
@@ -241,19 +246,25 @@ export async function checkSnippePaymentStatus(
 ): Promise<ConsultationPaymentStatus> {
   try {
     const session = await getPatientSession();
-    if (!session) return "pending";
+    if (!session) return { status: "pending" };
 
     const service = createServiceClient();
     const { data: appointment } = await service
       .from("appointments")
-      .select("payment_status")
+      .select("payment_status, patient_id")
       .eq("id", appointmentId)
       .eq("patient_id", session.patientId)
       .maybeSingle();
 
-    if (!appointment) return "pending";
-    if (appointment.payment_status === "paid") return "paid";
-    if (appointment.payment_status === "failed") return "failed";
+    if (!appointment) return { status: "pending" };
+    if (appointment.payment_status === "paid") {
+      const hospitalReferenceNumber = await ensurePatientReferenceNumber(
+        service,
+        appointment.patient_id as string
+      );
+      return { status: "paid", hospitalReferenceNumber };
+    }
+    if (appointment.payment_status === "failed") return { status: "failed" };
 
     const { data: payment } = await service
       .from("payments")
@@ -265,12 +276,12 @@ export async function checkSnippePaymentStatus(
       .maybeSingle();
 
     if (!payment?.reference) {
-      return "pending";
+      return { status: "pending" };
     }
 
     const snippeResult = await getSnippePaymentStatus(payment.reference);
     if (!snippeResult.found || snippeResult.status === "pending") {
-      return "pending";
+      return { status: "pending" };
     }
 
     const applied = await applySnippePaymentResult({
@@ -280,7 +291,9 @@ export async function checkSnippePaymentStatus(
     });
 
     if (applied.applied) {
-      return snippeResult.status === "completed" ? "paid" : "failed";
+      return snippeResult.status === "completed"
+        ? { status: "paid", hospitalReferenceNumber: applied.hospitalReferenceNumber }
+        : { status: "failed" };
     }
 
     // The webhook settled it between our two reads above -- trust the
@@ -291,12 +304,18 @@ export async function checkSnippePaymentStatus(
       .eq("id", appointmentId)
       .single();
 
-    if (fresh?.payment_status === "paid") return "paid";
-    if (fresh?.payment_status === "failed") return "failed";
-    return "pending";
+    if (fresh?.payment_status === "paid") {
+      const hospitalReferenceNumber = await ensurePatientReferenceNumber(
+        service,
+        appointment.patient_id as string
+      );
+      return { status: "paid", hospitalReferenceNumber };
+    }
+    if (fresh?.payment_status === "failed") return { status: "failed" };
+    return { status: "pending" };
   } catch (error) {
     console.error("checkSnippePaymentStatus failed", error);
-    return "pending";
+    return { status: "pending" };
   }
 }
 

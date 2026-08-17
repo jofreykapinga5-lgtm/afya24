@@ -44,7 +44,7 @@ export default async function ConsultationPaymentPage({
 
   const { data: patient } = await service
     .from("patients")
-    .select("phone, hospital_reference_number")
+    .select("phone")
     .eq("id", session.patientId)
     .maybeSingle();
 
@@ -60,7 +60,6 @@ export default async function ConsultationPaymentPage({
             providerName={appointment.providers?.full_name ?? ""}
             specialty={appointment.providers?.specialty ?? ""}
             defaultPhone={patient?.phone ?? ""}
-            hospitalReferenceNumber={patient?.hospital_reference_number ?? ""}
           />
         </Reveal>
       </div>

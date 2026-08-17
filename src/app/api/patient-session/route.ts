@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { createPatientSession, verifyAccountClaimToken } from "@/lib/patient-session";
 
-// AI-created accounts need to survive qualification -> browsing doctors ->
-// picking a mode -> booking, which can run well past the 30-minute default
-// used by the reference-number lookup flow.
-const BOOKING_SESSION_TTL_SECONDS = 2 * 60 * 60;
-
 // Plain, non-streaming route on purpose: the createPatientAccount tool (in
 // /api/assistant/chat) can't reliably set cookies itself because that route's
 // Response is already streaming by the time the tool's execute() resolves.
@@ -24,6 +19,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid or expired claim" }, { status: 401 });
   }
 
-  await createPatientSession(patientId, BOOKING_SESSION_TTL_SECONDS);
+  await createPatientSession(patientId);
   return NextResponse.json({ ok: true });
 }

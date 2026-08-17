@@ -229,6 +229,14 @@ export async function updateProviderRating(formData: FormData) {
 // whole site. Revalidate everywhere it's read: the landing page and
 // /doctors listing (via mapProviderRow), the booking checkout, and the
 // payment page.
+// Snippe (the payment gateway -- see lib/payments/snippe.ts) rejects any
+// collection payment below this, confirmed directly against their live API:
+// {"error_code":"VAL_001","message":"...amount 50 is below minimum of 500"}.
+// A price set below this doesn't fail loudly here -- it silently breaks
+// every patient's payment with an opaque error, so it's rejected at the
+// source instead.
+const SNIPPE_MINIMUM_TZS = 500;
+
 export async function updateServicePrice(formData: FormData) {
   const { adminUserId, service } = await requireAdmin();
   const serviceId = formString(formData, "serviceId");
@@ -236,6 +244,9 @@ export async function updateServicePrice(formData: FormData) {
 
   if (!serviceId || !Number.isFinite(price) || price <= 0 || price > 100_000_000) {
     throw new Error("A valid price greater than zero is required.");
+  }
+  if (price < SNIPPE_MINIMUM_TZS) {
+    throw new Error(`Price must be at least TZS ${SNIPPE_MINIMUM_TZS} -- the payment gateway rejects anything lower.`);
   }
 
   const { data: existing, error: existingError } = await service

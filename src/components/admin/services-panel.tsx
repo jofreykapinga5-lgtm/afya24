@@ -108,10 +108,11 @@ function UpdatePriceForm({
         key={price}
         name="price"
         type="number"
-        min={1}
+        min={500}
         step={1}
         defaultValue={price}
-        aria-label="Price in TZS"
+        aria-label="Price in TZS (minimum 500, the payment gateway's floor)"
+        title="Minimum TZS 500 -- the payment gateway rejects anything lower"
         className="h-7 w-20 rounded-md border border-border bg-white px-1.5 text-xs tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       />
       <SubmitButton size="sm" variant="outline" className="h-7 px-2.5 text-xs">

@@ -97,17 +97,17 @@ export function PayForm({
     }
 
     startTransition(async () => {
-      try {
-        const result = await initiateSnippePayment({ appointmentId, channelProvider, phone });
-        if (result.alreadyPaid) {
-          router.push(`/consultation/${appointmentId}/connect`);
-          return;
-        }
-        setShowSlowNotice(false);
-        setStage("waiting");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t("payment_failed_body", locale));
+      const result = await initiateSnippePayment({ appointmentId, channelProvider, phone });
+      if (!result.ok) {
+        setError(result.message);
+        return;
       }
+      if (result.alreadyPaid) {
+        router.push(`/consultation/${appointmentId}/connect`);
+        return;
+      }
+      setShowSlowNotice(false);
+      setStage("waiting");
     });
   }
 

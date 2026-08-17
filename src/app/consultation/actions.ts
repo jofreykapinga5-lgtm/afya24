@@ -101,104 +101,125 @@ function appBaseUrl() {
 // and checkSnippePaymentStatus's poll-fallback both settle the result
 // through the same lib/payments/reconcile.ts helper, so this action only
 // ever needs to get a payment *started*, not confirmed.
+export type InitiatePaymentResult =
+  | { ok: true; alreadyPaid: boolean; reference: string | null }
+  | { ok: false; message: string };
+
+// Returns a result object rather than throwing -- confirmed twice now (a
+// missing env var, then a gateway amount-validation rejection) that a
+// thrown Error from this action never reaches the client's try/catch with
+// a readable message in production. Next serializes the Server Action
+// invocation through the same RSC stream as the page's re-render, and an
+// uncaught throw there surfaces to the client as a generic, digest-only
+// "Server Components render" error (React error #441) -- not the specific
+// message this function actually threw. Returning a value sidesteps that
+// entirely: the client always gets a real Promise result to branch on.
 export async function initiateSnippePayment(input: {
   appointmentId: string;
   channelProvider: SnippeChannelProvider;
   phone: string;
-}): Promise<{ alreadyPaid: boolean; reference: string | null }> {
-  const session = await getPatientSession();
-  if (!session) {
-    throw new Error("Your session expired. Please start the intake chat again.");
-  }
-
-  const service = createServiceClient();
-  const { data: appointment, error: appointmentError } = await service
-    .from("appointments")
-    .select("id, patient_id, price, currency, payment_status")
-    .eq("id", input.appointmentId)
-    .maybeSingle();
-
-  if (appointmentError || !appointment) {
-    throw new Error(appointmentError?.message ?? "Appointment not found.");
-  }
-  if (appointment.patient_id !== session.patientId) {
-    throw new Error("Not authorized for this appointment.");
-  }
-  if (appointment.payment_status === "paid") {
-    return { alreadyPaid: true, reference: null };
-  }
-
-  const { data: patient } = await service
-    .from("patients")
-    .select("full_name")
-    .eq("id", session.patientId)
-    .maybeSingle();
-
-  const [firstName, ...rest] = (patient?.full_name ?? "Patient").trim().split(/\s+/);
-  const lastName = rest.join(" ") || firstName;
-
-  const since = new Date(Date.now() - PENDING_PAYMENT_REUSE_WINDOW_MS).toISOString();
-  const { data: recentPending } = await service
-    .from("payments")
-    .select("id, reference, idempotency_key")
-    .eq("appointment_id", input.appointmentId)
-    .eq("status", "pending")
-    .gte("created_at", since)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // A previous attempt already has a live reference -- don't start a second
-  // one just because the patient re-opened the pay page.
-  if (recentPending?.reference) {
-    return { alreadyPaid: false, reference: recentPending.reference };
-  }
-
-  let paymentRowId: string;
-  let idempotencyKey: string;
-
-  if (recentPending) {
-    paymentRowId = recentPending.id;
-    idempotencyKey = recentPending.idempotency_key ?? randomUUID().replace(/-/g, "").slice(0, 30);
-  } else {
-    idempotencyKey = randomUUID().replace(/-/g, "").slice(0, 30);
-    const { data: inserted, error: insertError } = await service
-      .from("payments")
-      .insert({
-        appointment_id: input.appointmentId,
-        patient_id: session.patientId,
-        amount: appointment.price,
-        currency: appointment.currency,
-        method: input.channelProvider,
-        status: "pending",
-        idempotency_key: idempotencyKey,
-      })
-      .select("id")
-      .single();
-
-    if (insertError || !inserted) {
-      throw new Error(insertError?.message ?? "Could not start the payment.");
+}): Promise<InitiatePaymentResult> {
+  try {
+    const session = await getPatientSession();
+    if (!session) {
+      return { ok: false, message: "Your session expired. Please start the intake chat again." };
     }
-    paymentRowId = inserted.id;
+
+    const service = createServiceClient();
+    const { data: appointment, error: appointmentError } = await service
+      .from("appointments")
+      .select("id, patient_id, price, currency, payment_status")
+      .eq("id", input.appointmentId)
+      .maybeSingle();
+
+    if (appointmentError || !appointment) {
+      return { ok: false, message: appointmentError?.message ?? "Appointment not found." };
+    }
+    if (appointment.patient_id !== session.patientId) {
+      return { ok: false, message: "Not authorized for this appointment." };
+    }
+    if (appointment.payment_status === "paid") {
+      return { ok: true, alreadyPaid: true, reference: null };
+    }
+
+    const { data: patient } = await service
+      .from("patients")
+      .select("full_name")
+      .eq("id", session.patientId)
+      .maybeSingle();
+
+    const [firstName, ...rest] = (patient?.full_name ?? "Patient").trim().split(/\s+/);
+    const lastName = rest.join(" ") || firstName;
+
+    const since = new Date(Date.now() - PENDING_PAYMENT_REUSE_WINDOW_MS).toISOString();
+    const { data: recentPending } = await service
+      .from("payments")
+      .select("id, reference, idempotency_key")
+      .eq("appointment_id", input.appointmentId)
+      .eq("status", "pending")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // A previous attempt already has a live reference -- don't start a
+    // second one just because the patient re-opened the pay page.
+    if (recentPending?.reference) {
+      return { ok: true, alreadyPaid: false, reference: recentPending.reference };
+    }
+
+    let paymentRowId: string;
+    let idempotencyKey: string;
+
+    if (recentPending) {
+      paymentRowId = recentPending.id;
+      idempotencyKey = recentPending.idempotency_key ?? randomUUID().replace(/-/g, "").slice(0, 30);
+    } else {
+      idempotencyKey = randomUUID().replace(/-/g, "").slice(0, 30);
+      const { data: inserted, error: insertError } = await service
+        .from("payments")
+        .insert({
+          appointment_id: input.appointmentId,
+          patient_id: session.patientId,
+          amount: appointment.price,
+          currency: appointment.currency,
+          method: input.channelProvider,
+          status: "pending",
+          idempotency_key: idempotencyKey,
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !inserted) {
+        return { ok: false, message: insertError?.message ?? "Could not start the payment." };
+      }
+      paymentRowId = inserted.id;
+    }
+
+    const normalizedPhone = normalizeTanzanianPhoneToE164(input.phone).replace(/^\+/, "");
+
+    const result = await createSnippeCollectionPayment({
+      idempotencyKey,
+      amountValue: Number(appointment.price),
+      channelProvider: input.channelProvider,
+      phone: normalizedPhone,
+      firstName,
+      lastName,
+      email: patientAuthEmailFromPhone(input.phone),
+      webhookUrl: `${appBaseUrl()}/api/payments/snippe-webhook`,
+      metadata: { appointment_id: input.appointmentId },
+    });
+
+    await service.from("payments").update({ reference: result.reference }).eq("id", paymentRowId);
+
+    return { ok: true, alreadyPaid: false, reference: result.reference };
+  } catch (error) {
+    console.error("initiateSnippePayment failed", error);
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Could not start the payment. Please try again.",
+    };
   }
-
-  const normalizedPhone = normalizeTanzanianPhoneToE164(input.phone).replace(/^\+/, "");
-
-  const result = await createSnippeCollectionPayment({
-    idempotencyKey,
-    amountValue: Number(appointment.price),
-    channelProvider: input.channelProvider,
-    phone: normalizedPhone,
-    firstName,
-    lastName,
-    email: patientAuthEmailFromPhone(input.phone),
-    webhookUrl: `${appBaseUrl()}/api/payments/snippe-webhook`,
-    metadata: { appointment_id: input.appointmentId },
-  });
-
-  await service.from("payments").update({ reference: result.reference }).eq("id", paymentRowId);
-
-  return { alreadyPaid: false, reference: result.reference };
 }
 
 export type ConsultationPaymentStatus = "pending" | "paid" | "failed";
@@ -208,67 +229,74 @@ export type ConsultationPaymentStatus = "pending" | "paid" | "failed";
 // is still "pending", so the pay page's own progress never depends on
 // SNIPPE_WEBHOOK_SECRET being configured or a webhook actually being
 // delivered.
+// Never throws -- this is polled every few seconds while the patient just
+// sees a spinner, so there's no useful place to surface a thrown message
+// even if the client's try/catch *did* reliably receive it (which Server
+// Actions don't guarantee in production -- see initiateSnippePayment's
+// comment). Any unexpected failure here degrades to "pending"; the next
+// tick retries, same as a transient network hiccup already does.
 export async function checkSnippePaymentStatus(
   appointmentId: string
 ): Promise<ConsultationPaymentStatus> {
-  const session = await getPatientSession();
-  if (!session) {
-    throw new Error("Your session expired. Please start the intake chat again.");
-  }
+  try {
+    const session = await getPatientSession();
+    if (!session) return "pending";
 
-  const service = createServiceClient();
-  const { data: appointment } = await service
-    .from("appointments")
-    .select("payment_status")
-    .eq("id", appointmentId)
-    .eq("patient_id", session.patientId)
-    .maybeSingle();
+    const service = createServiceClient();
+    const { data: appointment } = await service
+      .from("appointments")
+      .select("payment_status")
+      .eq("id", appointmentId)
+      .eq("patient_id", session.patientId)
+      .maybeSingle();
 
-  if (!appointment) {
-    throw new Error("Not authorized for this appointment.");
-  }
-  if (appointment.payment_status === "paid") return "paid";
-  if (appointment.payment_status === "failed") return "failed";
+    if (!appointment) return "pending";
+    if (appointment.payment_status === "paid") return "paid";
+    if (appointment.payment_status === "failed") return "failed";
 
-  const { data: payment } = await service
-    .from("payments")
-    .select("reference")
-    .eq("appointment_id", appointmentId)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    const { data: payment } = await service
+      .from("payments")
+      .select("reference")
+      .eq("appointment_id", appointmentId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  if (!payment?.reference) {
+    if (!payment?.reference) {
+      return "pending";
+    }
+
+    const snippeResult = await getSnippePaymentStatus(payment.reference);
+    if (!snippeResult.found || snippeResult.status === "pending") {
+      return "pending";
+    }
+
+    const applied = await applySnippePaymentResult({
+      reference: payment.reference,
+      snippeStatus: snippeResult.status,
+      source: "poll_fallback",
+    });
+
+    if (applied.applied) {
+      return snippeResult.status === "completed" ? "paid" : "failed";
+    }
+
+    // The webhook settled it between our two reads above -- trust the
+    // appointment row's real status rather than what we just computed.
+    const { data: fresh } = await service
+      .from("appointments")
+      .select("payment_status")
+      .eq("id", appointmentId)
+      .single();
+
+    if (fresh?.payment_status === "paid") return "paid";
+    if (fresh?.payment_status === "failed") return "failed";
+    return "pending";
+  } catch (error) {
+    console.error("checkSnippePaymentStatus failed", error);
     return "pending";
   }
-
-  const snippeResult = await getSnippePaymentStatus(payment.reference);
-  if (!snippeResult.found || snippeResult.status === "pending") {
-    return "pending";
-  }
-
-  const applied = await applySnippePaymentResult({
-    reference: payment.reference,
-    snippeStatus: snippeResult.status,
-    source: "poll_fallback",
-  });
-
-  if (applied.applied) {
-    return snippeResult.status === "completed" ? "paid" : "failed";
-  }
-
-  // The webhook settled it between our two reads above -- trust the
-  // appointment row's real status rather than what we just computed.
-  const { data: fresh } = await service
-    .from("appointments")
-    .select("payment_status")
-    .eq("id", appointmentId)
-    .single();
-
-  if (fresh?.payment_status === "paid") return "paid";
-  if (fresh?.payment_status === "failed") return "failed";
-  return "pending";
 }
 
 // Lets a patient back out of a stuck "waiting for payment" state -- Snippe

@@ -169,7 +169,7 @@ export function LabsPreview({ labs }: { labs: PublicLabLocation[] }) {
               </div>
             ) : (
               <p className="mx-auto max-w-md rounded-2xl bg-white px-4 py-3 text-center text-sm text-muted-foreground ring-1 ring-[#dfe8eb]">
-                No active partner labs are configured yet.
+                {t("home_no_labs_configured", locale)}
               </p>
             )
           ) : null}

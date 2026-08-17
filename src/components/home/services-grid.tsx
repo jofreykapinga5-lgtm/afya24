@@ -6,57 +6,63 @@ import { ArrowRight } from "lucide-react";
 import { SectionHeading } from "@/components/home/section-heading";
 import { serviceCategories } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
-import { t } from "@/lib/i18n";
+import { t, type TranslationKey } from "@/lib/i18n";
 
 type ServiceTile = {
   categoryId: string;
-  label: string;
-  price?: string;
+  labelKey: TranslationKey;
+  priceKey?: TranslationKey;
   image: string;
   alt: string;
 };
 
-const serviceTabs = ["Popular", "Ongoing care", "Urgent care", "Medications", "Labs & imaging"];
+const serviceTabKeys: TranslationKey[] = [
+  "home_service_tab_popular",
+  "home_service_tab_ongoing_care",
+  "home_service_tab_urgent_care",
+  "home_service_tab_medications",
+  "home_service_tab_labs_imaging",
+];
 
 const stitchServices: ServiceTile[] = [
   {
     categoryId: "cat-prescription",
-    label: "Prescription refills",
+    labelKey: "home_service_prescription_refills",
     image: "/images/services/prescription-bottle.png",
     alt: "Prescription medication bottle",
   },
   {
     categoryId: "cat-general",
-    label: "General doctor",
-    price: "From TZS 15,000",
+    labelKey: "home_service_general_doctor",
+    priceKey: "home_service_price_from_15000",
     image: "/images/services/fertility-doctor.png",
     alt: "Doctor providing online care",
   },
   {
     categoryId: "cat-urgent",
-    label: "Urgent care",
-    price: "From TZS 20,000",
+    labelKey: "home_service_tab_urgent_care",
+    priceKey: "home_service_price_from_20000",
     image: "/images/services/urgent-care-doctor.png",
     alt: "Doctor ready for urgent care",
   },
   {
     categoryId: "cat-mental-health",
-    label: "Mental health meds",
-    price: "From TZS 25,000",
+    labelKey: "home_service_mental_health",
+    priceKey: "home_service_price_from_25000",
     image: "/images/services/mental-health-meds.png",
     alt: "Mental health medication tablets",
   },
   {
     categoryId: "cat-sexual-health",
-    label: "Sexual health",
-    price: "Private visit",
+    labelKey: "home_service_sexual_health",
+    priceKey: "home_service_private_visit",
     image: "/images/services/doctor-note.png",
     alt: "Doctor preparing a confidential visit note",
   },
   {
     categoryId: "cat-dermatology",
-    label: "Skin concerns",
-    price: "Photo review",
+    labelKey: "home_service_dermatology",
+    priceKey: "home_service_photo_review",
     image: "/images/services/weight-loss-meds.png",
     alt: "Clean medical product photography",
   },
@@ -81,12 +87,12 @@ export function ServicesGrid() {
         </SectionHeading>
 
         <nav
-          aria-label="Service categories"
+          aria-label={t("home_service_categories_aria", locale)}
           className="mt-4 flex gap-2 overflow-x-auto pb-1.5 [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden"
         >
-          {serviceTabs.map((tab, index) => (
+          {serviceTabKeys.map((tabKey, index) => (
             <button
-              key={tab}
+              key={tabKey}
               type="button"
               className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-brand-teal/25 ${
                 index === 0
@@ -94,7 +100,7 @@ export function ServicesGrid() {
                   : "border-[#e4e9ec] bg-white text-[#4c5560] hover:border-[#d6dde2] hover:bg-[#f7f8f8]"
               }`}
             >
-              {tab}
+              {t(tabKey, locale)}
             </button>
           ))}
         </nav>
@@ -104,15 +110,15 @@ export function ServicesGrid() {
             <button
               key={service.categoryId}
               type="button"
-              onClick={() => openCategory(service.categoryId, service.label)}
+              onClick={() => openCategory(service.categoryId, t(service.labelKey, locale))}
               className="group relative flex min-h-[96px] items-center overflow-hidden rounded-[1.05rem] bg-[#f7f7f7] px-4 py-3 text-left outline-none transition-all duration-300 hover:bg-[#f0f0f0] hover:shadow-[0_12px_28px_-26px_rgba(8,50,115,0.45)] focus-visible:ring-3 focus-visible:ring-brand-teal/30 sm:min-h-[108px] sm:px-5"
             >
               <div className="relative z-10 max-w-[58%]">
                 <h3 className="text-[1rem] font-semibold leading-tight tracking-[-0.015em] text-[#171b20] sm:text-[1.05rem]">
-                  {service.label}
+                  {t(service.labelKey, locale)}
                 </h3>
-                {service.price ? (
-                  <p className="mt-1 text-xs leading-5 text-[#5c6670]">{service.price}</p>
+                {service.priceKey ? (
+                  <p className="mt-1 text-xs leading-5 text-[#5c6670]">{t(service.priceKey, locale)}</p>
                 ) : null}
               </div>
 
@@ -131,7 +137,7 @@ export function ServicesGrid() {
             onClick={() => router.push("/qualification")}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#087a7b] outline-none transition-colors hover:text-[#065f63] focus-visible:ring-3 focus-visible:ring-brand-teal/25"
           >
-            Explore all services
+            {t("home_explore_all_services", locale)}
             <ArrowRight className="size-5" />
           </button>
         </div>

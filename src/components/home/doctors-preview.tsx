@@ -89,9 +89,9 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
         </>
       ) : (
         <div className="mt-6 rounded-[1.25rem] bg-[#f7fbfb] px-5 py-7 text-center ring-1 ring-[#dfe8eb]">
-          <p className="text-sm font-semibold text-[#071923]">No doctors are published yet.</p>
+          <p className="text-sm font-semibold text-[#071923]">{t("home_no_doctors_title", locale)}</p>
           <p className="mt-1 text-sm text-[#60717a]">
-            Our first listed doctors will appear here soon.
+            {t("home_no_doctors_body", locale)}
           </p>
         </div>
       )}
@@ -110,13 +110,13 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
         <div className="grid md:grid-cols-[1fr_310px] md:items-stretch">
           <div className="p-5 pb-4 sm:p-6 md:pr-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">
-              For professionals
+              {t("home_for_professionals_label", locale)}
             </p>
             <h3 className="mt-3 text-2xl font-bold leading-tight text-[#071923]">
-              Are you a doctor?
+              {t("home_are_you_doctor_title", locale)}
             </h3>
             <p className="mt-2 text-sm leading-6 text-[#4d5960]">
-              Join Afya24, set your availability, and receive matched patients after credential review.
+              {t("home_are_you_doctor_body", locale)}
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
                 href="/doctor/apply"
                 className="inline-flex w-auto translate-y-1 items-center justify-center gap-2 rounded-full bg-[#01b7bb] px-6 py-3 text-sm font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/35 sm:translate-y-0 sm:px-7"
               >
-                Apply now
+                {t("home_apply_now", locale)}
                 <ArrowRight className="size-4" />
               </Link>
             </div>

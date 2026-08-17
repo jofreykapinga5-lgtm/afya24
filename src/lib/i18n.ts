@@ -662,26 +662,13 @@ const dict = {
     sw: "Andaa akaunti yako",
   },
   consultation_upgrade_body: {
-    en: "Create a password so you can sign back in anytime to follow up on this visit and see your session history.",
-    sw: "Weka nywila ili uweze kuingia tena wakati wowote kufuatilia ziara hii na kuona historia ya vipindi vyako.",
-  },
-  consultation_upgrade_password_label: { en: "Password", sw: "Nywila" },
-  consultation_upgrade_password_confirm_label: {
-    en: "Confirm password",
-    sw: "Thibitisha nywila",
+    en: "We'll save this visit to an account you can come back to anytime -- sign in later with your phone number and date of birth.",
+    sw: "Tutahifadhi ziara hii kwenye akaunti unayoweza kuifikia wakati wowote -- ingia baadaye kwa nambari yako ya simu na tarehe ya kuzaliwa.",
   },
   consultation_upgrade_cta: { en: "Create my account", sw: "Unda akaunti yangu" },
   consultation_upgrade_success: {
-    en: "Account created. You can sign in anytime with your phone number and this password.",
-    sw: "Akaunti imeundwa. Unaweza kuingia wakati wowote kwa nambari yako ya simu na nywila hii.",
-  },
-  consultation_upgrade_mismatch_error: {
-    en: "Passwords don't match.",
-    sw: "Nywila hazifanani.",
-  },
-  consultation_upgrade_length_error: {
-    en: "Password must be at least 8 characters.",
-    sw: "Nywila lazima iwe na herufi 8 au zaidi.",
+    en: "Account created. Sign in anytime with your phone number and date of birth.",
+    sw: "Akaunti imeundwa. Ingia wakati wowote kwa nambari yako ya simu na tarehe ya kuzaliwa.",
   },
   consultation_upgrade_go_to_account: {
     en: "Go to my account",
@@ -755,9 +742,11 @@ const dict = {
   payment_reference_label: { en: "Your reference number", sw: "Namba yako ya rejea" },
   payment_success_title: { en: "You've paid — thank you!", sw: "Umelipa — asante!" },
   payment_success_body: {
-    en: "Keep this reference number for your records.",
-    sw: "Hifadhi namba hii ya rejea kwa kumbukumbu yako.",
+    en: "Please save this reference number — you'll need it to find your visit, prescriptions, and records later.",
+    sw: "Tafadhali hifadhi namba hii ya rejea — utaihitaji kupata ziara yako, dawa, na taarifa zako baadaye.",
   },
+  payment_success_copy_button: { en: "Copy", sw: "Nakili" },
+  payment_success_copied: { en: "Copied!", sw: "Imenakiliwa!" },
   payment_success_continue: { en: "Continue", sw: "Endelea" },
   connect_payment_confirmed_badge: { en: "Payment confirmed", sw: "Malipo yamethibitishwa" },
   connect_title: { en: "How would you like to connect?", sw: "Ungependa kuunganishwa vipi?" },

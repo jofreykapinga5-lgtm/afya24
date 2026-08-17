@@ -17,20 +17,20 @@ import { applySnippePaymentResult } from "@/lib/payments/reconcile";
 // real account -- attaches a Supabase Auth user to the SAME patients row
 // rather than the old /account/sign-up path of creating a second, unlinked
 // row for the same person. Reuses the phone already collected during
-// intake, so this is just "set a password," not a full signup form again.
-export async function upgradeToFullAccount(password: string) {
+// intake. No password prompt -- the patient's date of birth (already on
+// file; both intake paths require it) becomes the account password, in the
+// same YYYY-MM-DD form the /lookup DOB-alternative already uses, so sign-in
+// later needs only their phone number and the birthdate they already know.
+export async function upgradeToFullAccount() {
   const session = await getPatientSession();
   if (!session) {
     throw new Error("Your session expired. Please look yourself up again to continue.");
-  }
-  if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters.");
   }
 
   const service = createServiceClient();
   const { data: patient, error: patientError } = await service
     .from("patients")
-    .select("id, phone, user_id")
+    .select("id, phone, user_id, date_of_birth")
     .eq("id", session.patientId)
     .maybeSingle();
 
@@ -43,7 +43,11 @@ export async function upgradeToFullAccount(password: string) {
   if (!patient.phone) {
     throw new Error("No phone number on file to create an account with.");
   }
+  if (!patient.date_of_birth) {
+    throw new Error("No date of birth on file to create an account with.");
+  }
 
+  const password = patient.date_of_birth;
   const authEmail = patientAuthEmailFromPhone(patient.phone);
   const { data: created, error: createError } = await service.auth.admin.createUser({
     email: authEmail,

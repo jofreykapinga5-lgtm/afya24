@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import type { FormEvent } from "react";
 import Link from "next/link";
 import { ConnectionQuality, ConnectionState, DisconnectReason, Track, VideoPresets } from "livekit-client";
 import type { AudioCaptureOptions, RoomConnectOptions, RoomOptions, VideoCaptureOptions } from "livekit-client";
@@ -16,7 +15,6 @@ import {
 } from "@livekit/components-react";
 import { Mic, MicOff, PhoneOff, ShieldCheck, TriangleAlert, Video, VideoOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { VideoTile } from "./video-tile";
 import { upgradeToFullAccount } from "@/app/consultation/actions";
 import { useAppStore } from "@/lib/store";
@@ -198,27 +196,15 @@ function CallStage() {
 }
 
 function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (password.length < 8) {
-      setError(t("consultation_upgrade_length_error", locale));
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError(t("consultation_upgrade_mismatch_error", locale));
-      return;
-    }
-
+  function handleCreateAccount() {
     setError(null);
     startTransition(async () => {
       try {
-        await upgradeToFullAccount(password);
+        await upgradeToFullAccount();
         setSuccess(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not create your account.");
@@ -253,48 +239,21 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
         <p className="mt-3 font-bold text-[#071923]">{t("consultation_upgrade_title", locale)}</p>
         <p className="mt-1 text-sm text-[#60717a]">{t("consultation_upgrade_body", locale)}</p>
       </div>
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
-        <div className="space-y-1.5">
-          <label htmlFor="upgradePassword" className="text-sm font-semibold text-[#071923]">
-            {t("consultation_upgrade_password_label", locale)}
-          </label>
-          <Input
-            id="upgradePassword"
-            type="password"
-            minLength={8}
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="rounded-xl bg-[#f8fbfd]"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="upgradePasswordConfirm" className="text-sm font-semibold text-[#071923]">
-            {t("consultation_upgrade_password_confirm_label", locale)}
-          </label>
-          <Input
-            id="upgradePasswordConfirm"
-            type="password"
-            minLength={8}
-            required
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className="rounded-xl bg-[#f8fbfd]"
-          />
-        </div>
+      <div className="mt-4 grid gap-3">
         {error && (
           <p role="alert" className="rounded-xl bg-[#fff4f0] px-4 py-3 text-sm text-[#9b2c12]">
             {error}
           </p>
         )}
         <Button
-          type="submit"
+          type="button"
           disabled={pending}
+          onClick={handleCreateAccount}
           className="h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
         >
           {t("consultation_upgrade_cta", locale)}
         </Button>
-      </form>
+      </div>
     </div>
   );
 }

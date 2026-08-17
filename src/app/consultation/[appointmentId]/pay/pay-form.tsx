@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Lock, Phone, Smartphone, TriangleAlert } from "lucide-react";
+import { Check, CheckCircle2, Copy, Lock, Phone, Smartphone, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,7 +24,6 @@ const PROVIDERS: { value: SnippeChannelProvider; labelKey: `payment_provider_${S
 
 const POLL_INTERVAL_MS = 3000;
 const SLOW_NOTICE_AFTER_MS = 3 * 60 * 1000;
-const SUCCESS_AUTO_CONTINUE_MS = 3000;
 
 type Stage = "form" | "waiting" | "success" | "failed";
 
@@ -53,6 +52,7 @@ export function PayForm({
   const [stage, setStage] = useState<Stage>("form");
   const [error, setError] = useState<string | null>(null);
   const [showSlowNotice, setShowSlowNotice] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [pending, startTransition] = useTransition();
   const waitingSinceRef = useRef<number | null>(null);
 
@@ -90,13 +90,19 @@ export function PayForm({
     };
   }, [stage, appointmentId, router]);
 
-  useEffect(() => {
-    if (stage !== "success") return;
-    const timeout = setTimeout(() => {
-      router.push(`/consultation/${appointmentId}/connect`);
-    }, SUCCESS_AUTO_CONTINUE_MS);
-    return () => clearTimeout(timeout);
-  }, [stage, appointmentId, router]);
+  function handleCopyReference() {
+    if (!hospitalReferenceNumber) return;
+    navigator.clipboard
+      .writeText(hospitalReferenceNumber)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        // Clipboard access can be denied by the browser -- the number is
+        // still shown on screen, so this is a nice-to-have, not required.
+      });
+  }
 
   function handlePay() {
     setError(null);
@@ -248,9 +254,19 @@ export function PayForm({
                 <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a969c]">
                   {t("payment_reference_label", locale)}
                 </p>
-                <p className="mt-0.5 font-mono text-lg font-bold tabular-nums text-[#083273]">
+                <p className="mt-0.5 break-all font-mono text-lg font-bold tabular-nums text-[#083273]">
                   {hospitalReferenceNumber}
                 </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyReference}
+                  className="mt-2.5 h-9 w-full gap-1.5 rounded-full border-[#01b7bb]/30 bg-white text-[#087a7b] hover:bg-[#e8f7f4]"
+                >
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  {copied ? t("payment_success_copied", locale) : t("payment_success_copy_button", locale)}
+                </Button>
               </div>
             )}
             <Button

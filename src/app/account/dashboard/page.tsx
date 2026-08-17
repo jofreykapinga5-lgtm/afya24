@@ -25,7 +25,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getDefaultService } from "@/lib/default-service";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { getServerLocale } from "@/lib/locale-cookie";
-import { t, appointmentStatusKey } from "@/lib/i18n";
+import {
+  t,
+  appointmentStatusKey,
+  pharmacyOrderStatusKey,
+  adminLabOrderStatusKey,
+  adminPaymentStatusKey,
+} from "@/lib/i18n";
 import type { ConsultationMode, Locale } from "@/lib/types";
 import { signOut } from "../actions";
 import { PatientDashboardMobileMenu } from "./mobile-menu";
@@ -66,13 +72,29 @@ type DbFile = {
 };
 
 const navItems = [
-  { label: "Overview", icon: LayoutDashboard },
-  { label: "Book a call", icon: Video },
-  { label: "Doctors", icon: Stethoscope },
-  { label: "History", icon: History },
-  { label: "Payments", icon: CreditCard },
-  { label: "Files", icon: FileText },
-];
+  { labelKey: "account_dashboard_nav_overview", anchor: "overview", icon: LayoutDashboard },
+  { labelKey: "account_dashboard_nav_book", anchor: "book-a-call", icon: Video },
+  { labelKey: "account_dashboard_nav_doctors", anchor: "doctors", icon: Stethoscope },
+  { labelKey: "account_dashboard_nav_history", anchor: "history", icon: History },
+  { labelKey: "account_dashboard_nav_payments", anchor: "payments", icon: CreditCard },
+  { labelKey: "account_dashboard_nav_files", anchor: "files", icon: FileText },
+] as const;
+
+const orderModeKey = {
+  chat: "account_dashboard_mode_chat",
+  voice: "account_dashboard_mode_voice",
+  video: "account_dashboard_mode_video",
+} as const;
+
+const fulfillmentMethodKey = {
+  pickup: "checkout_pickup",
+  delivery: "checkout_delivery",
+} as const;
+
+const fileKindKey = {
+  image: "account_dashboard_file_kind_image",
+  audio: "account_dashboard_file_kind_audio",
+} as const;
 
 const modeIcon: Record<ConsultationMode, typeof MessageCircle> = {
   chat: MessageCircle,
@@ -97,10 +119,6 @@ function statusClass(status: string) {
     return "bg-[#fdecec] text-[#b42318]";
   }
   return "bg-[#eef4ff] text-[#083273]";
-}
-
-function prettyStatus(status: string) {
-  return status.replaceAll("_", " ");
 }
 
 function calculateAge(dateOfBirth: string | null) {
@@ -266,8 +284,8 @@ export default async function AccountDashboardPage() {
                 const Icon = item.icon;
                 return (
                   <a
-                    key={item.label}
-                    href={index === 0 ? "#overview" : `#${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                    key={item.anchor}
+                    href={`#${item.anchor}`}
                     className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition ${
                       index === 0
                         ? "bg-[#e8f7f4] text-[#083273]"
@@ -275,23 +293,23 @@ export default async function AccountDashboardPage() {
                     }`}
                   >
                     <Icon className="size-4" />
-                    {item.label}
+                    {t(item.labelKey, locale)}
                   </a>
                 );
               })}
             </nav>
 
             <div className="mt-10 rounded-[1.35rem] bg-[#f4f8f9] p-4 ring-1 ring-[#dfe8eb] lg:mt-auto">
-              <p className="text-sm font-bold text-[#083273]">Need care now?</p>
+              <p className="text-sm font-bold text-[#083273]">{t("account_dashboard_need_care_title", locale)}</p>
               <p className="mt-2 text-xs leading-5 text-[#60717a]">
-                Start with Afya24 intake, then choose an available doctor.
+                {t("account_dashboard_need_care_body", locale)}
               </p>
               <Button
                 className="mt-4 h-10 w-full rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
                 nativeButton={false}
                 render={<Link href="/qualification" />}
               >
-                Start intake
+                {t("start_assessment_cta", locale)}
               </Button>
             </div>
           </div>
@@ -300,7 +318,9 @@ export default async function AccountDashboardPage() {
         <section className="min-w-0" id="overview">
           <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-[#e1e9ec] bg-[#f8fbfd]/92 px-4 py-4 backdrop-blur sm:px-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7a82]">Patient profile</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7a82]">
+                {t("account_dashboard_patient_profile_label", locale)}
+              </p>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#071923]">
                 {patientName}
               </h1>
@@ -330,27 +350,30 @@ export default async function AccountDashboardPage() {
                     </p>
                   </div>
                   <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                    <MiniStat label="Visits" value={String(appointments.length)} />
-                    <MiniStat label="Age" value={patientAge !== null ? String(patientAge) : "—"} />
-                    <MiniStat label="Sex" value={patient?.gender ?? "—"} />
+                    <MiniStat label={t("account_dashboard_stat_visits", locale)} value={String(appointments.length)} />
+                    <MiniStat label={t("account_dashboard_stat_age", locale)} value={patientAge !== null ? String(patientAge) : "—"} />
+                    <MiniStat label={t("account_dashboard_stat_sex", locale)} value={patient?.gender ?? "—"} />
                   </div>
                 </article>
 
                 <article className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold text-[#071923]">General information</p>
-                      <p className="mt-1 text-sm text-[#64747c]">Your active Afya24 care file.</p>
+                      <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_general_info_title", locale)}</p>
+                      <p className="mt-1 text-sm text-[#64747c]">{t("account_dashboard_general_info_body", locale)}</p>
                     </div>
                     <span className="rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-bold text-[#087a7b]">
-                      Active
+                      {t("account_dashboard_active_badge", locale)}
                     </span>
                   </div>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <InfoRow label="Reference number" value={patientReference} />
-                    <InfoRow label="Phone" value={patientPhone} />
-                    <InfoRow label="Date of birth" value={patient?.date_of_birth ?? "Not recorded"} />
-                    <InfoRow label="Language" value={locale === "sw" ? "Kiswahili" : "English"} />
+                    <InfoRow label={t("account_dashboard_reference_number_label", locale)} value={patientReference} />
+                    <InfoRow label={t("account_dashboard_phone_label", locale)} value={patientPhone} />
+                    <InfoRow
+                      label={t("account_dashboard_dob_label", locale)}
+                      value={patient?.date_of_birth ?? t("account_dashboard_not_recorded", locale)}
+                    />
+                    <InfoRow label={t("account_dashboard_language_label", locale)} value={locale === "sw" ? "Kiswahili" : "English"} />
                   </div>
                 </article>
               </section>
@@ -359,8 +382,8 @@ export default async function AccountDashboardPage() {
                 <article className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold text-[#071923]">Next session</p>
-                      <p className="mt-1 text-sm text-[#64747c]">Join, chat, or reschedule your active visit.</p>
+                      <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_next_session_title", locale)}</p>
+                      <p className="mt-1 text-sm text-[#64747c]">{t("account_dashboard_next_session_body", locale)}</p>
                     </div>
                     <CalendarClock className="size-5 text-[#01b7bb]" />
                   </div>
@@ -368,15 +391,21 @@ export default async function AccountDashboardPage() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="font-bold text-[#071923]">
-                          {nextAppointment?.providers?.specialty ?? "General consultation"}
+                          {nextAppointment?.providers?.specialty ?? t("account_dashboard_general_consultation_fallback", locale)}
                         </p>
                         <p className="mt-1 text-sm text-[#64747c]">
-                          {nextAppointment?.providers?.full_name ?? "Available doctor"}
-                          {nextAppointment ? ` · ${formatDateTime(nextAppointment.scheduled_at, locale)}` : " · Choose a time"}
+                          {nextAppointment?.providers?.full_name ?? t("account_dashboard_available_doctor_fallback", locale)}
+                          {" · "}
+                          {nextAppointment
+                            ? formatDateTime(nextAppointment.scheduled_at, locale)
+                            : t("account_dashboard_choose_a_time", locale)}
                         </p>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusClass(nextAppointment?.status ?? "scheduled")}`}>
-                        {prettyStatus(nextAppointment?.status ?? "scheduled")}
+                        {t(
+                          appointmentStatusKey[(nextAppointment?.status ?? "scheduled") as keyof typeof appointmentStatusKey],
+                          locale
+                        )}
                       </span>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -394,7 +423,7 @@ export default async function AccountDashboardPage() {
                         }
                       >
                         <Video className="size-4" />
-                        Join call
+                        {t("lookup_join_call_cta", locale)}
                       </Button>
                       <Button
                         variant="outline"
@@ -402,20 +431,20 @@ export default async function AccountDashboardPage() {
                         nativeButton={false}
                         render={<Link href="/doctors" />}
                       >
-                        Book a call
+                        {t("account_dashboard_nav_book", locale)}
                       </Button>
                     </div>
                   </div>
                 </article>
 
                 <article className="rounded-[1.35rem] bg-[#e8f7f4] p-5 text-[#071923] shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]">
-                  <p className="text-sm font-bold text-[#083273]">Care summary</p>
+                  <p className="text-sm font-bold text-[#083273]">{t("account_dashboard_care_summary_title", locale)}</p>
                   <p className="mt-3 text-sm leading-6 text-[#4d5960]">
-                    No signed visit summary yet. Your doctor shares one here after your consultation.
+                    {t("account_dashboard_care_summary_empty", locale)}
                   </p>
                   <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#087a7b]">
                     <ShieldCheck className="size-4" />
-                    Doctor sign-off required before anything appears here
+                    {t("account_dashboard_doctor_signoff_required", locale)}
                   </div>
                 </article>
               </section>
@@ -423,19 +452,19 @@ export default async function AccountDashboardPage() {
               <section id="doctors" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-[#071923]">Available doctors</p>
-                    <p className="mt-1 text-sm text-[#64747c]">Doctors you can book for voice or video.</p>
+                    <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_available_doctors_title", locale)}</p>
+                    <p className="mt-1 text-sm text-[#64747c]">{t("account_dashboard_available_doctors_body", locale)}</p>
                   </div>
                   <Button variant="outline" className="h-9 rounded-full bg-white" nativeButton={false} render={<Link href="/doctors" />}>
-                    See all
+                    {t("doctors_preview_see_all", locale)}
                     <ArrowRight className="size-4" />
                   </Button>
                 </div>
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                   {featuredDoctors.length > 0 ? (
-                    featuredDoctors.map((provider) => <DoctorMiniCard key={provider.id} provider={provider} />)
+                    featuredDoctors.map((provider) => <DoctorMiniCard key={provider.id} provider={provider} locale={locale} />)
                   ) : (
-                    <p className="text-sm text-[#64747c] md:col-span-3">No doctors available right now.</p>
+                    <p className="text-sm text-[#64747c] md:col-span-3">{t("account_dashboard_no_doctors_available", locale)}</p>
                   )}
                 </div>
               </section>
@@ -443,8 +472,8 @@ export default async function AccountDashboardPage() {
               <section id="history" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-[#071923]">Session history</p>
-                    <p className="mt-1 text-sm text-[#64747c]">Past and upcoming Afya24 visits.</p>
+                    <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_session_history_title", locale)}</p>
+                    <p className="mt-1 text-sm text-[#64747c]">{t("account_dashboard_session_history_body", locale)}</p>
                   </div>
                   <History className="size-5 text-[#01b7bb]" />
                 </div>
@@ -460,16 +489,16 @@ export default async function AccountDashboardPage() {
                         >
                           <div>
                             <p className="font-semibold text-[#071923]">
-                              {appointment.providers?.specialty ?? "Consultation"}
+                              {appointment.providers?.specialty ?? t("account_dashboard_consultation_fallback", locale)}
                             </p>
                             <p className="mt-1 text-sm text-[#64747c]">
-                              {appointment.providers?.full_name ?? "Doctor"} ·{" "}
+                              {appointment.providers?.full_name ?? t("account_dashboard_doctor_fallback", locale)} ·{" "}
                               {formatDateTime(appointment.scheduled_at, locale)}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 text-sm font-semibold text-[#083273]">
                             <ModeIcon className="size-4 text-[#01b7bb]" />
-                            {mode}
+                            {t(orderModeKey[mode], locale)}
                           </div>
                           <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${statusClass(appointment.status)}`}>
                             {t(appointmentStatusKey[appointment.status as keyof typeof appointmentStatusKey], locale)}
@@ -478,7 +507,7 @@ export default async function AccountDashboardPage() {
                       );
                     })
                   ) : (
-                    <p className="px-4 py-8 text-center text-sm text-[#64747c]">No visits yet.</p>
+                    <p className="px-4 py-8 text-center text-sm text-[#64747c]">{t("account_dashboard_no_visits_yet", locale)}</p>
                   )}
                 </div>
               </section>
@@ -488,24 +517,24 @@ export default async function AccountDashboardPage() {
               <section id="book-a-call" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-[#071923]">Book a call</p>
-                    <p className="mt-1 text-sm text-[#64747c]">Find the right doctor fast.</p>
+                    <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_nav_book", locale)}</p>
+                    <p className="mt-1 text-sm text-[#64747c]">{t("account_dashboard_find_doctor_fast_body", locale)}</p>
                   </div>
                   <Search className="size-5 text-[#01b7bb]" />
                 </div>
                 <div className="mt-4 grid gap-2">
                   <Button className="h-11 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]" nativeButton={false} render={<Link href="/qualification" />}>
-                    Start with AI intake
+                    {t("start_assessment_cta", locale)}
                   </Button>
                   <Button variant="outline" className="h-11 rounded-full bg-white font-bold text-[#083273]" nativeButton={false} render={<Link href="/doctors" />}>
-                    Browse doctors
+                    {t("account_dashboard_browse_doctors", locale)}
                   </Button>
                 </div>
               </section>
 
               <section id="payments" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-[#071923]">Payments</p>
+                  <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_nav_payments", locale)}</p>
                   <p className="text-sm font-bold text-[#083273]">
                     TZS {paidTotal.toLocaleString("en-TZ")}
                   </p>
@@ -519,21 +548,25 @@ export default async function AccountDashboardPage() {
                             {appointment.currency ?? "TZS"} {appointment.price ?? 0}
                           </p>
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass(appointment.payment_status)}`}>
-                            {appointment.payment_status}
+                            {t(
+                              adminPaymentStatusKey[appointment.payment_status as keyof typeof adminPaymentStatusKey] ??
+                                adminPaymentStatusKey.pending,
+                              locale
+                            )}
                           </span>
                         </div>
                         <p className="mt-1 text-xs text-[#64747c]">{formatDateTime(appointment.scheduled_at, locale)}</p>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-[#64747c]">No payments yet.</p>
+                    <p className="text-sm text-[#64747c]">{t("account_dashboard_no_payments_yet", locale)}</p>
                   )}
                 </div>
               </section>
 
               <section className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-[#071923]">Pharmacy</p>
+                  <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_pharmacy_title", locale)}</p>
                   <Pill className="size-5 text-[#01b7bb]" />
                 </div>
                 <div className="mt-4 grid gap-3">
@@ -543,47 +576,64 @@ export default async function AccountDashboardPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-[#071923]">
-                              TZS {order.total_amount} · {order.fulfillment_method}
+                              TZS {order.total_amount} ·{" "}
+                              {t(
+                                fulfillmentMethodKey[order.fulfillment_method as keyof typeof fulfillmentMethodKey] ??
+                                  "checkout_delivery",
+                                locale
+                              )}
                             </p>
                             <p className="mt-1 text-xs text-[#64747c]">{formatDateTime(order.created_at, locale)}</p>
                           </div>
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass(order.status)}`}>
-                            {prettyStatus(order.status)}
+                            {t(
+                              pharmacyOrderStatusKey[order.status as keyof typeof pharmacyOrderStatusKey] ??
+                                pharmacyOrderStatusKey.pending,
+                              locale
+                            )}
                           </span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-[#64747c]">No pharmacy orders yet.</p>
+                    <p className="text-sm text-[#64747c]">{t("account_dashboard_no_pharmacy_orders", locale)}</p>
                   )}
                 </div>
               </section>
 
               <section className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-[#071923]">Labs and files</p>
+                  <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_labs_files_title", locale)}</p>
                   <FlaskConical className="size-5 text-[#01b7bb]" />
                 </div>
                 <div className="mt-4 grid gap-2">
                   {labOrdersData && labOrdersData.length > 0 ? (
                     labOrdersData.map((order) => (
                       <div key={order.id} className="rounded-2xl bg-[#f8fbfd] p-3">
-                        <p className="text-sm font-semibold text-[#071923]">{order.reason ?? "Lab order"}</p>
-                        <p className="mt-1 text-xs text-[#64747c]">{order.lab_locations?.name ?? "Partner lab"}</p>
+                        <p className="text-sm font-semibold text-[#071923]">
+                          {order.reason ?? t("account_dashboard_lab_order_fallback", locale)}
+                        </p>
+                        <p className="mt-1 text-xs text-[#64747c]">
+                          {order.lab_locations?.name ?? t("account_dashboard_partner_lab_fallback", locale)}
+                        </p>
                         <div className="mt-3 flex items-center justify-between gap-3">
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass(order.status)}`}>
-                            {prettyStatus(order.status)}
+                            {t(
+                              adminLabOrderStatusKey[order.status as keyof typeof adminLabOrderStatusKey] ??
+                                adminLabOrderStatusKey.ordered,
+                              locale
+                            )}
                           </span>
                           {order.map_url ? (
                             <Link href={order.map_url} className="text-xs font-bold text-[#083273]">
-                              Open map
+                              {t("account_dashboard_open_map", locale)}
                             </Link>
                           ) : null}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-[#64747c]">No lab orders yet.</p>
+                    <p className="text-sm text-[#64747c]">{t("account_dashboard_no_lab_orders", locale)}</p>
                   )}
                 </div>
                 <div id="files" className="mt-3 grid gap-2">
@@ -601,14 +651,20 @@ export default async function AccountDashboardPage() {
                         >
                           <span className="flex min-w-0 items-center gap-2 font-medium text-[#071923]">
                             <Icon className="size-4 shrink-0 text-[#64747c]" />
-                            <span className="truncate">{file.original_filename ?? "File"}</span>
+                            <span className="truncate">{file.original_filename ?? t("account_dashboard_file_fallback", locale)}</span>
                           </span>
-                          <span className="shrink-0 text-xs text-[#64747c]">{file.attachment_kind}</span>
+                          <span className="shrink-0 text-xs text-[#64747c]">
+                            {t(
+                              fileKindKey[file.attachment_kind as keyof typeof fileKindKey] ??
+                                "account_dashboard_file_kind_document",
+                              locale
+                            )}
+                          </span>
                         </a>
                       );
                     })
                   ) : (
-                    <p className="px-1 text-sm text-[#64747c]">No files uploaded yet.</p>
+                    <p className="px-1 text-sm text-[#64747c]">{t("account_dashboard_no_files_uploaded", locale)}</p>
                   )}
                 </div>
               </section>
@@ -638,7 +694,13 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DoctorMiniCard({ provider }: { provider: ReturnType<typeof mapProviderRow> }) {
+function DoctorMiniCard({
+  provider,
+  locale,
+}: {
+  provider: ReturnType<typeof mapProviderRow>;
+  locale: Locale;
+}) {
   return (
     <article className="rounded-2xl border border-[#e1e9ec] bg-[#f8fbfd] p-4">
       <div className="flex items-center gap-3">
@@ -672,7 +734,7 @@ function DoctorMiniCard({ provider }: { provider: ReturnType<typeof mapProviderR
           nativeButton={false}
           render={<Link href={`/doctors/${provider.id}`} />}
         >
-          Book
+          {t("account_dashboard_book_button", locale)}
         </Button>
       </div>
     </article>

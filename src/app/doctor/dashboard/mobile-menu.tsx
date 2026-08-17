@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "../actions";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 export type DoctorMobileMenuItem = {
   label: string;
@@ -29,6 +31,7 @@ const menuIcons = {
 };
 
 export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuItem[] }) {
+  const locale = useAppStore((state) => state.locale);
   const [open, setOpen] = useState(false);
 
   return (
@@ -36,7 +39,7 @@ export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuIt
       <button
         type="button"
         aria-expanded={open}
-        aria-label="Open doctor menu"
+        aria-label={t("doctor_dashboard_open_menu", locale)}
         onClick={() => setOpen((current) => !current)}
         className="flex size-10 cursor-pointer list-none items-center justify-center rounded-full bg-[#e8f7f4] text-[#083273] outline-none transition hover:bg-[#d8f3ef] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/30"
       >
@@ -63,7 +66,7 @@ export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuIt
             <form action={signOut}>
               <Button type="submit" variant="outline" className="h-10 w-full rounded-full bg-white">
                 <LogOut className="size-4" />
-                Sign out
+                {t("dashboard_sign_out", locale)}
               </Button>
             </form>
           </div>

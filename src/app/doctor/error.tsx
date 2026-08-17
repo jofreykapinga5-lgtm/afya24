@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 // Safety net for doctor dashboard actions that don't return their own
 // inline error state (schedule blocks, cancel slot, join queue, etc.) --
@@ -17,6 +19,8 @@ export default function DoctorError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const locale = useAppStore((state) => state.locale);
+
   useEffect(() => {
     console.error("Doctor dashboard error", error);
   }, [error]);
@@ -27,15 +31,15 @@ export default function DoctorError({
         <AlertTriangle className="size-7" />
       </span>
       <div>
-        <h1 className="text-xl font-bold text-[#071923]">Something went wrong</h1>
+        <h1 className="text-xl font-bold text-[#071923]">{t("error_page_title", locale)}</h1>
         <p className="mt-1 max-w-md text-sm text-muted-foreground">
-          {error.message || "That action couldn't be completed. Please try again."}
+          {error.message || t("staff_error_body_fallback", locale)}
         </p>
       </div>
       <div className="flex gap-3">
-        <Button onClick={() => reset()}>Try again</Button>
+        <Button onClick={() => reset()}>{t("error_page_retry", locale)}</Button>
         <Button variant="outline" nativeButton={false} render={<Link href="/doctor/dashboard" />}>
-          Back to dashboard
+          {t("staff_error_back_to_dashboard", locale)}
         </Button>
       </div>
     </div>

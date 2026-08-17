@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateDoctorPublicProfile } from "../actions";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 export function DoctorProfileForm({
   bio,
@@ -16,6 +18,7 @@ export function DoctorProfileForm({
   photoUrl: string;
   phone: string;
 }) {
+  const locale = useAppStore((state) => state.locale);
   return (
     <form action={updateDoctorPublicProfile} className="mt-5 grid gap-4">
       <div className="grid gap-3 rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb] sm:grid-cols-[96px_1fr] sm:items-center">
@@ -29,19 +32,19 @@ export function DoctorProfileForm({
           )}
         </div>
         <label className="grid gap-1.5 text-sm">
-          <span className="font-bold text-[#071923]">Profile image</span>
+          <span className="font-bold text-[#071923]">{t("doctor_profile_image_label", locale)}</span>
           <input
             name="image"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="block w-full text-sm text-[#60717a] file:mr-3 file:rounded-full file:border-0 file:bg-[#01b7bb] file:px-4 file:py-2 file:text-sm file:font-bold file:text-white"
           />
-          <span className="text-xs text-[#64747c]">JPG, PNG, or WebP under 5 MB.</span>
+          <span className="text-xs text-[#64747c]">{t("doctor_profile_image_hint", locale)}</span>
         </label>
       </div>
 
       <label className="grid gap-1.5 text-sm">
-        <span className="font-bold text-[#071923]">Phone number</span>
+        <span className="font-bold text-[#071923]">{t("doctor_profile_phone_label", locale)}</span>
         <Input
           name="phone"
           type="tel"
@@ -51,22 +54,22 @@ export function DoctorProfileForm({
           className="rounded-xl border-[#d8e5e3] bg-[#f8fbfd]"
         />
         <span className="text-xs text-[#64747c]">
-          Shown to patients only after they&apos;ve paid, for phone-call and WhatsApp options.
+          {t("doctor_profile_phone_hint", locale)}
         </span>
       </label>
 
       <label className="grid gap-1.5 text-sm">
-        <span className="font-bold text-[#071923]">Public bio</span>
+        <span className="font-bold text-[#071923]">{t("doctor_profile_bio_label", locale)}</span>
         <Textarea
           name="bio"
           defaultValue={bio}
-          placeholder="Tell patients what you help with and your care approach."
+          placeholder={t("doctor_profile_bio_placeholder", locale)}
           className="min-h-28 rounded-2xl border-[#d8e5e3] bg-[#f8fbfd]"
         />
       </label>
 
       <Button type="submit" className="h-11 justify-self-start rounded-full bg-[#01b7bb] px-5 font-bold text-white hover:bg-[#019ea2]">
-        Save profile
+        {t("doctor_profile_save", locale)}
       </Button>
     </form>
   );

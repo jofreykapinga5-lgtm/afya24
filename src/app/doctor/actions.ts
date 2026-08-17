@@ -5,6 +5,8 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
+import { getServerLocale } from "@/lib/locale-cookie";
+import { t } from "@/lib/i18n";
 
 export type AvailabilityActionState = {
   status: "idle" | "success" | "error";
@@ -198,6 +200,7 @@ export async function updateProviderAvailability(
   _previousState: AvailabilityActionState,
   formData: FormData
 ): Promise<AvailabilityActionState> {
+  const locale = await getServerLocale();
   try {
     const { service, providerId } = await requireDoctorProvider();
     const availableNow = formData.get("availableNow") === "on";
@@ -226,14 +229,14 @@ export async function updateProviderAvailability(
 
     return {
       status: "success",
-      message: availableNow ? "You're visible to patients now." : "You're set to offline.",
+      message: t(availableNow ? "doctor_msg_visible_now" : "doctor_msg_set_offline", locale),
     };
   } catch (error) {
     unstable_rethrow(error);
     console.error("updateProviderAvailability failed", error);
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Could not save availability. Try again.",
+      message: error instanceof Error ? error.message : t("doctor_msg_avail_save_failed", locale),
     };
   }
 }
@@ -247,12 +250,13 @@ export async function updateDoctorPassword(
   _previousState: AvailabilityActionState,
   formData: FormData
 ): Promise<AvailabilityActionState> {
+  const locale = await getServerLocale();
   try {
     const currentPassword = String(formData.get("currentPassword") ?? "");
     const newPassword = String(formData.get("newPassword") ?? "");
 
     if (newPassword.length < 8) {
-      return { status: "error", message: "New password must be at least 8 characters." };
+      return { status: "error", message: t("doctor_msg_password_min_length", locale) };
     }
 
     const supabase = await createClient();
@@ -270,7 +274,7 @@ export async function updateDoctorPassword(
     });
 
     if (verifyError) {
-      return { status: "error", message: "Current password is incorrect." };
+      return { status: "error", message: t("doctor_msg_password_incorrect", locale) };
     }
 
     const { userId } = await requireDoctorProvider();
@@ -281,13 +285,13 @@ export async function updateDoctorPassword(
       throw new Error(error.message);
     }
 
-    return { status: "success", message: "Password updated." };
+    return { status: "success", message: t("doctor_msg_password_updated", locale) };
   } catch (error) {
     unstable_rethrow(error);
     console.error("updateDoctorPassword failed", error);
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Could not update password. Try again.",
+      message: error instanceof Error ? error.message : t("doctor_msg_password_update_failed", locale),
     };
   }
 }

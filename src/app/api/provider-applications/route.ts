@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/types";
 
 const BUCKET = "provider-applications";
 const MAX_BYTES = 12 * 1024 * 1024;
@@ -21,8 +23,12 @@ function extensionFor(file: File) {
 export async function POST(request: Request) {
   const formData = await request.formData().catch(() => null);
   if (!formData) {
-    return NextResponse.json({ error: "Application form is required." }, { status: 400 });
+    // No locale available yet -- form itself failed to parse.
+    return NextResponse.json({ error: t("error_apply_form_required", "en") }, { status: 400 });
   }
+
+  const localeField = text(formData, "locale");
+  const locale: Locale = localeField === "en" ? "en" : "sw";
 
   const fullName = text(formData, "fullName");
   const email = text(formData, "email").toLowerCase();
@@ -37,10 +43,7 @@ export async function POST(request: Request) {
   const file = formData.get("file");
 
   if (!fullName || !email || !phone || !specialty || !licenseNumber) {
-    return NextResponse.json(
-      { error: "Full name, email, phone number, license number, and specialty are required." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: t("error_apply_required_fields", locale) }, { status: 400 });
   }
 
   const service = createServiceClient();
@@ -53,11 +56,11 @@ export async function POST(request: Request) {
 
   if (file instanceof File && file.size > 0) {
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Upload a JPG, PNG, WebP, or PDF file." }, { status: 400 });
+      return NextResponse.json({ error: t("error_apply_file_type", locale) }, { status: 400 });
     }
 
     if (file.size > MAX_BYTES) {
-      return NextResponse.json({ error: "File must be 12 MB or smaller." }, { status: 400 });
+      return NextResponse.json({ error: t("error_apply_file_too_large", locale) }, { status: 400 });
     }
 
     const path = `${crypto.randomUUID()}/${crypto.randomUUID()}.${extensionFor(file)}`;

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { updateProviderAvailability, type AvailabilityActionState } from "../actions";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 const initialState: AvailabilityActionState = { status: "idle", message: "" };
 
@@ -18,6 +20,7 @@ export function DoctorAvailabilityForm({
   availabilityNote: string;
   modes: string[];
 }) {
+  const locale = useAppStore((state) => state.locale);
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(updateProviderAvailability, initialState);
   const [online, setOnline] = useState(availableNow);
@@ -47,10 +50,10 @@ export function DoctorAvailabilityForm({
           />
           <span>
             <span className="block text-sm font-bold text-[#071923]">
-              {online ? "Visible to patients" : "Offline"}
+              {online ? t("doctor_avail_visible_label", locale) : t("doctor_avail_offline_label", locale)}
             </span>
             <span className="text-xs text-[#64747c]">
-              Patients can be routed to you when slots and payment rules match.
+              {t("doctor_avail_visible_body", locale)}
             </span>
           </span>
         </div>
@@ -62,23 +65,23 @@ export function DoctorAvailabilityForm({
             requestAnimationFrame(() => formRef.current?.requestSubmit());
           }}
           disabled={pending}
-          aria-label="Available to patients"
+          aria-label={t("doctor_avail_aria_label", locale)}
         />
       </div>
 
       <fieldset className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-        <legend className="px-1 text-sm font-bold text-[#071923]">Consultation modes</legend>
+        <legend className="px-1 text-sm font-bold text-[#071923]">{t("doctor_avail_modes_legend", locale)}</legend>
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          <ModeToggle icon={<Phone className="size-3.5" />} label="Voice" name="voice" defaultChecked={modes.includes("voice")} />
-          <ModeToggle icon={<Video className="size-3.5" />} label="Video" name="video" defaultChecked={modes.includes("video")} />
+          <ModeToggle icon={<Phone className="size-3.5" />} label={t("doctor_avail_mode_voice", locale)} name="voice" defaultChecked={modes.includes("voice")} />
+          <ModeToggle icon={<Video className="size-3.5" />} label={t("doctor_avail_mode_video", locale)} name="video" defaultChecked={modes.includes("video")} />
         </div>
       </fieldset>
 
       <label className="grid gap-1.5 text-sm">
-        <span className="font-bold text-[#071923]">Availability note</span>
+        <span className="font-bold text-[#071923]">{t("doctor_avail_note_label", locale)}</span>
         <Textarea
           name="availabilityNote"
-          placeholder="Example: Online from 2 PM, urgent care only today."
+          placeholder={t("doctor_avail_note_placeholder", locale)}
           defaultValue={availabilityNote}
           className="min-h-24 rounded-2xl border-[#d8e5e3] bg-[#f8fbfd]"
         />
@@ -90,7 +93,7 @@ export function DoctorAvailabilityForm({
           disabled={pending}
           className="h-11 rounded-full bg-[#01b7bb] px-5 font-bold text-white hover:bg-[#019ea2]"
         >
-          {pending ? "Saving..." : "Save availability"}
+          {pending ? t("doctor_avail_saving", locale) : t("doctor_avail_save", locale)}
         </Button>
         {state.status === "success" ? (
           <span role="status" className="text-sm font-medium text-[#087a7b]">

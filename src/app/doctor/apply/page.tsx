@@ -17,10 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MEDICAL_SPECIALTIES } from "@/lib/types";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
 
 export default function DoctorApplicationPage() {
+  const locale = useAppStore((state) => state.locale);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -31,6 +34,7 @@ export default function DoctorApplicationPage() {
     event.preventDefault();
     setError(null);
     const formData = new FormData(event.currentTarget);
+    formData.set("locale", locale);
 
     startTransition(async () => {
       const response = await fetch("/api/provider-applications", {
@@ -39,7 +43,7 @@ export default function DoctorApplicationPage() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setError(data.error ?? "Could not submit application.");
+        setError(data.error ?? t("error_apply_could_not_submit", locale));
         return;
       }
       setSuccess(true);
@@ -49,7 +53,7 @@ export default function DoctorApplicationPage() {
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     if (file && file.size > MAX_FILE_BYTES) {
-      setError("File must be 12 MB or smaller.");
+      setError(t("error_apply_file_too_large", locale));
       event.target.value = "";
       setSelectedFile(null);
       return;
@@ -79,7 +83,7 @@ export default function DoctorApplicationPage() {
         </Link>
 
         <div className="mx-auto mt-8 max-w-2xl">
-          <h1 className="text-center text-2xl font-bold sm:text-3xl">Doctor application</h1>
+          <h1 className="text-center text-2xl font-bold sm:text-3xl">{t("doctor_apply_title", locale)}</h1>
 
           <Reveal delay={60}>
             <section className="mt-6 rounded-[1.75rem] bg-white p-5 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#dfe8eb] sm:p-7">
@@ -87,40 +91,44 @@ export default function DoctorApplicationPage() {
                 <div className="grid min-h-[32rem] place-items-center text-center">
                   <div>
                     <CheckCircle2 className="mx-auto size-12 text-[#01b7bb]" />
-                    <h2 className="mt-4 text-2xl font-bold">Application submitted</h2>
+                    <h2 className="mt-4 text-2xl font-bold">{t("doctor_apply_success_title", locale)}</h2>
                     <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#60717a]">
-                      The Afya24 team will review your details and contact you with the next step.
+                      {t("doctor_apply_success_body", locale)}
                     </p>
                     <Button className="mt-5 rounded-full" nativeButton={false} render={<Link href="/" />}>
-                      Back home
+                      {t("back_to_home", locale)}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={submitApplication} className="grid gap-7" noValidate>
-                  <FormSection title="Personal details">
+                  <FormSection title={t("doctor_apply_section_personal", locale)}>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Full name" required>
+                      <Field label={t("doctor_apply_full_name", locale)} required>
                         <Input name="fullName" required placeholder="Dr. Amina Hassan" />
                       </Field>
-                      <Field label="Email" required>
+                      <Field label={t("doctor_apply_email", locale)} required>
                         <Input name="email" type="email" required placeholder="doctor@email.com" />
                       </Field>
-                      <Field label="Phone" required>
+                      <Field label={t("doctor_apply_phone", locale)} required>
                         <Input name="phone" required placeholder="+255..." />
                       </Field>
-                      <Field label="Region">
+                      <Field label={t("doctor_apply_region", locale)}>
                         <Input name="region" placeholder="Dar es Salaam" />
                       </Field>
                     </div>
                   </FormSection>
 
-                  <FormSection title="Professional credentials">
+                  <FormSection title={t("doctor_apply_section_credentials", locale)}>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="License number" required>
-                        <Input name="licenseNumber" required placeholder="Medical council number" />
+                      <Field label={t("doctor_apply_license_number", locale)} required>
+                        <Input
+                          name="licenseNumber"
+                          required
+                          placeholder={t("doctor_apply_license_placeholder", locale)}
+                        />
                       </Field>
-                      <Field label="Specialty" required>
+                      <Field label={t("doctor_apply_specialty", locale)} required>
                         <Select name="specialty" defaultValue="General Practice">
                           <SelectTrigger className="w-full">
                             <SelectValue />
@@ -134,33 +142,33 @@ export default function DoctorApplicationPage() {
                           </SelectContent>
                         </Select>
                       </Field>
-                      <Field label="Years of experience">
+                      <Field label={t("doctor_apply_experience_years", locale)}>
                         <Input name="experienceYears" type="number" min="0" max="70" placeholder="5" />
                       </Field>
                     </div>
                   </FormSection>
 
-                  <FormSection title="Languages">
+                  <FormSection title={t("doctor_apply_section_languages", locale)}>
                     <fieldset className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-                      <legend className="px-1 text-sm font-bold">Languages</legend>
+                      <legend className="px-1 text-sm font-bold">{t("doctor_apply_section_languages", locale)}</legend>
                       <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                        <Check name="languages" value="sw" label="Swahili" />
-                        <Check name="languages" value="en" label="English" />
+                        <Check name="languages" value="sw" label={t("doctor_apply_language_swahili", locale)} />
+                        <Check name="languages" value="en" label={t("doctor_apply_language_english", locale)} />
                       </div>
                     </fieldset>
                   </FormSection>
 
-                  <FormSection title="About you">
-                    <Field label="Short bio">
+                  <FormSection title={t("doctor_apply_section_about", locale)}>
+                    <Field label={t("doctor_apply_bio_label", locale)}>
                       <Textarea
                         name="bio"
-                        placeholder="Tell us what you specialize in and how you support patients."
+                        placeholder={t("doctor_apply_bio_placeholder", locale)}
                         className="min-h-24"
                       />
                     </Field>
                   </FormSection>
 
-                  <FormSection title="Supporting document">
+                  <FormSection title={t("doctor_apply_section_document", locale)}>
                     <label
                       htmlFor="doctor-application-file"
                       className="group grid cursor-pointer gap-3 rounded-2xl border-2 border-dashed border-[#c7dde0] bg-[#f8fbfd] p-5 text-center transition-colors hover:border-[#01b7bb]/60 hover:bg-[#f1fbfa]"
@@ -186,7 +194,7 @@ export default function DoctorApplicationPage() {
                           <button
                             type="button"
                             onClick={clearFile}
-                            aria-label="Remove selected file"
+                            aria-label={t("doctor_apply_remove_file", locale)}
                             className="flex size-8 shrink-0 items-center justify-center rounded-full text-[#64747c] transition-colors hover:bg-[#fff4f0] hover:text-[#9b2c12]"
                           >
                             <X className="size-4" />
@@ -199,10 +207,10 @@ export default function DoctorApplicationPage() {
                           </span>
                           <span>
                             <span className="block text-sm font-bold text-[#071923]">
-                              Upload license, CV, or profile photo
+                              {t("doctor_apply_upload_label", locale)}
                             </span>
                             <span className="mt-0.5 block text-xs text-[#64747c]">
-                              JPG, PNG, WebP, or PDF, up to 12 MB
+                              {t("doctor_apply_upload_hint", locale)}
                             </span>
                           </span>
                         </>
@@ -230,13 +238,13 @@ export default function DoctorApplicationPage() {
                     disabled={pending}
                     className="h-12 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
                   >
-                    {pending ? "Submitting..." : "Submit application"}
+                    {pending ? t("doctor_apply_submitting", locale) : t("doctor_apply_submit", locale)}
                     <ArrowRight className="size-4" />
                   </Button>
 
                   <p className="flex items-start gap-2 text-xs leading-5 text-[#60717a]">
                     <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#01b7bb]" />
-                    Submission starts a credential review before provider access is opened.
+                    {t("doctor_apply_trust_note", locale)}
                   </p>
                 </form>
               )}
@@ -273,12 +281,17 @@ function Field({
         {required ? (
           <span className="ml-0.5 text-[#dc2626]">*</span>
         ) : (
-          <span className="ml-1 text-xs font-normal text-[#8a969c]">(optional)</span>
+          <OptionalHint />
         )}
       </span>
       {children}
     </label>
   );
+}
+
+function OptionalHint() {
+  const locale = useAppStore((state) => state.locale);
+  return <span className="ml-1 text-xs font-normal text-[#8a969c]">{t("doctor_apply_optional", locale)}</span>;
 }
 
 function Check({ name, value, label }: { name: string; value: string; label: string }) {

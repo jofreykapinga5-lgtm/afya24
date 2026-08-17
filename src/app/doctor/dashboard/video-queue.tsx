@@ -4,6 +4,15 @@ import { useEffect, useState, useTransition } from "react";
 import { FileAudio, FileText, ImageIcon, Paperclip, UserRound, UsersRound, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { joinWaitingAppointment } from "../actions";
+import { useAppStore } from "@/lib/store";
+import { t, type TranslationKey } from "@/lib/i18n";
+
+const urgencyLabelKey: Record<string, TranslationKey> = {
+  low: "urgency_low_label",
+  moderate: "urgency_moderate_label",
+  high: "urgency_high_label",
+  emergency: "urgency_emergency_label",
+};
 
 type QueueItem = {
   id: string;
@@ -30,6 +39,7 @@ function AttachmentKindIcon({ kind }: { kind: string }) {
 }
 
 export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }) {
+  const locale = useAppStore((state) => state.locale);
   const [items, setItems] = useState(initialItems);
   const [pending, startTransition] = useTransition();
 
@@ -59,8 +69,8 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
     <section id="patients" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-[#071923]">Patient queue</p>
-          <p className="mt-1 text-sm text-[#64747c]">Live video calls waiting to connect with you.</p>
+          <p className="text-sm font-bold text-[#071923]">{t("doctor_queue_title", locale)}</p>
+          <p className="mt-1 text-sm text-[#64747c]">{t("doctor_queue_body", locale)}</p>
         </div>
         <UsersRound className="size-5 text-[#01b7bb]" />
       </div>
@@ -90,7 +100,7 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
                     </span>
                   ) : null}
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${urgencyClass(appointment.urgencyLevel)}`}>
-                    {appointment.urgencyLevel}
+                    {t(urgencyLabelKey[appointment.urgencyLevel] ?? "urgency_low_label", locale)}
                   </span>
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
@@ -99,7 +109,7 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
                         : "bg-[#fdecec] text-[#b42318]"
                     }`}
                   >
-                    {appointment.patientOnline ? "Patient online" : "Patient off"}
+                    {appointment.patientOnline ? t("doctor_queue_patient_online", locale) : t("doctor_queue_patient_off", locale)}
                   </span>
                 </div>
               </div>
@@ -143,14 +153,14 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
                   className="w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2] disabled:bg-[#e5eef0] disabled:text-[#8a9aa2]"
                 >
                   <Video className="size-4" />
-                  Join call
+                  {t("lookup_join_call_cta", locale)}
                 </Button>
               </form>
             </div>
           ))
         ) : (
           <p className="px-1 py-6 text-center text-sm text-[#64747c]">
-            No active video calls right now.
+            {t("doctor_queue_empty", locale)}
           </p>
         )}
       </div>

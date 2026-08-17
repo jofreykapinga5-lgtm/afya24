@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { listRoomParticipantIdentities } from "@/lib/video/livekit";
 import { getServerLocale } from "@/lib/locale-cookie";
-import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
+import { t, staffRoleKey, staffStatusKey, adminProviderStatusKey, type TranslationKey } from "@/lib/i18n";
 import {
   cancelAvailabilitySlot,
   createAvailabilitySlot,
@@ -67,18 +67,29 @@ type WaitingAppointment = {
 };
 
 const navItems = [
-  { label: "Overview", icon: LayoutDashboard, iconKey: "overview" },
-  { label: "Availability", icon: Clock, iconKey: "availability" },
-  { label: "Schedule", icon: CalendarClock, iconKey: "schedule" },
-  { label: "Patients", icon: UsersRound, iconKey: "patients" },
-  { label: "Notes", icon: FileText, iconKey: "notes" },
-];
+  { labelKey: "doctor_dashboard_nav_overview", icon: LayoutDashboard, anchor: "overview" },
+  { labelKey: "doctor_dashboard_nav_availability", icon: Clock, anchor: "availability" },
+  { labelKey: "doctor_dashboard_nav_schedule", icon: CalendarClock, anchor: "schedule" },
+  { labelKey: "doctor_dashboard_nav_patients", icon: UsersRound, anchor: "patients" },
+  { labelKey: "doctor_dashboard_nav_notes", icon: FileText, anchor: "notes" },
+] as const;
 
-const mobileNavItems: DoctorMobileMenuItem[] = navItems.map((item, index) => ({
-  label: item.label,
-  icon: item.iconKey as DoctorMobileMenuItem["icon"],
-  href: index === 0 ? "#overview" : `#${item.label.toLowerCase()}`,
-}));
+const slotTypeKey: Record<string, TranslationKey> = {
+  available: "doctor_dashboard_slot_available",
+  break: "doctor_dashboard_slot_break",
+  time_off: "doctor_dashboard_slot_time_off",
+};
+
+const slotStatusKey: Record<string, TranslationKey> = {
+  open: "doctor_dashboard_slot_status_open",
+  cancelled: "doctor_dashboard_slot_status_cancelled",
+};
+
+const orderModeKey: Record<string, TranslationKey> = {
+  chat: "account_dashboard_mode_chat",
+  voice: "account_dashboard_mode_voice",
+  video: "account_dashboard_mode_video",
+};
 
 function statusClass(status: string) {
   if (status === "active" || status === "available" || status === "scheduled" || status === "paid") {
@@ -95,6 +106,11 @@ function statusClass(status: string) {
 
 export default async function DoctorDashboardPage() {
   const locale = await getServerLocale();
+  const mobileNavItems: DoctorMobileMenuItem[] = navItems.map((item) => ({
+    label: t(item.labelKey, locale),
+    icon: item.anchor as DoctorMobileMenuItem["icon"],
+    href: `#${item.anchor}`,
+  }));
   const supabase = await createClient();
   const {
     data: { user },
@@ -271,8 +287,8 @@ export default async function DoctorDashboardPage() {
                 const Icon = item.icon;
                 return (
                   <a
-                    key={item.label}
-                    href={index === 0 ? "#overview" : `#${item.label.toLowerCase()}`}
+                    key={item.anchor}
+                    href={`#${item.anchor}`}
                     className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition ${
                       index === 0
                         ? "bg-[#e8f7f4] text-[#083273]"
@@ -280,19 +296,23 @@ export default async function DoctorDashboardPage() {
                     }`}
                   >
                     <Icon className="size-4" />
-                    {item.label}
+                    {t(item.labelKey, locale)}
                   </a>
                 );
               })}
             </nav>
 
             <div className="mt-10 rounded-[1.35rem] bg-[#f4f8f9] p-4 ring-1 ring-[#dfe8eb] lg:mt-auto">
-              <p className="text-sm font-bold text-[#083273]">Doctor routing</p>
+              <p className="text-sm font-bold text-[#083273]">{t("doctor_dashboard_routing_title", locale)}</p>
               <p className="mt-2 text-xs leading-5 text-[#60717a]">
-                Availability controls whether Afya24 can send matched patients to you.
+                {t("doctor_dashboard_routing_body", locale)}
               </p>
               <span className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusClass(provider?.profile_status ?? "pending")}`}>
-                {provider?.profile_status ?? "pending"}
+                {t(
+                  adminProviderStatusKey[provider?.profile_status as keyof typeof adminProviderStatusKey] ??
+                    adminProviderStatusKey.pending,
+                  locale
+                )}
               </span>
             </div>
           </div>
@@ -301,7 +321,9 @@ export default async function DoctorDashboardPage() {
         <section className="min-w-0" id="overview">
           <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-[#e1e9ec] bg-[#f8fbfd]/92 px-4 py-4 backdrop-blur sm:px-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7a82]">Doctor dashboard</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7a82]">
+                {t("doctor_dashboard_eyebrow", locale)}
+              </p>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#071923]">
                 {doctorName}
               </h1>
@@ -333,20 +355,20 @@ export default async function DoctorDashboardPage() {
                     </p>
                   </div>
                   <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                    <MiniStat label="Queue" value={String(videoAppointments.length)} />
-                    <MiniStat label="Done" value={String(completedToday ?? 0)} />
-                    <MiniStat label="Slots" value={String(slots?.length ?? 0)} />
+                    <MiniStat label={t("doctor_dashboard_stat_queue", locale)} value={String(videoAppointments.length)} />
+                    <MiniStat label={t("doctor_dashboard_stat_done", locale)} value={String(completedToday ?? 0)} />
+                    <MiniStat label={t("doctor_dashboard_stat_slots", locale)} value={String(slots?.length ?? 0)} />
                   </div>
                 </article>
 
                 <article className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold text-[#071923]">Provider information</p>
-                      <p className="mt-1 text-sm text-[#64747c]">Your active Afya24 staff profile.</p>
+                      <p className="text-sm font-bold text-[#071923]">{t("doctor_dashboard_provider_info_title", locale)}</p>
+                      <p className="mt-1 text-sm text-[#64747c]">{t("doctor_dashboard_provider_info_body", locale)}</p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusClass(profile?.status ?? "pending")}`}>
-                      {profile?.status ? t(staffStatusKey[profile.status], locale) : "Missing"}
+                      {profile?.status ? t(staffStatusKey[profile.status], locale) : t("doctor_dashboard_missing_badge", locale)}
                     </span>
                   </div>
 
@@ -354,8 +376,22 @@ export default async function DoctorDashboardPage() {
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       <InfoRow label={t("doctor_dashboard_role", locale)} value={t(staffRoleKey[profile.role], locale)} />
                       <InfoRow label={t("doctor_dashboard_status", locale)} value={t(staffStatusKey[profile.status], locale)} />
-                      <InfoRow label="Profile status" value={provider?.profile_status ?? "Missing provider"} />
-                      <InfoRow label="Available now" value={provider?.available_now ? "Yes" : "No"} />
+                      <InfoRow
+                        label={t("doctor_dashboard_profile_status_label", locale)}
+                        value={
+                          provider?.profile_status
+                            ? t(
+                                adminProviderStatusKey[provider.profile_status as keyof typeof adminProviderStatusKey] ??
+                                  adminProviderStatusKey.pending,
+                                locale
+                              )
+                            : t("doctor_dashboard_missing_provider", locale)
+                        }
+                      />
+                      <InfoRow
+                        label={t("doctor_dashboard_available_now_label", locale)}
+                        value={provider?.available_now ? t("doctor_dashboard_yes", locale) : t("doctor_dashboard_no", locale)}
+                      />
                     </div>
                   ) : (
                     <p className="mt-5 rounded-2xl bg-[#fff6df] p-4 text-sm text-[#9a6500]">
@@ -370,8 +406,8 @@ export default async function DoctorDashboardPage() {
 
                 {canManageAvailability ? (
                   <article className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
-                    <p className="text-sm font-bold text-[#071923]">Password</p>
-                    <p className="mt-1 text-sm text-[#64747c]">Change your sign-in password.</p>
+                    <p className="text-sm font-bold text-[#071923]">{t("doctor_dashboard_password_title", locale)}</p>
+                    <p className="mt-1 text-sm text-[#64747c]">{t("doctor_dashboard_password_body", locale)}</p>
                     <DoctorPasswordForm />
                   </article>
                 ) : null}
@@ -380,9 +416,9 @@ export default async function DoctorDashboardPage() {
               <section id="availability" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-[#071923]">Availability controls</p>
+                    <p className="text-sm font-bold text-[#071923]">{t("doctor_dashboard_availability_controls_title", locale)}</p>
                     <p className="mt-1 text-sm text-[#64747c]">
-                      Control routing, consultation modes, and doctor note.
+                      {t("doctor_dashboard_availability_controls_body", locale)}
                     </p>
                   </div>
                   <Clock className="size-5 text-[#01b7bb]" />
@@ -396,7 +432,7 @@ export default async function DoctorDashboardPage() {
                   />
                 ) : (
                   <div className="mt-5 rounded-2xl bg-[#fff6df] p-4 text-sm text-[#9a6500]">
-                    Your provider profile must be active before you can manage availability.
+                    {t("doctor_dashboard_profile_inactive_note", locale)}
                   </div>
                 )}
               </section>
@@ -404,9 +440,9 @@ export default async function DoctorDashboardPage() {
               <section id="schedule" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-[#071923]">Schedule blocks</p>
+                    <p className="text-sm font-bold text-[#071923]">{t("doctor_dashboard_schedule_title", locale)}</p>
                     <p className="mt-1 text-sm text-[#64747c]">
-                      Set today&apos;s available hours, breaks, or time off. Add a new block each day.
+                      {t("doctor_dashboard_schedule_body", locale)}
                     </p>
                   </div>
                   <CalendarClock className="size-5 text-[#01b7bb]" />
@@ -414,25 +450,25 @@ export default async function DoctorDashboardPage() {
 
                 {canManageAvailability ? (
                   <form action={createAvailabilitySlot} className="mt-5 grid gap-3 rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb] lg:grid-cols-[1fr_1fr_0.7fr_1fr_auto] lg:items-end">
-                    <Field label="Start time">
+                    <Field label={t("doctor_dashboard_start_time", locale)}>
                       <Input name="startTime" type="time" required className="rounded-xl bg-white" />
                     </Field>
-                    <Field label="End time">
+                    <Field label={t("doctor_dashboard_end_time", locale)}>
                       <Input name="endTime" type="time" required className="rounded-xl bg-white" />
                     </Field>
-                    <Field label="Type">
+                    <Field label={t("doctor_dashboard_type_label", locale)}>
                       <select
                         className="h-8 rounded-xl border border-input bg-white px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                         name="slotType"
                         defaultValue="available"
                       >
-                        <option value="available">Available</option>
-                        <option value="break">Break</option>
-                        <option value="time_off">Time off</option>
+                        <option value="available">{t("doctor_dashboard_slot_available", locale)}</option>
+                        <option value="break">{t("doctor_dashboard_slot_break", locale)}</option>
+                        <option value="time_off">{t("doctor_dashboard_slot_time_off", locale)}</option>
                       </select>
                     </Field>
-                    <Field label="Note">
-                      <Input name="note" placeholder="Optional" className="rounded-xl bg-white" />
+                    <Field label={t("doctor_dashboard_note_label", locale)}>
+                      <Input name="note" placeholder={t("doctor_dashboard_optional", locale)} className="rounded-xl bg-white" />
                     </Field>
                     <div className="hidden">
                       <input name="consultationModes" type="checkbox" value="chat" defaultChecked={modes.includes("chat")} />
@@ -440,7 +476,7 @@ export default async function DoctorDashboardPage() {
                       <input name="consultationModes" type="checkbox" value="video" defaultChecked={modes.includes("video")} />
                     </div>
                     <Button type="submit" className="h-9 rounded-full bg-[#01b7bb] px-4 font-bold text-white hover:bg-[#019ea2]">
-                      Add block
+                      {t("doctor_dashboard_add_block", locale)}
                     </Button>
                   </form>
                 ) : null}
@@ -453,14 +489,16 @@ export default async function DoctorDashboardPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-bold text-[#071923]">{formatDateRange(slot.starts_at, slot.ends_at)}</p>
                             <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusClass(slot.slot_type ?? "available")}`}>
-                              {slot.slot_type ?? "available"}
+                              {t(slotTypeKey[slot.slot_type ?? "available"] ?? "doctor_dashboard_slot_available", locale)}
                             </span>
                             <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusClass(slot.status)}`}>
-                              {slot.status}
+                              {t(slotStatusKey[slot.status] ?? "doctor_dashboard_slot_status_open", locale)}
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-[#64747c]">
-                            {(slot.consultation_modes?.length ? slot.consultation_modes : ["chat", "voice", "video"]).join(", ")}
+                            {(slot.consultation_modes?.length ? slot.consultation_modes : ["chat", "voice", "video"])
+                              .map((mode) => t(orderModeKey[mode] ?? "account_dashboard_mode_video", locale))
+                              .join(", ")}
                             {slot.note ? ` / ${slot.note}` : ""}
                           </p>
                         </div>
@@ -468,7 +506,7 @@ export default async function DoctorDashboardPage() {
                           <form action={cancelAvailabilitySlot}>
                             <input type="hidden" name="slotId" value={slot.id} />
                             <Button type="submit" size="sm" variant="outline" className="rounded-full bg-white">
-                              Cancel
+                              {t("doctor_dashboard_cancel_button", locale)}
                             </Button>
                           </form>
                         ) : null}
@@ -476,7 +514,7 @@ export default async function DoctorDashboardPage() {
                     ))
                   ) : (
                     <p className="px-4 py-8 text-center text-sm text-[#64747c]">
-                      No schedule blocks yet.
+                      {t("doctor_dashboard_no_schedule_blocks", locale)}
                     </p>
                   )}
                 </div>
@@ -487,13 +525,13 @@ export default async function DoctorDashboardPage() {
               <DoctorVideoQueue initialItems={initialVideoQueueItems} />
 
               <section id="notes" className="rounded-[1.35rem] bg-[#e8f7f4] p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]">
-                <p className="text-sm font-bold text-[#083273]">Doctor workspace</p>
+                <p className="text-sm font-bold text-[#083273]">{t("doctor_dashboard_workspace_title", locale)}</p>
                 <p className="mt-3 text-sm leading-6 text-[#4d5960]">
-                  Patient summaries, related cases, prescriptions, lab orders, and signed visit summaries are organized here for each visit.
+                  {t("doctor_dashboard_workspace_body", locale)}
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#087a7b]">
                   <ShieldCheck className="size-4" />
-                  Doctor approval remains required
+                  {t("doctor_dashboard_approval_required", locale)}
                 </div>
               </section>
             </aside>

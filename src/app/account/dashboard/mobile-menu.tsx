@@ -13,6 +13,8 @@ import {
   Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import { signOut } from "../actions";
 
 // Defined here rather than passed in as a prop: a Server Component can't
@@ -21,15 +23,16 @@ import { signOut } from "../actions";
 // be passed directly to Client Components"), so this list has to be local
 // to the client tree instead of built in dashboard/page.tsx.
 const items = [
-  { label: "Overview", href: "#overview", icon: LayoutDashboard },
-  { label: "Book a call", href: "#book-a-call", icon: Video },
-  { label: "Doctors", href: "#doctors", icon: Stethoscope },
-  { label: "History", href: "#history", icon: History },
-  { label: "Payments", href: "#payments", icon: CreditCard },
-  { label: "Files", href: "#files", icon: FileText },
-];
+  { labelKey: "account_dashboard_nav_overview", href: "#overview", icon: LayoutDashboard },
+  { labelKey: "account_dashboard_nav_book", href: "#book-a-call", icon: Video },
+  { labelKey: "account_dashboard_nav_doctors", href: "#doctors", icon: Stethoscope },
+  { labelKey: "account_dashboard_nav_history", href: "#history", icon: History },
+  { labelKey: "account_dashboard_nav_payments", href: "#payments", icon: CreditCard },
+  { labelKey: "account_dashboard_nav_files", href: "#files", icon: FileText },
+] as const;
 
 export function PatientDashboardMobileMenu() {
+  const locale = useAppStore((state) => state.locale);
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,7 +40,7 @@ export function PatientDashboardMobileMenu() {
       <button
         type="button"
         aria-expanded={open}
-        aria-label="Open dashboard menu"
+        aria-label={t("account_dashboard_open_menu", locale)}
         onClick={() => setOpen((current) => !current)}
         className="flex size-10 cursor-pointer list-none items-center justify-center rounded-full bg-[#e8f7f4] text-[#083273] outline-none transition hover:bg-[#d8f3ef] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/30"
       >
@@ -50,13 +53,13 @@ export function PatientDashboardMobileMenu() {
             const Icon = item.icon;
             return (
               <Link
-                key={item.label}
+                key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition hover:bg-[#f4f8f9]"
               >
                 <Icon className="size-4 text-[#01b7bb]" />
-                {item.label}
+                {t(item.labelKey, locale)}
               </Link>
             );
           })}
@@ -66,12 +69,12 @@ export function PatientDashboardMobileMenu() {
               nativeButton={false}
               render={<Link href="/qualification" onClick={() => setOpen(false)} />}
             >
-              Start intake
+              {t("start_assessment_cta", locale)}
             </Button>
             <form action={signOut} className="mt-2">
               <Button type="submit" variant="outline" className="h-10 w-full rounded-full bg-white">
                 <LogOut className="size-4" />
-                Sign out
+                {t("dashboard_sign_out", locale)}
               </Button>
             </form>
           </div>

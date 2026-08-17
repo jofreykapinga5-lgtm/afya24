@@ -2,7 +2,6 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
@@ -51,28 +50,26 @@ export function CookieConsent() {
       role="dialog"
       aria-live="polite"
       aria-label={t("cookie_banner_title", locale)}
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.15)] backdrop-blur motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 supports-[backdrop-filter]:bg-card/85"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-[#e5eef0] bg-white/95 shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.15)] backdrop-blur motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 supports-[backdrop-filter]:bg-white/90"
     >
-      <div className="mx-auto flex max-w-5xl flex-col items-start gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
-        <div className="flex items-start gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Cookie className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold">{t("cookie_banner_title", locale)}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              {t("cookie_banner_body", locale)}{" "}
-              <Link
-                href="/privacy"
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {t("footer_privacy_policy", locale)}
-              </Link>
-              .
-            </p>
-          </div>
+      <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 px-4 py-4 text-center sm:flex-row sm:justify-center sm:gap-5 sm:px-6 sm:text-left">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[#071923]">{t("cookie_banner_title", locale)}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-[#60717a]">
+            {t("cookie_banner_body", locale)}{" "}
+            <Link
+              href="/privacy"
+              className="font-medium text-[#083273] underline-offset-4 hover:underline"
+            >
+              {t("footer_privacy_policy", locale)}
+            </Link>
+            .
+          </p>
         </div>
-        <Button onClick={handleAccept} className="h-10 w-full shrink-0 rounded-full px-6 sm:w-auto">
+        <Button
+          onClick={handleAccept}
+          className="h-10 w-full shrink-0 rounded-full bg-[#083273] px-6 text-white hover:bg-[#0a3f8f] sm:w-auto"
+        >
           {t("cookie_banner_accept", locale)}
         </Button>
       </div>

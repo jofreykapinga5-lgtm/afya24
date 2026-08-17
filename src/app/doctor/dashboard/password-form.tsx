@@ -4,10 +4,13 @@ import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateDoctorPassword, type AvailabilityActionState } from "../actions";
+import { useAppStore } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 const initialState: AvailabilityActionState = { status: "idle", message: "" };
 
 export function DoctorPasswordForm() {
+  const locale = useAppStore((state) => state.locale);
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     async (previousState: AvailabilityActionState, formData: FormData) => {
@@ -23,7 +26,7 @@ export function DoctorPasswordForm() {
   return (
     <form ref={formRef} action={formAction} className="mt-5 grid gap-4">
       <label className="grid gap-1.5 text-sm">
-        <span className="font-bold text-[#071923]">Current password</span>
+        <span className="font-bold text-[#071923]">{t("doctor_password_current_label", locale)}</span>
         <Input
           name="currentPassword"
           type="password"
@@ -34,7 +37,7 @@ export function DoctorPasswordForm() {
       </label>
 
       <label className="grid gap-1.5 text-sm">
-        <span className="font-bold text-[#071923]">New password</span>
+        <span className="font-bold text-[#071923]">{t("doctor_password_new_label", locale)}</span>
         <Input
           name="newPassword"
           type="password"
@@ -51,7 +54,7 @@ export function DoctorPasswordForm() {
           disabled={pending}
           className="h-11 rounded-full bg-[#01b7bb] px-5 font-bold text-white hover:bg-[#019ea2]"
         >
-          {pending ? "Saving..." : "Change password"}
+          {pending ? t("doctor_avail_saving", locale) : t("doctor_password_change_button", locale)}
         </Button>
         {state.status === "success" ? (
           <span role="status" className="text-sm font-medium text-[#087a7b]">

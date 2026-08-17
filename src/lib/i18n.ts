@@ -747,6 +747,12 @@ const dict = {
   },
   payment_summary_label: { en: "Consultation with", sw: "Ushauri na" },
   payment_reference_label: { en: "Your reference number", sw: "Namba yako ya rejea" },
+  payment_success_title: { en: "You've paid — thank you!", sw: "Umelipa — asante!" },
+  payment_success_body: {
+    en: "Keep this reference number for your records.",
+    sw: "Hifadhi namba hii ya rejea kwa kumbukumbu yako.",
+  },
+  payment_success_continue: { en: "Continue", sw: "Endelea" },
   connect_payment_confirmed_badge: { en: "Payment confirmed", sw: "Malipo yamethibitishwa" },
   connect_title: { en: "How would you like to connect?", sw: "Ungependa kuunganishwa vipi?" },
   connect_body: {
@@ -782,8 +788,8 @@ const dict = {
     sw: "Inasubiri uthibitisho wa malipo",
   },
   payment_waiting_body: {
-    en: "Approve the payment prompt on your phone to continue.",
-    sw: "Idhinisha ombi la malipo kwenye simu yako ili kuendelea.",
+    en: "Sending the payment prompt to your phone — this can take up to 15 seconds. Approve it there to continue.",
+    sw: "Tunatuma ombi la malipo kwenye simu yako — hii inaweza kuchukua hadi sekunde 15. Liidhinishe huko ili kuendelea.",
   },
   payment_taking_longer: {
     en: "This is taking longer than usual. Check your phone for the payment prompt, or try again.",

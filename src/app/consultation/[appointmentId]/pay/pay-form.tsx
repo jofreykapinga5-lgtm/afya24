@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Phone, Smartphone, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Lock, Phone, Smartphone, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,8 +24,9 @@ const PROVIDERS: { value: SnippeChannelProvider; labelKey: `payment_provider_${S
 
 const POLL_INTERVAL_MS = 3000;
 const SLOW_NOTICE_AFTER_MS = 3 * 60 * 1000;
+const SUCCESS_AUTO_CONTINUE_MS = 3000;
 
-type Stage = "form" | "waiting" | "failed";
+type Stage = "form" | "waiting" | "success" | "failed";
 
 export function PayForm({
   appointmentId,
@@ -71,7 +72,7 @@ export function PayForm({
       if (cancelled) return;
 
       if (status === "paid") {
-        router.push(`/consultation/${appointmentId}/connect`);
+        setStage("success");
         return;
       }
       if (status === "failed") {
@@ -89,6 +90,14 @@ export function PayForm({
     };
   }, [stage, appointmentId, router]);
 
+  useEffect(() => {
+    if (stage !== "success") return;
+    const timeout = setTimeout(() => {
+      router.push(`/consultation/${appointmentId}/connect`);
+    }, SUCCESS_AUTO_CONTINUE_MS);
+    return () => clearTimeout(timeout);
+  }, [stage, appointmentId, router]);
+
   function handlePay() {
     setError(null);
     if (!phone.trim()) {
@@ -103,7 +112,7 @@ export function PayForm({
         return;
       }
       if (result.alreadyPaid) {
-        router.push(`/consultation/${appointmentId}/connect`);
+        setStage("success");
         return;
       }
       setShowSlowNotice(false);
@@ -141,12 +150,6 @@ export function PayForm({
         <p className="mt-1.5 text-lg font-bold tabular-nums text-[#083273]">
           {currency} {price.toLocaleString()}
         </p>
-        {hospitalReferenceNumber && (
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#dfe8eb] pt-3">
-            <span className="text-xs text-[#60717a]">{t("payment_reference_label", locale)}</span>
-            <span className="font-mono text-sm font-semibold text-[#083273]">{hospitalReferenceNumber}</span>
-          </div>
-        )}
       </div>
 
       <div aria-live="polite" key={stage} className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-300">
@@ -229,6 +232,32 @@ export function PayForm({
             )}
             <Button variant="ghost" className="mt-1 w-full text-[#60717a]" disabled={pending} onClick={handleCancel}>
               {t("payment_cancel_button", locale)}
+            </Button>
+          </div>
+        ) : stage === "success" ? (
+          <div className="mt-5 flex flex-col items-center gap-3 text-center">
+            <span className="flex size-16 items-center justify-center rounded-full bg-[#e8f7f4]">
+              <CheckCircle2 className="size-8 text-[#01b7bb]" />
+            </span>
+            <div>
+              <p className="font-bold text-[#071923]">{t("payment_success_title", locale)}</p>
+              <p className="mt-1 text-sm text-[#60717a]">{t("payment_success_body", locale)}</p>
+            </div>
+            {hospitalReferenceNumber && (
+              <div className="mt-1 w-full rounded-2xl bg-[#f8fbfd] px-4 py-3 ring-1 ring-[#dfe8eb]">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a969c]">
+                  {t("payment_reference_label", locale)}
+                </p>
+                <p className="mt-0.5 font-mono text-lg font-bold tabular-nums text-[#083273]">
+                  {hospitalReferenceNumber}
+                </p>
+              </div>
+            )}
+            <Button
+              onClick={() => router.push(`/consultation/${appointmentId}/connect`)}
+              className="mt-1 h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+            >
+              {t("payment_success_continue", locale)}
             </Button>
           </div>
         ) : (

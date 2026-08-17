@@ -142,25 +142,22 @@ export async function initiateSnippePayment(input: {
       return { ok: true, alreadyPaid: true, reference: null };
     }
 
-    const { data: patient } = await service
-      .from("patients")
-      .select("full_name")
-      .eq("id", session.patientId)
-      .maybeSingle();
+    const since = new Date(Date.now() - PENDING_PAYMENT_REUSE_WINDOW_MS).toISOString();
+    const [{ data: patient }, { data: recentPending }] = await Promise.all([
+      service.from("patients").select("full_name").eq("id", session.patientId).maybeSingle(),
+      service
+        .from("payments")
+        .select("id, reference, idempotency_key")
+        .eq("appointment_id", input.appointmentId)
+        .eq("status", "pending")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
     const [firstName, ...rest] = (patient?.full_name ?? "Patient").trim().split(/\s+/);
     const lastName = rest.join(" ") || firstName;
-
-    const since = new Date(Date.now() - PENDING_PAYMENT_REUSE_WINDOW_MS).toISOString();
-    const { data: recentPending } = await service
-      .from("payments")
-      .select("id, reference, idempotency_key")
-      .eq("appointment_id", input.appointmentId)
-      .eq("status", "pending")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
 
     // A previous attempt already has a live reference -- don't start a
     // second one just because the patient re-opened the pay page.

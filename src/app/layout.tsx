@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { SiteHeader } from "@/components/site-header";
+import { CookieConsent } from "@/components/cookie-consent";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <QueryProvider>
           <SiteHeader patientName={patientName} />
           {children}
+          <CookieConsent />
         </QueryProvider>
       </body>
     </html>

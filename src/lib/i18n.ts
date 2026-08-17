@@ -357,6 +357,12 @@ const dict = {
   footer_all_rights: { en: "All rights reserved.", sw: "Haki zote zimehifadhiwa." },
   footer_privacy_policy: { en: "Privacy policy", sw: "Sera ya faragha" },
   footer_terms: { en: "Terms", sw: "Vigezo" },
+  cookie_banner_title: { en: "We use cookies", sw: "Tunatumia vidakuzi" },
+  cookie_banner_body: {
+    en: "A few essential cookies remember your language and keep you signed in securely. We don't sell or share your data with advertisers. Read our",
+    sw: "Vidakuzi vichache muhimu hukumbuka lugha yako na kukuweka salama ukiwa umeingia. Hatuuzi wala kushiriki data yako na watangazaji. Soma",
+  },
+  cookie_banner_accept: { en: "Accept", sw: "Nimekubali" },
   footer_emergency_note: {
     en: "If this is an emergency, seek immediate in-person care now.",
     sw: "Ikiwa hii ni dharura, tafuta huduma ya haraka ya ana kwa ana sasa hivi.",

@@ -12,10 +12,13 @@ import { BookingForm } from "./booking-form";
 
 export default async function DoctorBookingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ providerId: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { providerId } = await params;
+  const { error: lookupError } = await searchParams;
   const locale = await getServerLocale();
   const service = createServiceClient();
 
@@ -104,7 +107,12 @@ export default async function DoctorBookingPage({
 
         <Reveal delay={60}>
           <div className="mt-6">
-            <BookingForm provider={provider} locale={locale} hasSession={Boolean(patientSession)} />
+            <BookingForm
+              provider={provider}
+              locale={locale}
+              hasSession={Boolean(patientSession)}
+              lookupError={lookupError}
+            />
           </div>
         </Reveal>
       </div>

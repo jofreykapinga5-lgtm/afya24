@@ -7,7 +7,6 @@ import { ServicesGrid } from "@/components/home/services-grid";
 import { PharmacyPreview } from "@/components/home/pharmacy-preview";
 import { LabsPreview, type PublicLabLocation } from "@/components/home/labs-preview";
 import { TrustSection } from "@/components/home/trust-section";
-import { ReturningPatient } from "@/components/home/returning-patient";
 import { PatientReviews } from "@/components/home/patient-reviews";
 import { EmailCapture } from "@/components/home/email-capture";
 import { SiteFooter } from "@/components/home/site-footer";
@@ -166,9 +165,6 @@ export default async function Home() {
           </Reveal>
           <Reveal>
             <HealthTips />
-          </Reveal>
-          <Reveal delay={60}>
-            <ReturningPatient />
           </Reveal>
           <Reveal>
             <PatientReviews />

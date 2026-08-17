@@ -150,21 +150,6 @@ const dict = {
     sw: "Chagua aina ya huduma na Afya24 itakuongoza kwa daktari sahihi.",
   },
   services_feature_title: { en: "Find the right care", sw: "Pata huduma sahihi" },
-  returning_patient_title: { en: "Returning patient?", sw: "Uliwahi kuwa mgonjwa wetu?" },
-  returning_patient_body: {
-    en: "Use your reference number to view appointments, prescriptions, lab referrals, or signed summaries. Or",
-    sw: "Tumia nambari yako ya rejea kuona miadi, dawa, rufaa za maabara, au muhtasari zilizosainiwa. Au",
-  },
-  returning_patient_sign_in: { en: "sign in", sw: "ingia" },
-  returning_patient_if_account: {
-    en: "if you have an account.",
-    sw: "kama una akaunti.",
-  },
-  returning_patient_lookup_cta: { en: "Look up", sw: "Tafuta" },
-  returning_patient_new_here: {
-    en: "New here? Create an account instead",
-    sw: "Mgeni hapa? Fungua akaunti badala yake",
-  },
   reviews_kicker: {
     en: "Those who choose Afya24",
     sw: "Wanaochagua Afya24",
@@ -1481,6 +1466,14 @@ const dict = {
   home_service_private_visit: { en: "Private visit", sw: "Ziara ya faragha" },
   home_service_dermatology: { en: "Skin concerns", sw: "Matatizo ya ngozi" },
   home_service_photo_review: { en: "Photo review", sw: "Ukaguzi wa picha" },
+  doctor_booking_returning_patient_prompt: {
+    en: "Already our patient? Enter your reference number",
+    sw: "Tayari ni mgonjwa wetu? Ingiza namba yako ya rejea",
+  },
+  doctor_booking_returning_patient_confirm: {
+    en: "Confirm and continue",
+    sw: "Thibitisha na uendelee",
+  },
 
 } as const;
 

@@ -2,6 +2,7 @@
 
 import { createHash, timingSafeEqual } from "node:crypto";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createPatientSession, clearPatientSession } from "@/lib/patient-session";
 import { verifyPin } from "@/lib/patient-pin";
@@ -22,14 +23,24 @@ function constantTimeEquals(a: string, b: string) {
 const RATE_LIMIT_WINDOW_MINUTES = 15;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
 
+// `redirectTo` lets this same action be embedded outside the standalone
+// /lookup page -- e.g. the doctor booking form's "already a patient?"
+// shortcut, which wants both the error and success landing spot to be the
+// booking page itself (a resolved session there just makes BookingForm
+// skip straight past the manual details fields) rather than /lookup/results.
+// Left blank, behavior is unchanged: errors bounce back to /lookup, success
+// goes to /lookup/results.
 export async function lookupPatient(formData: FormData) {
   const locale = await getServerLocale();
   const referenceNumber = String(formData.get("referenceNumber") ?? "").trim();
   const pin = String(formData.get("pin") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
+  const redirectTo = String(formData.get("redirectTo") ?? "").trim();
+  const errorBasePath = redirectTo || "/lookup";
+  const successPath = redirectTo || "/lookup/results";
 
   if (!referenceNumber || (!pin && !dateOfBirth)) {
-    redirect(`/lookup?error=${encodeURIComponent(t("error_enter_reference_dob", locale))}`);
+    redirect(`${errorBasePath}?error=${encodeURIComponent(t("error_enter_reference_dob", locale))}`);
   }
 
   const supabase = createServiceClient();
@@ -44,7 +55,7 @@ export async function lookupPatient(formData: FormData) {
     .gte("created_at", since);
 
   if ((recentAttempts ?? 0) >= RATE_LIMIT_MAX_ATTEMPTS) {
-    redirect(`/lookup?error=${encodeURIComponent(t("error_too_many_attempts", locale))}`);
+    redirect(`${errorBasePath}?error=${encodeURIComponent(t("error_too_many_attempts", locale))}`);
   }
 
   const { data: patient } = await supabase
@@ -69,11 +80,18 @@ export async function lookupPatient(formData: FormData) {
   });
 
   if (!matched) {
-    redirect(`/lookup?error=${encodeURIComponent(t("error_no_matching_record", locale))}`);
+    redirect(`${errorBasePath}?error=${encodeURIComponent(t("error_no_matching_record", locale))}`);
   }
 
   await createPatientSession(patient!.id);
-  redirect("/lookup/results");
+  // Without this, redirecting back to the SAME url the form was submitted
+  // from (the booking-page embed's whole point) can serve Next's client
+  // router cache of the pre-session render instead of refetching -- the
+  // patient just sees the same page as if nothing happened. Harmless no-op
+  // for the standalone /lookup form, whose success target is a different
+  // route it's never cached a stale copy of.
+  revalidatePath(successPath);
+  redirect(successPath);
 }
 
 export async function endPatientSession() {

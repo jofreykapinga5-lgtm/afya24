@@ -223,7 +223,7 @@ export async function updateProviderAvailability(
     // preview reads the same providers rows, so it would keep showing a
     // doctor as away/online after they'd just toggled it here.
     revalidatePath("/");
-    revalidatePath("/doctor/dashboard");
+    revalidatePath("/doctor/dashboard/availability");
     revalidatePath("/doctors");
     revalidatePath("/doctors/[providerId]", "page");
 
@@ -298,74 +298,101 @@ export async function updateDoctorPassword(
 
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000; // Africa/Nairobi-style fixed UTC+3, no DST -- matches Afya24's only market.
 
-export async function createAvailabilitySlot(formData: FormData) {
-  const { service, providerId } = await requireDoctorProvider();
-  const startTime = String(formData.get("startTime") ?? "");
-  const endTime = String(formData.get("endTime") ?? "");
-  const slotType = String(formData.get("slotType") ?? "available");
-  const note = String(formData.get("note") ?? "").trim();
+export type SlotActionResult = { ok: true } | { ok: false; message: string };
 
-  if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
-    throw new Error("Start time and end time are required.");
+// A plain <form action={createAvailabilitySlot}> with no client-side error
+// handling meant every one of the validation throws below (trivially
+// hit -- e.g. picking an end time before the start time on the native
+// time-picker) crashed the whole page to Next's generic error boundary
+// instead of showing a message. Result-object pattern instead, matching
+// the rest of this file's newer actions (joinWaitingAppointment etc.).
+export async function createAvailabilitySlot(input: {
+  startTime: string;
+  endTime: string;
+  slotType: string;
+  note: string;
+  consultationModes: string[];
+}): Promise<SlotActionResult> {
+  try {
+    const { service, providerId } = await requireDoctorProvider();
+    const { startTime, endTime, slotType, note } = input;
+
+    if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
+      return { ok: false, message: "Start time and end time are required." };
+    }
+    if (!["available", "break", "time_off"].includes(slotType)) {
+      return { ok: false, message: "A valid type is required." };
+    }
+
+    // Doctors set this every day, for today only -- asking them to also pick
+    // a date turned into the actual source of bad entries (ranges that
+    // silently crossed midnight backwards, e.g. "14:59 to 3:59"). Today's
+    // date is always Tanzania's calendar day, not the server's, hence the
+    // fixed offset rather than `new Date()` directly.
+    const todayEat = new Date(Date.now() + EAT_OFFSET_MS).toISOString().slice(0, 10);
+    const startsAt = new Date(`${todayEat}T${startTime}:00+03:00`);
+    const endsAt = new Date(`${todayEat}T${endTime}:00+03:00`);
+
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      return {
+        ok: false,
+        message: "End time must be after the start time. For an overnight window, add it as two entries.",
+      };
+    }
+    if (endsAt.getTime() < Date.now()) {
+      return { ok: false, message: "This time has already passed today." };
+    }
+
+    const modes = input.consultationModes.filter((mode) => mode === "voice" || mode === "video");
+
+    const { error } = await service.from("provider_availability_slots").insert({
+      provider_id: providerId,
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+      slot_type: slotType,
+      status: slotType === "available" ? "open" : "cancelled",
+      consultation_modes: modes.length > 0 ? modes : ["voice", "video"],
+      note: note.trim() || null,
+    });
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    revalidatePath("/doctor/dashboard/schedule");
+    revalidatePath("/doctors");
+    return { ok: true };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not add this time block." };
   }
-  if (!["available", "break", "time_off"].includes(slotType)) {
-    throw new Error("A valid type is required.");
-  }
-
-  // Doctors set this every day, for today only -- asking them to also pick
-  // a date turned into the actual source of bad entries (ranges that
-  // silently crossed midnight backwards, e.g. "14:59 to 3:59"). Today's date
-  // is always Tanzania's calendar day, not the server's, hence the fixed
-  // offset rather than `new Date()` directly.
-  const todayEat = new Date(Date.now() + EAT_OFFSET_MS).toISOString().slice(0, 10);
-  const startsAt = new Date(`${todayEat}T${startTime}:00+03:00`);
-  const endsAt = new Date(`${todayEat}T${endTime}:00+03:00`);
-
-  if (endsAt.getTime() <= startsAt.getTime()) {
-    throw new Error("End time must be after the start time. For an overnight window, add it as two entries.");
-  }
-  if (endsAt.getTime() < Date.now()) {
-    throw new Error("This time has already passed today.");
-  }
-
-  const { error } = await service.from("provider_availability_slots").insert({
-    provider_id: providerId,
-    starts_at: startsAt.toISOString(),
-    ends_at: endsAt.toISOString(),
-    slot_type: slotType,
-    status: slotType === "available" ? "open" : "cancelled",
-    consultation_modes: selectedModes(formData),
-    note: note || null,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/doctor/dashboard");
-  revalidatePath("/doctors");
 }
 
-export async function cancelAvailabilitySlot(formData: FormData) {
-  const { service, providerId } = await requireDoctorProvider();
-  const slotId = String(formData.get("slotId") ?? "");
+export async function cancelAvailabilitySlot(slotId: string): Promise<SlotActionResult> {
+  try {
+    const { service, providerId } = await requireDoctorProvider();
 
-  if (!slotId) {
-    throw new Error("Slot id is required.");
+    if (!slotId) {
+      return { ok: false, message: "Slot id is required." };
+    }
+
+    const { error } = await service
+      .from("provider_availability_slots")
+      .update({ status: "cancelled" })
+      .eq("id", slotId)
+      .eq("provider_id", providerId);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    revalidatePath("/doctor/dashboard/schedule");
+    revalidatePath("/doctors");
+    return { ok: true };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not cancel this time block." };
   }
-
-  const { error } = await service
-    .from("provider_availability_slots")
-    .update({ status: "cancelled" })
-    .eq("id", slotId)
-    .eq("provider_id", providerId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/doctor/dashboard");
-  revalidatePath("/doctors");
 }
 
 export type JoinAppointmentResult = { ok: true } | { ok: false; message: string };

@@ -8,6 +8,8 @@ import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import type { Locale, QualificationResult } from "@/lib/types";
 
+const REJOIN_WINDOW_HOURS = 24;
+
 export async function bookConsultation(input: {
   providerId: string;
   locale: Locale;
@@ -16,6 +18,31 @@ export async function bookConsultation(input: {
   const session = await getPatientSession();
   if (!session) {
     throw new Error("Your session expired. Please start the intake chat again.");
+  }
+
+  // A returning patient clicking "book" with an already-resolved session
+  // shouldn't be charged again for a visit they already paid for -- if they
+  // still have a paid, not-yet-finished appointment with this exact doctor
+  // from within the last 24 hours, hand that one back instead of creating
+  // (and billing) a brand new one. /consultation/[id]/pay already redirects
+  // straight through to the call room when payment_status is "paid", so
+  // this is safe even though the caller always routes through /pay next.
+  const service = createServiceClient();
+  const rejoinWindowStart = new Date(Date.now() - REJOIN_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const { data: existingAppointment } = await service
+    .from("appointments")
+    .select("id")
+    .eq("patient_id", session.patientId)
+    .eq("provider_id", input.providerId)
+    .eq("payment_status", "paid")
+    .in("status", ["waiting", "in_progress"])
+    .gte("scheduled_at", rejoinWindowStart)
+    .order("scheduled_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingAppointment) {
+    return existingAppointment.id as string;
   }
 
   return bookConsultationForPatient({

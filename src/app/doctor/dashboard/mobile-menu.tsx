@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   CalendarClock,
   Clock,
-  FileText,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -19,7 +18,7 @@ import { t } from "@/lib/i18n";
 export type DoctorMobileMenuItem = {
   label: string;
   href: string;
-  icon: "overview" | "availability" | "schedule" | "patients" | "notes";
+  icon: "overview" | "availability" | "schedule" | "patients";
 };
 
 const menuIcons = {
@@ -27,7 +26,6 @@ const menuIcons = {
   availability: Clock,
   schedule: CalendarClock,
   patients: UsersRound,
-  notes: FileText,
 };
 
 export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuItem[] }) {

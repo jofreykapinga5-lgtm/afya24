@@ -1471,6 +1471,7 @@ const dict = {
     sw: "Hakuna maelezo yaliyorekodiwa kwa ziara hii.",
   },
   doctor_call_panel_history_with: { en: "with", sw: "na" },
+  doctor_call_panel_save_button: { en: "Save notes", sw: "Hifadhi vidokezo" },
 
 } as const;
 

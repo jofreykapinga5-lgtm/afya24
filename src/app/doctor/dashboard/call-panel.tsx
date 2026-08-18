@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, PhoneOff, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Check, PhoneOff, Save, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CallRoom } from "@/components/video/call-room";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,14 +13,20 @@ import type { Locale } from "@/lib/types";
 type JoinInfo = { serverUrl: string; token: string };
 
 const NOTES_SAVE_DEBOUNCE_MS = 1200;
-const VIDEO_HEIGHT_CLASS = "h-64";
+// A fixed height here (independent of the panel's width) let the video area
+// become far wider than a camera's natural aspect ratio on the dedicated
+// /doctor/dashboard/patients page, so object-cover cropped heavily into the
+// patient's face. aspect-video keeps height proportional to width; the
+// max-width keeps it from growing to an oversized letterbox on a wide panel.
+const VIDEO_WRAPPER_CLASS = "mx-auto aspect-video w-full max-w-2xl";
 
-// Lives at the dashboard's #notes anchor -- idle by default (the same
-// placeholder card this section always showed), and swaps to a live call +
-// notes view once a doctor joins from DoctorVideoQueue. Deliberately
-// embedded here rather than the full-screen /consultation page: a doctor
-// needs the rest of the dashboard (and somewhere to actually write) usable
-// at the same time as the call, unlike a patient's single-purpose visit.
+// Lives on the dashboard's dedicated /doctor/dashboard/patients page --
+// idle by default (the same placeholder card this section always showed),
+// and swaps to a live call + notes view once a doctor joins from
+// DoctorVideoQueue. Deliberately embedded here rather than the full-screen
+// /consultation page: a doctor needs the rest of the dashboard (and
+// somewhere to actually write) usable at the same time as the call, unlike
+// a patient's single-purpose visit.
 export function DoctorCallPanel() {
   const locale = useAppStore((state) => state.locale);
   const activeCall = useAppStore((state) => state.activeDoctorCall);
@@ -28,10 +34,7 @@ export function DoctorCallPanel() {
 
   if (!activeCall) {
     return (
-      <section
-        id="notes"
-        className="rounded-[1.35rem] bg-[#e8f7f4] p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]"
-      >
+      <section id="doctor-call-panel" className="rounded-[1.35rem] bg-[#e8f7f4] p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]">
         <p className="text-sm font-bold text-[#083273]">{t("doctor_dashboard_workspace_title", locale)}</p>
         <p className="mt-3 text-sm leading-6 text-[#4d5960]">
           {t("doctor_dashboard_workspace_body", locale)}
@@ -213,8 +216,8 @@ function ActiveCallPanel({
   }
 
   return (
-    <section className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
-      <div className={`flex ${VIDEO_HEIGHT_CLASS} flex-col overflow-hidden bg-slate-950`}>
+    <section id="doctor-call-panel" className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">
+      <div className={`flex ${VIDEO_WRAPPER_CLASS} flex-col overflow-hidden bg-slate-950`}>
         {joinError ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
             <TriangleAlert className="size-6 text-[#ff8a75]" />
@@ -276,6 +279,16 @@ function ActiveCallPanel({
           placeholder={t("doctor_call_panel_notes_placeholder", locale)}
           className="mt-2 min-h-32 rounded-2xl bg-[#f8fbfd]"
         />
+        <Button
+          type="button"
+          size="sm"
+          disabled={saveState === "saving"}
+          onClick={() => flushNotes(notesRef.current)}
+          className="mt-3 gap-1.5 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+        >
+          <Save className="size-3.5" />
+          {t("doctor_call_panel_save_button", locale)}
+        </Button>
       </div>
     </section>
   );

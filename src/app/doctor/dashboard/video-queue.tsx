@@ -49,10 +49,11 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
   const [joinError, setJoinError] = useState<string | null>(null);
 
   function scrollToPanel() {
-    // The call panel lives at the dashboard's #notes anchor -- jump the
-    // doctor straight there instead of leaving them looking at the queue
-    // wondering whether anything happened.
-    document.getElementById("notes")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // On the merged /doctor/dashboard/patients page the panel usually sits
+    // beside the queue on desktop, but on a narrow mobile viewport it's
+    // stacked below -- jump the doctor straight there instead of leaving
+    // them looking at the queue wondering whether anything happened.
+    document.getElementById("doctor-call-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function handleJoin(appointment: QueueItem) {
@@ -118,17 +119,17 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
         {items.length > 0 ? (
           items.map((appointment) => (
             <div key={appointment.id} className="rounded-2xl bg-[#f8fbfd] p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-[#e8f7f4] text-sm font-bold text-[#087a7b]">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e8f7f4] text-sm font-bold text-[#087a7b]">
                     <UserRound className="size-4" />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-bold text-[#071923]">{appointment.patientName}</p>
                     <p className="mt-0.5 text-xs text-[#64747c]">{appointment.patientReference}</p>
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+                <div className="flex flex-wrap justify-end gap-1.5">
                   {appointment.files.length > 0 ? (
                     <span
                       className="flex items-center gap-1 rounded-full bg-[#eef4ff] px-2 py-1 text-[11px] font-bold text-[#083273]"

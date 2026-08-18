@@ -25,7 +25,6 @@ const AUDIO_CAPTURE_DEFAULTS = {
   autoGainControl: true,
   echoCancellation: true,
   noiseSuppression: true,
-  voiceIsolation: true,
 } satisfies AudioCaptureOptions;
 
 const VIDEO_CAPTURE_DEFAULTS = {

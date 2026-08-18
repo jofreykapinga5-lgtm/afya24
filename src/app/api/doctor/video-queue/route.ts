@@ -148,6 +148,7 @@ export async function GET() {
 
       return {
         id: appointment.id,
+        patientId: appointment.patient_id,
         scheduledAt: appointment.scheduled_at,
         status: appointment.status,
         patientName: appointment.patients?.full_name ?? "Patient",

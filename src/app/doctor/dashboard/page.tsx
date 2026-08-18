@@ -55,6 +55,7 @@ type AvailabilitySlot = {
 
 type WaitingAppointment = {
   id: string;
+  patient_id: string;
   scheduled_at: string;
   doctor_notes: string | null;
   // ai_summaries.appointment_id and consultation_orders.appointment_id have
@@ -166,7 +167,7 @@ export default async function DoctorDashboardPage() {
         service
           .from("appointments")
           .select(
-            "id, scheduled_at, doctor_notes, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions!video_sessions_appointment_id_fkey(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
+            "id, patient_id, scheduled_at, doctor_notes, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions!video_sessions_appointment_id_fkey(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
           )
           .eq("provider_id", provider.id)
           .in("status", ["waiting", "in_progress"])
@@ -237,6 +238,7 @@ export default async function DoctorDashboardPage() {
     const patientOnline = patientOnlineByAppointmentId.get(appointment.id) ?? false;
     return {
       id: appointment.id,
+      patientId: appointment.patient_id,
       scheduledAt: appointment.scheduled_at,
       status: "waiting",
       patientName: appointment.patients?.full_name ?? "Patient",

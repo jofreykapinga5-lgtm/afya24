@@ -16,6 +16,7 @@ const urgencyLabelKey: Record<string, TranslationKey> = {
 
 type QueueItem = {
   id: string;
+  patientId: string;
   scheduledAt: string;
   status: string;
   patientName: string;
@@ -73,6 +74,7 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
       }
       setActiveDoctorCall({
         appointmentId: appointment.id,
+        patientId: appointment.patientId,
         patientName: appointment.patientName,
         doctorNotes: appointment.doctorNotes,
       });

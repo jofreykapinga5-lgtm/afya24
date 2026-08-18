@@ -5,7 +5,7 @@ import { Check, PhoneOff, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CallRoom } from "@/components/video/call-room";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { saveDoctorNotes } from "../actions";
+import { endDoctorCall, saveDoctorNotes } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -50,6 +50,7 @@ export function DoctorCallPanel() {
       // switches straight from one active call to another.
       key={activeCall.appointmentId}
       appointmentId={activeCall.appointmentId}
+      patientId={activeCall.patientId}
       patientName={activeCall.patientName}
       initialNotes={activeCall.doctorNotes}
       locale={locale}
@@ -58,14 +59,88 @@ export function DoctorCallPanel() {
   );
 }
 
+type PatientVisit = {
+  id: string;
+  scheduledAt: string;
+  providerName: string;
+  doctorNotes: string;
+  summaryText: string;
+  urgencyLevel: string;
+};
+
+// The reference-number-as-patient-file feature: any doctor picking up a
+// returning patient sees every past completed visit's notes here, so care
+// continues where the last doctor left off instead of starting from zero.
+function PatientHistory({
+  patientId,
+  excludeAppointmentId,
+  locale,
+}: {
+  patientId: string;
+  excludeAppointmentId: string;
+  locale: Locale;
+}) {
+  const [visits, setVisits] = useState<PatientVisit[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(
+      `/api/doctor/patient-history?patientId=${encodeURIComponent(patientId)}&excludeAppointmentId=${encodeURIComponent(excludeAppointmentId)}`,
+      { cache: "no-store" }
+    )
+      .then((response) => response.json())
+      .then((data: { visits?: PatientVisit[] }) => {
+        if (!cancelled) setVisits(data.visits ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setVisits([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [patientId, excludeAppointmentId]);
+
+  return (
+    <div className="border-b border-[#eef2f3] p-5">
+      <p className="text-sm font-bold text-[#071923]">{t("doctor_call_panel_history_title", locale)}</p>
+
+      {visits === null ? (
+        <p className="mt-2 text-xs text-[#8a969c]">{t("doctor_call_panel_history_loading", locale)}</p>
+      ) : visits.length === 0 ? (
+        <p className="mt-2 text-xs text-[#8a969c]">{t("doctor_call_panel_history_empty", locale)}</p>
+      ) : (
+        <div className="mt-2 max-h-64 divide-y divide-[#eef2f3] overflow-y-auto rounded-2xl bg-[#f8fbfd] p-1">
+          {visits.map((visit) => (
+            <div key={visit.id} className="px-3 py-2.5">
+              <p className="text-xs font-semibold text-[#60717a]">
+                {new Date(visit.scheduledAt).toLocaleDateString(locale === "sw" ? "sw-TZ" : "en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}{" "}
+                {t("doctor_call_panel_history_with", locale)} {visit.providerName}
+              </p>
+              <p className="mt-1 text-sm text-[#071923]">
+                {visit.doctorNotes || t("doctor_call_panel_history_notes_empty", locale)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ActiveCallPanel({
   appointmentId,
+  patientId,
   patientName,
   initialNotes,
   locale,
   onClose,
 }: {
   appointmentId: string;
+  patientId: string;
   patientName: string;
   initialNotes: string;
   locale: Locale;
@@ -129,6 +204,11 @@ function ActiveCallPanel({
     // A pending debounced save shouldn't get dropped just because the
     // doctor closes the panel a beat after their last keystroke.
     flushNotes(notesRef.current);
+    // Fire-and-forget: marks the appointment completed so the patient-side
+    // queue countdown sees this doctor as free for the next waiting patient.
+    // The panel closes immediately either way -- there's nothing useful to
+    // do locally if this fails, and it's a fully server-scoped update.
+    void endDoctorCall(appointmentId);
     onClose();
   }
 
@@ -171,6 +251,8 @@ function ActiveCallPanel({
           {t("doctor_call_panel_close", locale)}
         </Button>
       </div>
+
+      <PatientHistory patientId={patientId} excludeAppointmentId={appointmentId} locale={locale} />
 
       <div className="p-5">
         <div className="flex items-center justify-between gap-3">

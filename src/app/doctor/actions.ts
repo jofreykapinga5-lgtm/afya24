@@ -434,6 +434,42 @@ export async function saveDoctorNotes(
   }
 }
 
+// Called when the doctor closes the embedded call panel (see call-panel.tsx).
+// Without this, an appointment stays 'in_progress' forever once joined --
+// nothing else ever moves it to 'completed' -- which would permanently block
+// the patient-side queue countdown (src/app/api/video/room/route.ts) from
+// ever seeing this doctor as free again for the next waiting patient.
+export async function endDoctorCall(appointmentId: string): Promise<JoinAppointmentResult> {
+  try {
+    const { service, providerId } = await requireDoctorProvider();
+
+    if (!appointmentId) {
+      return { ok: false, message: "Appointment id is required." };
+    }
+
+    const { error } = await service
+      .from("appointments")
+      .update({ status: "completed" })
+      .eq("id", appointmentId)
+      .eq("provider_id", providerId)
+      .eq("status", "in_progress");
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    await service
+      .from("video_sessions")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("appointment_id", appointmentId);
+
+    return { ok: true };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not end the call." };
+  }
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

@@ -68,11 +68,20 @@ export default async function LookupResultsPage() {
         </div>
 
         <Reveal delay={0}>
-          <div className="mt-6 rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
-            <h1 className="text-xl font-bold tracking-tight text-[#071923]">{patient?.full_name}</h1>
-            <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-semibold text-[#087a7b]">
-              {t("dashboard_reference_prefix", locale)} {patient?.hospital_reference_number}
-            </p>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-[#071923]">{patient?.full_name}</h1>
+              <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-semibold text-[#087a7b]">
+                {t("dashboard_reference_prefix", locale)} {patient?.hospital_reference_number}
+              </p>
+            </div>
+            <Button
+              className="h-10 shrink-0 rounded-full bg-[#01b7bb] px-4 font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+              nativeButton={false}
+              render={<Link href="/doctors" />}
+            >
+              {t("account_dashboard_nav_book", locale)}
+            </Button>
           </div>
         </Reveal>
 

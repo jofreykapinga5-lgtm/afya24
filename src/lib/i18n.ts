@@ -708,6 +708,23 @@ const dict = {
     en: "Payment is required before you can join this consultation.",
     sw: "Malipo yanahitajika kabla ya kujiunga na ushauri huu.",
   },
+  error_waiting_turn: {
+    en: "The doctor is still with another patient. Please wait for your turn.",
+    sw: "Daktari bado yuko na mgonjwa mwingine. Tafadhali subiri zamu yako.",
+  },
+  consultation_waiting_turn_title: {
+    en: "The doctor is with another patient",
+    sw: "Daktari yuko na mgonjwa mwingine",
+  },
+  consultation_waiting_turn_position: {
+    en: "You are number {n} in line. This page will update on its own.",
+    sw: "Wewe ni namba {n} kwenye foleni. Ukurasa huu utajisasisha wenyewe.",
+  },
+  consultation_waiting_turn_ready: {
+    en: "It's your turn. The doctor is ready for you.",
+    sw: "Ni zamu yako. Daktari yuko tayari kwa ajili yako.",
+  },
+  consultation_join_now_cta: { en: "Join now", sw: "Jiunge sasa" },
   payment_complete_link: { en: "Complete payment", sw: "Kamilisha malipo" },
   payment_page_title: { en: "Pay for your consultation", sw: "Lipia ushauri wako" },
   payment_page_body: {
@@ -1443,6 +1460,17 @@ const dict = {
   },
   doctor_call_panel_saving: { en: "Saving...", sw: "Inahifadhi..." },
   doctor_call_panel_saved: { en: "Saved", sw: "Imehifadhiwa" },
+  doctor_call_panel_history_title: { en: "Patient history", sw: "Historia ya mgonjwa" },
+  doctor_call_panel_history_loading: { en: "Loading history…", sw: "Inapakia historia…" },
+  doctor_call_panel_history_empty: {
+    en: "No previous visits recorded for this patient.",
+    sw: "Hakuna ziara za awali zilizorekodiwa kwa mgonjwa huyu.",
+  },
+  doctor_call_panel_history_notes_empty: {
+    en: "No notes recorded for this visit.",
+    sw: "Hakuna maelezo yaliyorekodiwa kwa ziara hii.",
+  },
+  doctor_call_panel_history_with: { en: "with", sw: "na" },
 
 } as const;
 

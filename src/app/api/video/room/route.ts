@@ -104,6 +104,37 @@ async function joinRoom(appointmentId: string, locale: Locale) {
     }
   }
 
+  // A patient can only join once the doctor is actually free for them --
+  // otherwise the first patient to hit this route each time the doctor
+  // finishes with someone would win the room regardless of booking order.
+  // "Free" means: no other appointment for this provider is in_progress, and
+  // no other waiting appointment for this provider was scheduled earlier.
+  // Providers are never subject to this -- they choose who to join from the
+  // dashboard queue themselves.
+  if (isPatient) {
+    const { data: queueRows } = await service
+      .from("appointments")
+      .select("status, scheduled_at")
+      .eq("provider_id", appointment.provider_id)
+      .in("status", ["waiting", "in_progress"])
+      .neq("id", appointment.id);
+
+    const doctorBusy = (queueRows ?? []).some((row) => row.status === "in_progress");
+    const patientsAhead = (queueRows ?? []).filter(
+      (row) =>
+        row.status === "waiting" &&
+        new Date(row.scheduled_at).getTime() < new Date(appointment.scheduled_at).getTime()
+    ).length;
+    const position = patientsAhead + (doctorBusy ? 1 : 0) + 1;
+
+    if (position > 1) {
+      return NextResponse.json(
+        { error: t("error_waiting_turn", locale), code: "WAITING_TURN", position },
+        { status: 403 }
+      );
+    }
+  }
+
   let userName = "Guest";
   let patientHasFullAccount = false;
   if (isProvider) {

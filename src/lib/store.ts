@@ -41,9 +41,14 @@ interface AppState {
   // here rather than local component state because the "join call" click
   // happens in DoctorVideoQueue while the panel itself renders in a
   // separate part of the (server-rendered) dashboard tree.
-  activeDoctorCall: { appointmentId: string; patientName: string; doctorNotes: string } | null;
+  activeDoctorCall: {
+    appointmentId: string;
+    patientId: string;
+    patientName: string;
+    doctorNotes: string;
+  } | null;
   setActiveDoctorCall: (
-    call: { appointmentId: string; patientName: string; doctorNotes: string } | null
+    call: { appointmentId: string; patientId: string; patientName: string; doctorNotes: string } | null
   ) => void;
 }
 

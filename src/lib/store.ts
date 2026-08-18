@@ -35,6 +35,16 @@ interface AppState {
   removeFromPharmacyCart: (itemId: string) => void;
   setPharmacyCartQuantity: (itemId: string, quantity: number) => void;
   clearPharmacyCart: () => void;
+
+  // The doctor dashboard's embedded call panel (src/app/doctor/dashboard/
+  // call-panel.tsx) reads this to know which appointment to join -- lives
+  // here rather than local component state because the "join call" click
+  // happens in DoctorVideoQueue while the panel itself renders in a
+  // separate part of the (server-rendered) dashboard tree.
+  activeDoctorCall: { appointmentId: string; patientName: string; doctorNotes: string } | null;
+  setActiveDoctorCall: (
+    call: { appointmentId: string; patientName: string; doctorNotes: string } | null
+  ) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -85,6 +95,9 @@ export const useAppStore = create<AppState>()(
                 ),
         })),
       clearPharmacyCart: () => set({ pharmacyCart: [] }),
+
+      activeDoctorCall: null,
+      setActiveDoctorCall: (call) => set({ activeDoctorCall: call }),
     }),
     {
       name: "afya24-preferences",

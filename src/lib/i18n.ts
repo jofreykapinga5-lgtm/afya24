@@ -1433,6 +1433,16 @@ const dict = {
     en: "Confirm and continue",
     sw: "Thibitisha na uendelee",
   },
+  doctor_queue_in_call_cta: { en: "Go to call", sw: "Nenda kwenye simu" },
+  doctor_call_panel_with: { en: "With", sw: "Pamoja na" },
+  doctor_call_panel_close: { en: "End call", sw: "Maliza simu" },
+  doctor_call_panel_notes_label: { en: "Clinical notes", sw: "Vidokezo vya kliniki" },
+  doctor_call_panel_notes_placeholder: {
+    en: "Write notes about this consultation...",
+    sw: "Andika vidokezo kuhusu ushauri huu...",
+  },
+  doctor_call_panel_saving: { en: "Saving...", sw: "Inahifadhi..." },
+  doctor_call_panel_saved: { en: "Saved", sw: "Imehifadhiwa" },
 
 } as const;
 

@@ -8,7 +8,6 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  ShieldCheck,
   Stethoscope,
   UsersRound,
 } from "lucide-react";
@@ -25,6 +24,7 @@ import {
   signOut,
 } from "../actions";
 import { DoctorAvailabilityForm } from "./availability-form";
+import { DoctorCallPanel } from "./call-panel";
 import { DoctorDashboardMobileMenu, type DoctorMobileMenuItem } from "./mobile-menu";
 import { DoctorPasswordForm } from "./password-form";
 import { DoctorProfileForm } from "./profile-form";
@@ -56,13 +56,17 @@ type AvailabilitySlot = {
 type WaitingAppointment = {
   id: string;
   scheduled_at: string;
+  doctor_notes: string | null;
   // ai_summaries.appointment_id and consultation_orders.appointment_id have
   // no unique constraint, so PostgREST embeds these as arrays, not objects.
   // files is a genuine one-to-many relationship, so it's an array too.
+  // video_sessions is disambiguated to the appointment_id FK (appointments
+  // also has its own video_session_id FK to the same table), which is
+  // one-to-one, so PostgREST embeds it as a single object, not an array.
   patients: { full_name: string; hospital_reference_number: string } | null;
   ai_summaries: { summary_text: string; urgency_level: string }[] | null;
   consultation_orders: { consultation_mode: string }[] | null;
-  video_sessions: { room_name: string | null; status: string | null }[] | null;
+  video_sessions: { room_name: string | null; status: string | null } | null;
   files: { id: string; original_filename: string | null; attachment_kind: string | null; storage_path: string }[] | null;
 };
 
@@ -162,7 +166,7 @@ export default async function DoctorDashboardPage() {
         service
           .from("appointments")
           .select(
-            "id, scheduled_at, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
+            "id, scheduled_at, doctor_notes, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions!video_sessions_appointment_id_fkey(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
           )
           .eq("provider_id", provider.id)
           .in("status", ["waiting", "in_progress"])
@@ -181,13 +185,13 @@ export default async function DoctorDashboardPage() {
   const videoAppointments = (waitingAppointments ?? []).filter(
     (appointment) =>
       appointment.consultation_orders?.[0]?.consultation_mode === "video" &&
-      Boolean(appointment.video_sessions?.[0]?.room_name)
+      Boolean(appointment.video_sessions?.room_name)
   );
 
   const patientOnlineByAppointmentId = new Map<string, boolean>();
   await Promise.all(
     videoAppointments.map(async (appointment) => {
-      const roomName = appointment.video_sessions?.[0]?.room_name;
+      const roomName = appointment.video_sessions?.room_name;
       if (!roomName) {
         patientOnlineByAppointmentId.set(appointment.id, false);
         return;
@@ -239,6 +243,7 @@ export default async function DoctorDashboardPage() {
       patientReference: appointment.patients?.hospital_reference_number ?? "",
       urgencyLevel: summary?.urgency_level ?? "low",
       summaryText: summary?.summary_text ?? "",
+      doctorNotes: appointment.doctor_notes ?? "",
       patientOnline,
       files: (appointment.files ?? []).map((file) => ({
         id: file.id,
@@ -524,16 +529,7 @@ export default async function DoctorDashboardPage() {
             <aside className="grid h-fit gap-4">
               <DoctorVideoQueue initialItems={initialVideoQueueItems} />
 
-              <section id="notes" className="rounded-[1.35rem] bg-[#e8f7f4] p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.45)] ring-1 ring-[#ccece7]">
-                <p className="text-sm font-bold text-[#083273]">{t("doctor_dashboard_workspace_title", locale)}</p>
-                <p className="mt-3 text-sm leading-6 text-[#4d5960]">
-                  {t("doctor_dashboard_workspace_body", locale)}
-                </p>
-                <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#087a7b]">
-                  <ShieldCheck className="size-4" />
-                  {t("doctor_dashboard_approval_required", locale)}
-                </div>
-              </section>
+              <DoctorCallPanel />
             </aside>
           </div>
         </section>

@@ -8,6 +8,7 @@ type AppointmentRow = {
   patient_id: string;
   scheduled_at: string;
   status: string;
+  doctor_notes: string | null;
   patients: { full_name: string; hospital_reference_number: string } | null;
 };
 
@@ -59,7 +60,7 @@ export async function GET() {
 
   const { data: appointments } = await service
     .from("appointments")
-    .select("id, patient_id, scheduled_at, status, patients(full_name, hospital_reference_number)")
+    .select("id, patient_id, scheduled_at, status, doctor_notes, patients(full_name, hospital_reference_number)")
     .eq("provider_id", provider.id)
     .in("status", ["waiting", "in_progress"])
     .order("scheduled_at", { ascending: true })
@@ -153,6 +154,7 @@ export async function GET() {
         patientReference: appointment.patients?.hospital_reference_number ?? "",
         urgencyLevel: summary?.urgency_level ?? "low",
         summaryText: summary?.summary_text ?? "",
+        doctorNotes: appointment.doctor_notes ?? "",
         patientOnline,
         files: appointmentFiles.map((file) => ({
           id: file.id,

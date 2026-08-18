@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { FileAudio, FileText, ImageIcon, Paperclip, UserRound, UsersRound, Video } from "lucide-react";
+import { FileAudio, FileText, ImageIcon, Paperclip, TriangleAlert, UserRound, UsersRound, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { joinWaitingAppointment } from "../actions";
 import { useAppStore } from "@/lib/store";
@@ -22,6 +22,7 @@ type QueueItem = {
   patientReference: string;
   urgencyLevel: string;
   summaryText: string;
+  doctorNotes: string;
   patientOnline: boolean;
   files: { id: string; name: string; kind: string; url: string | null }[];
 };
@@ -40,8 +41,44 @@ function AttachmentKindIcon({ kind }: { kind: string }) {
 
 export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }) {
   const locale = useAppStore((state) => state.locale);
+  const activeCallId = useAppStore((state) => state.activeDoctorCall?.appointmentId);
+  const setActiveDoctorCall = useAppStore((state) => state.setActiveDoctorCall);
   const [items, setItems] = useState(initialItems);
   const [pending, startTransition] = useTransition();
+  const [joinError, setJoinError] = useState<string | null>(null);
+
+  function scrollToPanel() {
+    // The call panel lives at the dashboard's #notes anchor -- jump the
+    // doctor straight there instead of leaving them looking at the queue
+    // wondering whether anything happened.
+    document.getElementById("notes")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleJoin(appointment: QueueItem) {
+    // Already the active call in the panel below -- just bring it into
+    // view rather than re-running the join action (which would reset the
+    // panel's notes field back to this queue snapshot's possibly-stale
+    // doctorNotes, clobbering anything typed since the queue last refreshed).
+    if (activeCallId === appointment.id) {
+      scrollToPanel();
+      return;
+    }
+
+    setJoinError(null);
+    startTransition(async () => {
+      const result = await joinWaitingAppointment(appointment.id);
+      if (!result.ok) {
+        setJoinError(result.message);
+        return;
+      }
+      setActiveDoctorCall({
+        appointmentId: appointment.id,
+        patientName: appointment.patientName,
+        doctorNotes: appointment.doctorNotes,
+      });
+      scrollToPanel();
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -136,26 +173,25 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
                 </div>
               ) : null}
 
-              <form
-                action={(formData) => {
-                  startTransition(async () => {
-                    await joinWaitingAppointment(formData);
-                  });
-                }}
-                className="mt-3"
+              {joinError && activeCallId !== appointment.id ? (
+                <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-[#fff4f0] px-3 py-2 text-xs text-[#9b2c12]">
+                  <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
+                  {joinError}
+                </p>
+              ) : null}
+
+              <Button
+                type="button"
+                size="sm"
+                disabled={(!appointment.patientOnline && activeCallId !== appointment.id) || pending}
+                onClick={() => handleJoin(appointment)}
+                className="mt-3 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2] disabled:bg-[#e5eef0] disabled:text-[#8a9aa2]"
               >
-                <input type="hidden" name="appointmentId" value={appointment.id} />
-                <input type="hidden" name="mode" value="video" />
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={!appointment.patientOnline || pending}
-                  className="w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2] disabled:bg-[#e5eef0] disabled:text-[#8a9aa2]"
-                >
-                  <Video className="size-4" />
-                  {t("lookup_join_call_cta", locale)}
-                </Button>
-              </form>
+                <Video className="size-4" />
+                {activeCallId === appointment.id
+                  ? t("doctor_queue_in_call_cta", locale)
+                  : t("lookup_join_call_cta", locale)}
+              </Button>
             </div>
           ))
         ) : (

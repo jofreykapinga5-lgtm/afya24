@@ -368,31 +368,70 @@ export async function cancelAvailabilitySlot(formData: FormData) {
   revalidatePath("/doctors");
 }
 
+export type JoinAppointmentResult = { ok: true } | { ok: false; message: string };
+
 // "Joining is accepting" -- a single step, no separate accept/decline. This
 // still has to move the appointment out of 'waiting' or the queue would
 // never empty even after a call happens; nothing else in the app makes that
 // transition.
-export async function joinWaitingAppointment(formData: FormData) {
-  const { service, providerId } = await requireDoctorProvider();
-  const appointmentId = String(formData.get("appointmentId") ?? "");
-  const mode = String(formData.get("mode") ?? "video");
+// Returns a result object instead of redirecting -- the doctor now joins a
+// call inline on the dashboard (see DoctorVideoQueue + call-panel.tsx)
+// rather than navigating to the full-screen /consultation page, so there's
+// nowhere to redirect *to* anymore. A thrown error also wouldn't reliably
+// reach the client here (see initiateSnippePayment's comment on the same
+// issue in src/app/consultation/actions.ts).
+export async function joinWaitingAppointment(appointmentId: string): Promise<JoinAppointmentResult> {
+  try {
+    const { service, providerId } = await requireDoctorProvider();
 
-  if (!appointmentId) {
-    throw new Error("Appointment id is required.");
+    if (!appointmentId) {
+      return { ok: false, message: "Appointment id is required." };
+    }
+
+    const { error } = await service
+      .from("appointments")
+      .update({ status: "in_progress" })
+      .eq("id", appointmentId)
+      .eq("provider_id", providerId)
+      .eq("status", "waiting");
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not join the call." };
   }
+}
 
-  const { error } = await service
-    .from("appointments")
-    .update({ status: "in_progress" })
-    .eq("id", appointmentId)
-    .eq("provider_id", providerId)
-    .eq("status", "waiting");
+// Autosaved from the dashboard's embedded call panel while a doctor writes
+// notes during/after a consultation -- see migration 0017. Scoped to
+// providerId the same way every other doctor action here is, so a doctor
+// can only write notes on their own appointments.
+export async function saveDoctorNotes(
+  appointmentId: string,
+  notes: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const { service, providerId } = await requireDoctorProvider();
 
-  if (error) {
-    throw new Error(error.message);
+    const { error } = await service
+      .from("appointments")
+      .update({ doctor_notes: notes })
+      .eq("id", appointmentId)
+      .eq("provider_id", providerId);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not save notes." };
   }
-
-  redirect(`/consultation/${appointmentId}?mode=${mode}`);
 }
 
 export async function signOut() {

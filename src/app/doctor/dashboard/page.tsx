@@ -3,6 +3,7 @@ import { Stethoscope } from "lucide-react";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey, adminProviderStatusKey } from "@/lib/i18n";
 import { getDoctorDashboardContext } from "./doctor-context";
+import { patientAccessCutoff, queueHeartbeatCutoff } from "@/lib/video/queue";
 import { statusClass } from "./status-class";
 import { DoctorPasswordForm } from "./password-form";
 import { DoctorProfileForm } from "./profile-form";
@@ -22,7 +23,10 @@ export default async function DoctorOverviewPage() {
           .from("appointments")
           .select("id", { count: "exact", head: true })
           .eq("provider_id", provider.id)
-          .in("status", ["waiting", "in_progress"]),
+          .eq("payment_status", "paid")
+          .in("status", ["waiting", "in_progress"])
+          .gte("scheduled_at", patientAccessCutoff())
+          .gte("queue_last_seen_at", queueHeartbeatCutoff()),
         service
           .from("appointments")
           .select("id", { count: "exact", head: true })

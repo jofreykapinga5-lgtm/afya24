@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { listRoomParticipantIdentities } from "@/lib/video/livekit";
+import { hasRecentQueueHeartbeat, patientAccessCutoff } from "@/lib/video/queue";
 
 type AppointmentRow = {
   id: string;
@@ -9,6 +10,7 @@ type AppointmentRow = {
   scheduled_at: string;
   status: string;
   doctor_notes: string | null;
+  queue_last_seen_at: string | null;
   patients: { full_name: string; hospital_reference_number: string } | null;
 };
 
@@ -60,9 +62,11 @@ export async function GET() {
 
   const { data: appointments } = await service
     .from("appointments")
-    .select("id, patient_id, scheduled_at, status, doctor_notes, patients(full_name, hospital_reference_number)")
+    .select("id, patient_id, scheduled_at, status, doctor_notes, queue_last_seen_at, patients(full_name, hospital_reference_number)")
     .eq("provider_id", provider.id)
+    .eq("payment_status", "paid")
     .in("status", ["waiting", "in_progress"])
+    .gte("scheduled_at", patientAccessCutoff())
     .order("scheduled_at", { ascending: true })
     .returns<AppointmentRow[]>();
 
@@ -94,10 +98,10 @@ export async function GET() {
         .returns<FileRow[]>(),
     ]);
 
-  const videoAppointmentIds = new Set(
+  const inAppAppointmentModes = new Map(
     (orders ?? [])
-      .filter((order) => order.consultation_mode === "video")
-      .map((order) => order.appointment_id as string)
+      .filter((order) => order.consultation_mode === "voice" || order.consultation_mode === "video")
+      .map((order) => [order.appointment_id as string, order.consultation_mode as "voice" | "video"])
   );
   const sessionByAppointment = new Map(
     (sessions ?? []).map((session) => [
@@ -131,18 +135,21 @@ export async function GET() {
     });
   }
 
-  const activeVideoAppointments = appointmentRows.filter((appointment) => {
+  const activeInAppAppointments = appointmentRows.filter((appointment) => {
     const session = sessionByAppointment.get(appointment.id);
-    return videoAppointmentIds.has(appointment.id) && Boolean(session?.roomName);
+    return inAppAppointmentModes.has(appointment.id) && Boolean(session?.roomName);
   });
 
   const items = await Promise.all(
-    activeVideoAppointments.map(async (appointment) => {
+    activeInAppAppointments.map(async (appointment) => {
       const session = sessionByAppointment.get(appointment.id);
       const participantIds = session?.roomName
         ? await listRoomParticipantIdentities(session.roomName)
         : [];
       const patientOnline = participantIds.some((identity) => identity.startsWith("patient-"));
+      const providerOnline = participantIds.some((identity) => identity.startsWith("provider-"));
+      const queueActive = hasRecentQueueHeartbeat(appointment.queue_last_seen_at) || patientOnline || providerOnline;
+      if (!queueActive) return null;
       const summary = summaryByAppointment.get(appointment.id);
       const appointmentFiles = filesByAppointment.get(appointment.id) ?? [];
 
@@ -156,6 +163,7 @@ export async function GET() {
         urgencyLevel: summary?.urgency_level ?? "low",
         summaryText: summary?.summary_text ?? "",
         doctorNotes: appointment.doctor_notes ?? "",
+        consultationMode: inAppAppointmentModes.get(appointment.id) ?? "video",
         patientOnline,
         files: appointmentFiles.map((file) => ({
           id: file.id,
@@ -167,5 +175,5 @@ export async function GET() {
     })
   );
 
-  return NextResponse.json({ items });
+  return NextResponse.json({ items: items.filter((item): item is NonNullable<typeof item> => Boolean(item)) });
 }

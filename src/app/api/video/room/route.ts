@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPatientSession } from "@/lib/patient-session";
-import { createMeetingToken, getOrCreateRoomForAppointment } from "@/lib/video/livekit";
+import { createMeetingToken, getOrCreateRoomForAppointment, listRoomParticipantIdentities } from "@/lib/video/livekit";
+import { hasRecentQueueHeartbeat, patientAccessCutoff, PATIENT_ACCESS_WINDOW_HOURS } from "@/lib/video/queue";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
@@ -13,6 +14,7 @@ import type { Locale } from "@/lib/types";
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const appointmentId = body?.appointmentId;
+  const queueCheckOnly = body?.queueCheckOnly === true;
   const locale: Locale = body?.locale === "sw" ? "sw" : "en";
   if (!appointmentId || typeof appointmentId !== "string") {
     return NextResponse.json(
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    return await joinRoom(appointmentId, locale);
+    return await joinRoom(appointmentId, locale, queueCheckOnly);
   } catch (error) {
     // Without this, an unexpected failure here (a LiveKit API call
     // erroring out, a bad LIVEKIT_* env value, a transient network blip)
@@ -37,13 +39,11 @@ export async function POST(request: Request) {
   }
 }
 
-const PATIENT_ACCESS_WINDOW_HOURS = 24;
-
-async function joinRoom(appointmentId: string, locale: Locale) {
+async function joinRoom(appointmentId: string, locale: Locale, queueCheckOnly: boolean) {
   const service = createServiceClient();
   const { data: appointment } = await service
     .from("appointments")
-    .select("id, patient_id, provider_id, payment_status, scheduled_at")
+    .select("id, patient_id, provider_id, payment_status, scheduled_at, status, queue_joined_at")
     .eq("id", appointmentId)
     .maybeSingle();
 
@@ -89,6 +89,13 @@ async function joinRoom(appointmentId: string, locale: Locale) {
     );
   }
 
+  if (isPatient && appointment.status !== "waiting" && appointment.status !== "in_progress") {
+    return NextResponse.json(
+      { error: t("error_access_window_expired", locale) },
+      { status: 403 }
+    );
+  }
+
   // Once a patient has paid, they can rejoin (dropped call, doctor running
   // late, a follow-up message) for 24 hours from when the visit was booked
   // -- scheduled_at is set once at booking and never touched again, so it's
@@ -104,6 +111,23 @@ async function joinRoom(appointmentId: string, locale: Locale) {
     }
   }
 
+  if (isPatient) {
+    const now = new Date().toISOString();
+    const { error: heartbeatError } = await service
+      .from("appointments")
+      .update({
+        queue_joined_at: appointment.queue_joined_at ?? now,
+        queue_last_seen_at: now,
+      })
+      .eq("id", appointment.id)
+      .eq("payment_status", "paid")
+      .in("status", ["waiting", "in_progress"]);
+
+    if (heartbeatError) {
+      throw new Error(`Could not join the patient queue: ${heartbeatError.message}`);
+    }
+  }
+
   // A patient can only join once the doctor is actually free for them --
   // otherwise the first patient to hit this route each time the doctor
   // finishes with someone would win the room regardless of booking order.
@@ -114,13 +138,60 @@ async function joinRoom(appointmentId: string, locale: Locale) {
   if (isPatient) {
     const { data: queueRows } = await service
       .from("appointments")
-      .select("status, scheduled_at")
+      .select("id, status, scheduled_at, queue_last_seen_at")
       .eq("provider_id", appointment.provider_id)
+      .eq("payment_status", "paid")
       .in("status", ["waiting", "in_progress"])
+      .gte("scheduled_at", patientAccessCutoff())
       .neq("id", appointment.id);
 
-    const doctorBusy = (queueRows ?? []).some((row) => row.status === "in_progress");
-    const patientsAhead = (queueRows ?? []).filter(
+    const queueIds = (queueRows ?? []).map((row) => row.id);
+    const [{ data: queueOrders }, { data: queueSessions }] = queueIds.length
+      ? await Promise.all([
+          service
+            .from("consultation_orders")
+            .select("appointment_id, consultation_mode")
+            .in("appointment_id", queueIds),
+          service
+            .from("video_sessions")
+            .select("appointment_id, room_name")
+            .in("appointment_id", queueIds),
+        ])
+      : [{ data: [] }, { data: [] }];
+
+    const inAppAppointmentIds = new Set(
+      (queueOrders ?? [])
+        .filter((order) => order.consultation_mode === "voice" || order.consultation_mode === "video")
+        .map((order) => order.appointment_id as string)
+    );
+    const roomByAppointmentId = new Map(
+      (queueSessions ?? []).map((session) => [
+        session.appointment_id as string,
+        session.room_name as string | null,
+      ])
+    );
+
+    const activeQueueRows = (
+      await Promise.all(
+        (queueRows ?? []).map(async (row) => {
+          if (!inAppAppointmentIds.has(row.id)) return null;
+          if (hasRecentQueueHeartbeat(row.queue_last_seen_at)) return row;
+          if (row.status !== "in_progress") return null;
+
+          const roomName = roomByAppointmentId.get(row.id);
+          if (!roomName) return null;
+          const participants = await listRoomParticipantIdentities(roomName);
+          return participants.some(
+            (identity) => identity.startsWith("patient-") || identity.startsWith("provider-")
+          )
+            ? row
+            : null;
+        })
+      )
+    ).filter((row): row is NonNullable<typeof row> => Boolean(row));
+
+    const doctorBusy = activeQueueRows.some((row) => row.status === "in_progress");
+    const patientsAhead = activeQueueRows.filter(
       (row) =>
         row.status === "waiting" &&
         new Date(row.scheduled_at).getTime() < new Date(appointment.scheduled_at).getTime()
@@ -133,6 +204,10 @@ async function joinRoom(appointmentId: string, locale: Locale) {
         { status: 403 }
       );
     }
+  }
+
+  if (isPatient && queueCheckOnly) {
+    return NextResponse.json({ ready: true });
   }
 
   let userName = "Guest";

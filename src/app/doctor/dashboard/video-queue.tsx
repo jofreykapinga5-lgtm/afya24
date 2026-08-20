@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { FileAudio, FileText, ImageIcon, Paperclip, TriangleAlert, UserRound, UsersRound, Video } from "lucide-react";
+import { FileAudio, FileText, ImageIcon, Paperclip, Phone, TriangleAlert, UserRound, UsersRound, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { joinWaitingAppointment } from "../actions";
 import { useAppStore } from "@/lib/store";
@@ -24,6 +24,7 @@ type QueueItem = {
   urgencyLevel: string;
   summaryText: string;
   doctorNotes: string;
+  consultationMode: "voice" | "video";
   patientOnline: boolean;
   files: { id: string; name: string; kind: string; url: string | null }[];
 };
@@ -190,7 +191,7 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
                 onClick={() => handleJoin(appointment)}
                 className="mt-3 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2] disabled:bg-[#e5eef0] disabled:text-[#8a9aa2]"
               >
-                <Video className="size-4" />
+                {appointment.consultationMode === "voice" ? <Phone className="size-4" /> : <Video className="size-4" />}
                 {activeCallId === appointment.id
                   ? t("doctor_queue_in_call_cta", locale)
                   : t("lookup_join_call_cta", locale)}

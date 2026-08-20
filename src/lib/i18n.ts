@@ -724,6 +724,19 @@ const dict = {
     en: "It's your turn. The doctor is ready for you.",
     sw: "Ni zamu yako. Daktari yuko tayari kwa ajili yako.",
   },
+  consultation_waiting_turn_countdown: {
+    en: "Join within {seconds} seconds or the next patient will be called.",
+    sw: "Jiunge ndani ya sekunde {seconds}, la sivyo mgonjwa anayefuata ataitwa.",
+  },
+  consultation_waiting_turn_expired: {
+    en: "Your turn has expired",
+    sw: "Muda wa zamu yako umeisha",
+  },
+  consultation_waiting_turn_expired_body: {
+    en: "Rejoin the queue to get an updated position.",
+    sw: "Jiunge tena kwenye foleni ili kupata nafasi yako mpya.",
+  },
+  consultation_waiting_turn_rejoin: { en: "Rejoin queue", sw: "Jiunge tena" },
   consultation_join_now_cta: { en: "Join now", sw: "Jiunge sasa" },
   payment_complete_link: { en: "Complete payment", sw: "Kamilisha malipo" },
   payment_page_title: { en: "Pay for your consultation", sw: "Lipia ushauri wako" },
@@ -1278,14 +1291,14 @@ const dict = {
 
   doctor_queue_title: { en: "Patient queue", sw: "Foleni ya wagonjwa" },
   doctor_queue_body: {
-    en: "Live video calls waiting to connect with you.",
-    sw: "Simu za video za moja kwa moja zinazosubiri kuungana nawe.",
+    en: "Live voice and video calls waiting to connect with you.",
+    sw: "Simu za sauti na video zinazosubiri kuungana nawe.",
   },
   doctor_queue_patient_online: { en: "Patient online", sw: "Mgonjwa yupo mtandaoni" },
   doctor_queue_patient_off: { en: "Patient off", sw: "Mgonjwa hayupo mtandaoni" },
   doctor_queue_empty: {
-    en: "No active video calls right now.",
-    sw: "Hakuna simu za video zinazoendelea kwa sasa.",
+    en: "No active calls right now.",
+    sw: "Hakuna simu zinazoendelea kwa sasa.",
   },
   doctor_dashboard_open_menu: { en: "Open doctor menu", sw: "Fungua menyu ya daktari" },
   doctor_avail_visible_label: { en: "Visible to patients", sw: "Anaonekana kwa wagonjwa" },

@@ -2,12 +2,14 @@ import { listRoomParticipantIdentities } from "@/lib/video/livekit";
 import { getDoctorDashboardContext } from "../doctor-context";
 import { DoctorCallPanel } from "../call-panel";
 import { DoctorVideoQueue } from "../video-queue";
+import { hasRecentQueueHeartbeat, patientAccessCutoff } from "@/lib/video/queue";
 
 type WaitingAppointment = {
   id: string;
   patient_id: string;
   scheduled_at: string;
   doctor_notes: string | null;
+  queue_last_seen_at: string | null;
   // ai_summaries.appointment_id and consultation_orders.appointment_id have
   // no unique constraint, so PostgREST embeds these as arrays, not objects.
   // files is a genuine one-to-many relationship, so it's an array too.
@@ -28,17 +30,20 @@ export default async function DoctorPatientsPage() {
     ? await service
         .from("appointments")
         .select(
-          "id, patient_id, scheduled_at, doctor_notes, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions!video_sessions_appointment_id_fkey(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
+          "id, patient_id, scheduled_at, doctor_notes, queue_last_seen_at, patients(full_name, hospital_reference_number), ai_summaries(summary_text, urgency_level), consultation_orders(consultation_mode), video_sessions!video_sessions_appointment_id_fkey(room_name, status), files(id, original_filename, attachment_kind, storage_path)"
         )
         .eq("provider_id", provider.id)
+        .eq("payment_status", "paid")
         .in("status", ["waiting", "in_progress"])
+        .gte("scheduled_at", patientAccessCutoff())
         .order("scheduled_at", { ascending: true })
         .returns<WaitingAppointment[]>()
     : { data: [] as WaitingAppointment[] };
 
   const videoAppointments = (waitingAppointments ?? []).filter(
     (appointment) =>
-      appointment.consultation_orders?.[0]?.consultation_mode === "video" &&
+      ["voice", "video"].includes(appointment.consultation_orders?.[0]?.consultation_mode ?? "") &&
+      hasRecentQueueHeartbeat(appointment.queue_last_seen_at) &&
       Boolean(appointment.video_sessions?.room_name)
   );
 
@@ -88,6 +93,7 @@ export default async function DoctorPatientsPage() {
       urgencyLevel: summary?.urgency_level ?? "low",
       summaryText: summary?.summary_text ?? "",
       doctorNotes: appointment.doctor_notes ?? "",
+      consultationMode: appointment.consultation_orders?.[0]?.consultation_mode === "voice" ? "voice" as const : "video" as const,
       patientOnline,
       files: (appointment.files ?? []).map((file) => ({
         id: file.id,

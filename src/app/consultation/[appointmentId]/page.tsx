@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ShieldCheck, TriangleAlert } from "lucide-react";
@@ -30,6 +30,7 @@ class JoinRoomError extends Error {
 }
 
 const WAITING_TURN_POLL_MS = 4000;
+const READY_TURN_SECONDS = 60;
 
 export default function ConsultationPage(props: {
   params: Promise<{ appointmentId: string }>;
@@ -67,6 +68,10 @@ function ConsultationPageInner({
   // "Join now" click instead of suddenly grabbing their camera/mic.
   const [readyToJoin, setReadyToJoin] = useState(false);
   const [manuallyJoining, setManuallyJoining] = useState(false);
+  const [readySeconds, setReadySeconds] = useState(READY_TURN_SECONDS);
+  const [turnExpired, setTurnExpired] = useState(false);
+  const [queueAttemptVersion, setQueueAttemptVersion] = useState(0);
+  const readyDeadlineRef = useRef(0);
 
   // Also used by CallRoom to get a fresh token when reconnecting after the
   // network drops the call -- the room persists (see
@@ -85,23 +90,37 @@ function ConsultationPageInner({
     return data as JoinInfo;
   }
 
+  async function requestQueueCheck(): Promise<void> {
+    const response = await fetch("/api/video/room", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appointmentId, locale, queueCheckOnly: true }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new JoinRoomError(data.error ?? t("consultation_couldnt_start", locale), data.code, data.position);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     let pollId: ReturnType<typeof setInterval> | undefined;
     let hasBeenBlocked = false;
 
     function attempt() {
-      requestJoinInfo()
+      const request = hasBeenBlocked ? requestQueueCheck() : requestJoinInfo();
+      request
         .then((data) => {
           if (cancelled) return;
           if (hasBeenBlocked) {
-            // Don't auto-connect a patient who was waiting -- let them
-            // confirm with an explicit click instead.
-            setJoin(data);
+            // A queue check deliberately returns no LiveKit token. The
+            // patient receives one only after pressing Join now and passing
+            // a fresh server-side turn check.
             setWaitPosition(null);
+            setTurnExpired(false);
             setReadyToJoin(true);
           } else {
-            setJoin(data);
+            setJoin(data as JoinInfo);
           }
           if (pollId) clearInterval(pollId);
         })
@@ -125,7 +144,53 @@ function ConsultationPageInner({
       if (pollId) clearInterval(pollId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointmentId]);
+  }, [appointmentId, queueAttemptVersion]);
+
+  useEffect(() => {
+    if (!readyToJoin) return;
+
+    const deadline = Date.now() + READY_TURN_SECONDS * 1000;
+    readyDeadlineRef.current = deadline;
+    setReadySeconds(READY_TURN_SECONDS);
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setReadySeconds(remaining);
+      if (remaining === 0) {
+        setReadyToJoin(false);
+        setTurnExpired(true);
+      }
+    };
+
+    const intervalId = window.setInterval(tick, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [readyToJoin]);
+
+  async function handleManualJoin() {
+    if (Date.now() >= readyDeadlineRef.current) {
+      setReadyToJoin(false);
+      setTurnExpired(true);
+      return;
+    }
+
+    setManuallyJoining(true);
+    try {
+      const data = await requestJoinInfo();
+      setJoin(data);
+      setReadyToJoin(false);
+    } catch (err) {
+      const joinError = err as JoinRoomError;
+      setReadyToJoin(false);
+      if (joinError.code === "WAITING_TURN") {
+        setWaitPosition(joinError.position ?? null);
+        setQueueAttemptVersion((value) => value + 1);
+      } else {
+        setError(joinError);
+      }
+    } finally {
+      setManuallyJoining(false);
+    }
+  }
 
   if (error) {
     return (
@@ -182,13 +247,40 @@ function ConsultationPageInner({
         </span>
         <div className="mx-auto max-w-md">
           <p className="font-bold text-[#071923]">{t("consultation_waiting_turn_ready", locale)}</p>
+          <p className="mt-1 text-sm text-[#60717a]">
+            {t("consultation_waiting_turn_countdown", locale).replace("{seconds}", String(readySeconds))}
+          </p>
         </div>
         <Button
           type="button"
-          onClick={() => setManuallyJoining(true)}
+          onClick={handleManualJoin}
           className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
         >
           {t("consultation_join_now_cta", locale)}
+        </Button>
+      </main>
+    );
+  }
+
+  if (turnExpired) {
+    return (
+      <main className="flex min-h-[calc(100dvh-3.5rem)] w-full flex-1 flex-col items-center justify-center gap-3 bg-[#f7fbfb] px-4 py-20 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-[#fff6df] text-[#9a6500]">
+          <TriangleAlert className="size-7" />
+        </span>
+        <div className="mx-auto max-w-md">
+          <p className="font-bold text-[#071923]">{t("consultation_waiting_turn_expired", locale)}</p>
+          <p className="mt-1 text-sm text-[#60717a]">{t("consultation_waiting_turn_expired_body", locale)}</p>
+        </div>
+        <Button
+          type="button"
+          onClick={() => {
+            setTurnExpired(false);
+            setQueueAttemptVersion((value) => value + 1);
+          }}
+          className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+        >
+          {t("consultation_waiting_turn_rejoin", locale)}
         </Button>
       </main>
     );
@@ -213,6 +305,7 @@ function ConsultationPageInner({
       <CallRoom
         serverUrl={join.serverUrl}
         token={join.token}
+        queueAppointmentId={join.role === "patient" ? appointmentId : undefined}
         initialVideoEnabled={initialVideoEnabled}
         showAccountUpgrade={join.role === "patient" && !join.patientHasFullAccount}
         onReconnect={requestJoinInfo}

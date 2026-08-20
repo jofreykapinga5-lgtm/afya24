@@ -260,12 +260,14 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
 export function CallRoom({
   serverUrl,
   token,
+  queueAppointmentId,
   initialVideoEnabled = true,
   showAccountUpgrade = false,
   onReconnect,
 }: {
   serverUrl: string;
   token: string;
+  queueAppointmentId?: string;
   initialVideoEnabled?: boolean;
   showAccountUpgrade?: boolean;
   // Re-requests a fresh join token for this same appointment (the parent
@@ -286,6 +288,22 @@ export function CallRoom({
   // different messaging -- "call ended" reads as broken when what actually
   // happened is the signal died mid-consultation.
   const droppedByNetwork = ended && disconnectReason !== DisconnectReason.CLIENT_INITIATED;
+
+  useEffect(() => {
+    if (!queueAppointmentId || ended) return;
+
+    const heartbeat = () => {
+      void fetch("/api/video/queue-heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: queueAppointmentId }),
+      });
+    };
+
+    heartbeat();
+    const intervalId = window.setInterval(heartbeat, 8_000);
+    return () => window.clearInterval(intervalId);
+  }, [queueAppointmentId, ended]);
 
   async function handleReconnect() {
     if (!onReconnect) return;

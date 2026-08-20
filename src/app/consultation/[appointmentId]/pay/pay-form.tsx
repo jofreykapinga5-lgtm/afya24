@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Check, CheckCircle2, Copy, Lock, Phone, Smartphone, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,16 @@ import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 import type { SnippeChannelProvider } from "@/lib/payments/snippe";
 
-const PROVIDERS: { value: SnippeChannelProvider; labelKey: `payment_provider_${SnippeChannelProvider}` }[] = [
-  { value: "mpesa", labelKey: "payment_provider_mpesa" },
-  { value: "airtel", labelKey: "payment_provider_airtel" },
-  { value: "halotel", labelKey: "payment_provider_halotel" },
-  { value: "mixx", labelKey: "payment_provider_mixx" },
+const PROVIDERS: {
+  value: SnippeChannelProvider;
+  labelKey: `payment_provider_${SnippeChannelProvider}`;
+  logo: string;
+  logoClassName: string;
+}[] = [
+  { value: "mpesa", labelKey: "payment_provider_mpesa", logo: "/brands/payments/mpesa.svg", logoClassName: "max-h-6" },
+  { value: "airtel", labelKey: "payment_provider_airtel", logo: "/brands/payments/airtel-money.png", logoClassName: "max-h-7" },
+  { value: "halotel", labelKey: "payment_provider_halotel", logo: "/brands/payments/halopesa.png", logoClassName: "max-h-6" },
+  { value: "mixx", labelKey: "payment_provider_mixx", logo: "/brands/payments/mixx-by-yas.svg", logoClassName: "max-h-6" },
 ];
 
 const POLL_INTERVAL_MS = 3000;
@@ -183,8 +189,16 @@ export function PayForm({
                         : "h-auto justify-start gap-2 rounded-xl bg-[#f8fbfd] px-3 py-2.5 text-left text-[#071923] hover:border-[#01b7bb]/40 hover:bg-[#f1fbfa]"
                     }
                   >
-                    <Smartphone className="size-4 shrink-0" />
-                    <span className="text-sm font-semibold">{t(option.labelKey, locale)}</span>
+                    <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-white px-1.5 shadow-sm ring-1 ring-black/5">
+                      <Image
+                        src={option.logo}
+                        alt=""
+                        width={88}
+                        height={40}
+                        className={`h-auto w-auto max-w-full object-contain ${option.logoClassName}`}
+                      />
+                    </span>
+                    <span className="min-w-0 text-sm font-semibold">{t(option.labelKey, locale)}</span>
                   </Button>
                 );
               })}

@@ -118,6 +118,7 @@ function ConsultationPageInner({
             // a fresh server-side turn check.
             setWaitPosition(null);
             setTurnExpired(false);
+            setReadySeconds(READY_TURN_SECONDS);
             setReadyToJoin(true);
           } else {
             setJoin(data as JoinInfo);
@@ -151,7 +152,6 @@ function ConsultationPageInner({
 
     const deadline = Date.now() + READY_TURN_SECONDS * 1000;
     readyDeadlineRef.current = deadline;
-    setReadySeconds(READY_TURN_SECONDS);
 
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));

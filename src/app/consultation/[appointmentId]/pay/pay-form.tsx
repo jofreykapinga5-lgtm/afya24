@@ -22,7 +22,7 @@ const PROVIDERS: {
   logo: string;
   logoClassName: string;
 }[] = [
-  { value: "mpesa", labelKey: "payment_provider_mpesa", logo: "/brands/payments/mpesa.svg", logoClassName: "max-h-6" },
+  { value: "mpesa", labelKey: "payment_provider_mpesa", logo: "/brands/payments/mpesa.png", logoClassName: "max-h-6" },
   { value: "airtel", labelKey: "payment_provider_airtel", logo: "/brands/payments/airtel-money.png", logoClassName: "max-h-7" },
   { value: "halotel", labelKey: "payment_provider_halotel", logo: "/brands/payments/halopesa.png", logoClassName: "max-h-6" },
   { value: "mixx", labelKey: "payment_provider_mixx", logo: "/brands/payments/mixx-by-yas.svg", logoClassName: "max-h-6" },

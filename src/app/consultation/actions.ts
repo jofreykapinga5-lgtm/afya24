@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPatientSession } from "@/lib/patient-session";
@@ -22,71 +23,85 @@ import { applySnippePaymentResult } from "@/lib/payments/reconcile";
 // file; both intake paths require it) becomes the account password, in the
 // same YYYY-MM-DD form the /lookup DOB-alternative already uses, so sign-in
 // later needs only their phone number and the birthdate they already know.
-export async function upgradeToFullAccount() {
-  const session = await getPatientSession();
-  if (!session) {
-    throw new Error("Your session expired. Please look yourself up again to continue.");
-  }
+export type UpgradeAccountResult = { ok: true } | { ok: false; message: string };
 
-  const service = createServiceClient();
-  const { data: patient, error: patientError } = await service
-    .from("patients")
-    .select("id, phone, user_id, date_of_birth")
-    .eq("id", session.patientId)
-    .maybeSingle();
-
-  if (patientError || !patient) {
-    throw new Error("Could not find your patient record.");
-  }
-  if (patient.user_id) {
-    throw new Error("This visit already has a full account. Sign in instead.");
-  }
-  if (!patient.phone) {
-    throw new Error("No phone number on file to create an account with.");
-  }
-  if (!patient.date_of_birth) {
-    throw new Error("No date of birth on file to create an account with.");
-  }
-
-  const password = patient.date_of_birth;
-  const authEmail = patientAuthEmailFromPhone(patient.phone);
-  const { data: created, error: createError } = await service.auth.admin.createUser({
-    email: authEmail,
-    password,
-    email_confirm: true,
-    phone: normalizeTanzanianPhoneToE164(patient.phone),
-    phone_confirm: true,
-    user_metadata: { role: "patient" },
-  });
-
-  if (createError || !created.user) {
-    if (createError?.message?.toLowerCase().includes("already been registered")) {
-      throw new Error("This phone number already has an account. Sign in instead at /account.");
+// Returns a result object rather than throwing -- see initiateSnippePayment's
+// comment below for why: a thrown Error from a Server Action never reaches
+// the client's try/catch with a readable message in production, only a
+// generic digest-only "Server Components render" error (React error #441).
+// This function used to throw and was hitting exactly that failure mode.
+export async function upgradeToFullAccount(): Promise<UpgradeAccountResult> {
+  try {
+    const session = await getPatientSession();
+    if (!session) {
+      return { ok: false, message: "Your session expired. Please look yourself up again to continue." };
     }
-    throw new Error(createError?.message ?? "Could not create your account.");
-  }
 
-  const { error: linkError } = await service
-    .from("patients")
-    .update({ user_id: created.user.id })
-    .eq("id", patient.id);
+    const service = createServiceClient();
+    const { data: patient, error: patientError } = await service
+      .from("patients")
+      .select("id, phone, user_id, date_of_birth")
+      .eq("id", session.patientId)
+      .maybeSingle();
 
-  if (linkError) {
-    await service.auth.admin.deleteUser(created.user.id);
-    throw new Error(linkError.message);
-  }
+    if (patientError || !patient) {
+      return { ok: false, message: "Could not find your patient record." };
+    }
+    if (patient.user_id) {
+      return { ok: false, message: "This visit already has a full account. Sign in instead." };
+    }
+    if (!patient.phone) {
+      return { ok: false, message: "No phone number on file to create an account with." };
+    }
+    if (!patient.date_of_birth) {
+      return { ok: false, message: "No date of birth on file to create an account with." };
+    }
 
-  // Sign them into a real Supabase Auth session now, so /account/dashboard
-  // recognizes them from this point on -- same synthetic-email sign-in used
-  // by the manual /account/sign-up flow.
-  const supabase = await createClient();
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: authEmail,
-    password,
-  });
+    const password = patient.date_of_birth;
+    const authEmail = patientAuthEmailFromPhone(patient.phone);
+    const { data: created, error: createError } = await service.auth.admin.createUser({
+      email: authEmail,
+      password,
+      email_confirm: true,
+      phone: normalizeTanzanianPhoneToE164(patient.phone),
+      phone_confirm: true,
+      user_metadata: { role: "patient" },
+    });
 
-  if (signInError) {
-    throw new Error(signInError.message);
+    if (createError || !created.user) {
+      if (createError?.message?.toLowerCase().includes("already been registered")) {
+        return { ok: false, message: "This phone number already has an account. Sign in instead at /account." };
+      }
+      return { ok: false, message: createError?.message ?? "Could not create your account." };
+    }
+
+    const { error: linkError } = await service
+      .from("patients")
+      .update({ user_id: created.user.id })
+      .eq("id", patient.id);
+
+    if (linkError) {
+      await service.auth.admin.deleteUser(created.user.id);
+      return { ok: false, message: linkError.message };
+    }
+
+    // Sign them into a real Supabase Auth session now, so /account/dashboard
+    // recognizes them from this point on -- same synthetic-email sign-in used
+    // by the manual /account/sign-up flow.
+    const supabase = await createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: authEmail,
+      password,
+    });
+
+    if (signInError) {
+      return { ok: false, message: signInError.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not create your account." };
   }
 }
 

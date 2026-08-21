@@ -197,18 +197,30 @@ function CallStage() {
 function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [skipped, setSkipped] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function handleCreateAccount() {
     setError(null);
     startTransition(async () => {
-      try {
-        await upgradeToFullAccount();
-        setSuccess(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not create your account.");
+      const result = await upgradeToFullAccount();
+      if (!result.ok) {
+        setError(result.message);
+        return;
       }
+      setSuccess(true);
     });
+  }
+
+  // This upgrade is a convenience, not a requirement -- the patient's
+  // reference number already works for returning later on its own (see
+  // USER-FLOWS.md: patients don't need an account in v1). Without a way out
+  // here, this screen was the only thing shown after a call ended, reading
+  // as a mandatory second step instead of an optional offer.
+  if (skipped) {
+    return (
+      <p className="text-sm text-[#60717a]">{t("video_close_window", locale)}</p>
+    );
   }
 
   if (success) {
@@ -252,6 +264,13 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
         >
           {t("consultation_upgrade_cta", locale)}
         </Button>
+        <button
+          type="button"
+          onClick={() => setSkipped(true)}
+          className="text-center text-sm font-semibold text-[#60717a] outline-none hover:text-[#083273] focus-visible:underline"
+        >
+          {t("consultation_upgrade_skip", locale)}
+        </button>
       </div>
     </div>
   );

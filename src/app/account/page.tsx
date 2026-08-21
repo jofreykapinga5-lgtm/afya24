@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Check, TriangleAlert } from "lucide-react";
+import { Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
-import { signIn } from "./actions";
+import { LoginForm } from "./login-form";
 
 const benefitKeys: TranslationKey[] = [
   "account_benefit1",
@@ -26,6 +27,7 @@ export default async function AccountSignInPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (user) {
+    await redirectIfStaffUser(user.id);
     redirect("/account/dashboard");
   }
 
@@ -79,45 +81,7 @@ export default async function AccountSignInPage({
             {t("account_login_title", locale)}
           </h1>
 
-          {error && (
-            <div className="mt-5 flex items-start gap-2 rounded-2xl border border-urgent/30 bg-urgent-soft px-3.5 py-3 text-sm text-urgent">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-              <p>{error}</p>
-            </div>
-          )}
-
-          <form action={signIn} className="mt-7 space-y-3">
-            <label htmlFor="phone" className="sr-only">
-              {t("account_phone_placeholder", locale)}
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              placeholder={t("account_phone_placeholder", locale)}
-              required
-              className="h-13 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-            />
-            <label htmlFor="password" className="sr-only">
-              {t("account_password_placeholder", locale)}
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              placeholder={t("account_password_placeholder", locale)}
-              required
-              className="h-13 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-            />
-            <button
-              type="submit"
-              className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25 active:translate-y-px"
-            >
-              {t("header_log_in", locale)}
-            </button>
-          </form>
+          <LoginForm locale={locale} error={error} />
 
           <div className="mt-5 rounded-2xl bg-[#f8fbfa] p-4 text-center text-sm text-[#5d6970]">
             <span>{t("account_new_to_afya24", locale)}</span>{" "}
@@ -125,14 +89,6 @@ export default async function AccountSignInPage({
               {t("account_create_account_link", locale)}
             </Link>
           </div>
-
-          <p className="mt-4 text-center text-sm text-[#5d6970]">
-            {t("account_prefer_lookup", locale)}{" "}
-            <Link href="/lookup" className="font-bold text-[#083273] hover:underline">
-              {t("account_reference_lookup_phrase", locale)}
-            </Link>{" "}
-            {t("account_instead", locale)}
-          </p>
         </section>
       </div>
     </main>

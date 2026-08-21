@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { getDefaultService } from "@/lib/default-service";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -149,6 +150,8 @@ export default async function AccountDashboardPage() {
   if (!user) {
     redirect("/account");
   }
+
+  await redirectIfStaffUser(user.id);
 
   const { data: patient } = await supabase
     .from("patients")

@@ -364,6 +364,8 @@ const dict = {
     sw: "utafutaji wa nambari ya rejea",
   },
   account_instead: { en: "instead.", sw: "badala yake." },
+  account_login_tab_password: { en: "Phone & password", sw: "Simu na nenosiri" },
+  account_login_tab_reference: { en: "Reference number", sw: "Nambari ya rejea" },
   account_signup_title: {
     en: "Fast, upfront healthcare starts here",
     sw: "Huduma za afya za haraka, kwa bei wazi, huanzia hapa",
@@ -642,6 +644,7 @@ const dict = {
     sw: "Tutahifadhi ziara hii kwenye akaunti unayoweza kuifikia wakati wowote -- ingia baadaye kwa nambari yako ya simu na tarehe ya kuzaliwa.",
   },
   consultation_upgrade_cta: { en: "Create my account", sw: "Unda akaunti yangu" },
+  consultation_upgrade_skip: { en: "Skip for now", sw: "Ruka kwa sasa" },
   consultation_upgrade_success: {
     en: "Account created. Sign in anytime with your phone number and date of birth.",
     sw: "Akaunti imeundwa. Ingia wakati wowote kwa nambari yako ya simu na tarehe ya kuzaliwa.",

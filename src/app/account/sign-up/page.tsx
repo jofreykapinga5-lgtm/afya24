@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Check, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { signUp } from "../actions";
@@ -27,6 +28,7 @@ export default async function AccountSignUpPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (user) {
+    await redirectIfStaffUser(user.id);
     redirect("/account/dashboard");
   }
 

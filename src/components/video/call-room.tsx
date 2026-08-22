@@ -86,6 +86,16 @@ function CallControls() {
   const locale = useAppStore((state) => state.locale);
   const room = useRoomContext();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled } = useLocalParticipant();
+  const connectionState = useConnectionState();
+  // Publishing a track before the underlying connection has fully come up
+  // rejects with "publishing rejected as engine not connected within
+  // timeout" -- seen in production as a real patient rage-clicking a
+  // mic/camera toggle that silently did nothing right after joining.
+  // Disabling until Connected removes the race instead of just swallowing
+  // the failure after the fact; the .catch() below is a second line of
+  // defense for the rare drop mid-toggle (e.g. a reconnect starting the
+  // instant the button is pressed).
+  const controlsReady = connectionState === ConnectionState.Connected;
 
   return (
     <div className="flex items-center justify-center gap-4 rounded-full bg-black/50 px-5 py-3 backdrop-blur-md">
@@ -93,8 +103,9 @@ function CallControls() {
         type="button"
         variant="ghost"
         size="icon"
+        disabled={!controlsReady}
         className="size-14 rounded-full bg-white/15 text-white hover:bg-white/25"
-        onClick={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
+        onClick={() => void localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled).catch(() => {})}
         aria-label={t(isMicrophoneEnabled ? "video_mute_mic" : "video_unmute_mic", locale)}
       >
         {isMicrophoneEnabled ? <Mic className="size-6" /> : <MicOff className="size-6" />}
@@ -103,8 +114,9 @@ function CallControls() {
         type="button"
         variant="ghost"
         size="icon"
+        disabled={!controlsReady}
         className="size-14 rounded-full bg-white/15 text-white hover:bg-white/25"
-        onClick={() => localParticipant.setCameraEnabled(!isCameraEnabled)}
+        onClick={() => void localParticipant.setCameraEnabled(!isCameraEnabled).catch(() => {})}
         aria-label={t(isCameraEnabled ? "video_camera_off_action" : "video_camera_on_action", locale)}
       >
         {isCameraEnabled ? <Video className="size-6" /> : <VideoOff className="size-6" />}

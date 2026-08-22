@@ -41,6 +41,17 @@ export default async function DoctorBookingPage({
 
   const provider = mapProviderRow(row as ProviderRow, defaultService.basePrice, locale);
 
+  // hasSession hides the whole name/phone/DOB form below (see BookingForm) --
+  // without this, a recognized returning visitor sees a bare "Start
+  // consultation" button with no indication of why their details aren't
+  // being asked for again, which reads as a missing section rather than an
+  // intentional shortcut.
+  const existingPatientName = patientSession
+    ? (
+        await service.from("patients").select("full_name").eq("id", patientSession.patientId).maybeSingle()
+      ).data?.full_name ?? null
+    : null;
+
   return (
     <main className="min-h-[calc(100dvh-3.5rem)] flex-1 bg-[#f7fbfb]">
       <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
@@ -111,6 +122,7 @@ export default async function DoctorBookingPage({
               provider={provider}
               locale={locale}
               hasSession={Boolean(patientSession)}
+              existingPatientName={existingPatientName}
               lookupError={lookupError}
             />
           </div>

@@ -1,7 +1,8 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
-import { createPatientSession, getPatientSession } from "@/lib/patient-session";
+import { createPatientSession, clearPatientSession, getPatientSession } from "@/lib/patient-session";
 import { createPatientAccountRecord } from "@/lib/patient-account";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
@@ -139,6 +140,17 @@ export async function bookConsultationDirect(input: {
     locale: input.locale,
     qualification: null,
   });
+}
+
+// The "Continuing as {name}" shortcut on the doctor page assumes whoever
+// holds this browser/phone is the same patient the saved session belongs
+// to -- not a safe assumption on a shared or borrowed phone. This clears
+// that session and sends them back to the same doctor's page, which then
+// renders as a first-time visitor and shows the normal name/phone/DOB form
+// again for whoever is actually booking now.
+export async function startOverAsNewPatient(providerId: string) {
+  await clearPatientSession();
+  redirect(`/doctors/${providerId}`);
 }
 
 async function bookConsultationForPatient(input: {

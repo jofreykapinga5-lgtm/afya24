@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DobSelect } from "@/app/lookup/dob-select";
 import { ReturningPatientLookup } from "./returning-patient-lookup";
-import { bookConsultation, bookConsultationDirect } from "../actions";
+import { bookConsultation, bookConsultationDirect, startOverAsNewPatient } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import type { Locale, Provider } from "@/lib/types";
@@ -25,11 +25,13 @@ export function BookingForm({
   provider,
   locale,
   hasSession,
+  existingPatientName,
   lookupError,
 }: {
   provider: Provider;
   locale: Locale;
   hasSession: boolean;
+  existingPatientName?: string | null;
   lookupError?: string;
 }) {
   const router = useRouter();
@@ -106,6 +108,25 @@ export function BookingForm({
         onSubmit={handleSubmit}
         className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7"
       >
+        {hasSession && existingPatientName && (
+          <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl bg-[#f4f8f9] px-4 py-3 text-sm font-semibold text-[#071923]">
+            <span className="flex min-w-0 items-center gap-2.5">
+              <UserRound className="size-4 shrink-0 text-[#01b7bb]" />
+              <span className="truncate">
+                {t("doctor_booking_continuing_as", locale)} {existingPatientName}
+              </span>
+            </span>
+            <form action={startOverAsNewPatient.bind(null, provider.id)}>
+              <button
+                type="submit"
+                className="shrink-0 rounded-full text-xs font-semibold text-[#60717a] underline decoration-dotted underline-offset-2 outline-none hover:text-[#083273] focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {t("doctor_booking_not_you", locale)}
+              </button>
+            </form>
+          </div>
+        )}
+
         {!hasSession && (
           <div className="grid gap-4">
             <p className="text-sm font-bold text-[#071923]">{t("doctor_direct_booking_title", locale)}</p>

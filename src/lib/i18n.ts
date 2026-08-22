@@ -524,6 +524,8 @@ const dict = {
     en: "Your details create a secure patient file, used only for this consultation.",
     sw: "Maelezo yako yanaunda faili salama la mgonjwa, linalotumika kwa ushauri huu tu.",
   },
+  doctor_booking_continuing_as: { en: "Continuing as", sw: "Unaendelea kama" },
+  doctor_booking_not_you: { en: "Not you? Start over", sw: "Sio wewe? Anza upya" },
   doctor_booking_summary_note: {
     en: "Your Afya24 intake summary will be shared with the doctor.",
     sw: "Muhtasari wako wa Afya24 utashirikiwa na daktari.",

@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedPublishedPharmacyItems } from "@/lib/cache/public-catalog";
 import type { PharmacyCategory, PharmacyItem, PharmacyItemBadge, StockStatus } from "@/lib/types";
 
 type DbPharmacyItemRow = {
@@ -20,16 +20,7 @@ type DbPharmacyItemRow = {
 // catalog, just filtered differently on the client (checkout only cares
 // about whatever's actually in the cart).
 export async function getPublishedPharmacyItems(): Promise<PharmacyItem[]> {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("pharmacy_items")
-    .select(
-      "id, medicine_name, category, description, form, strength, stock_status, unit_price, requires_prescription, photo_url, badge"
-    )
-    .eq("status", "published")
-    .order("medicine_name", { ascending: true })
-    .returns<DbPharmacyItemRow[]>();
+  const data = (await getCachedPublishedPharmacyItems()) as DbPharmacyItemRow[];
 
   return (data ?? []).map((item) => ({
     id: item.id,

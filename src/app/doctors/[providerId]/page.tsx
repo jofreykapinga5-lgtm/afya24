@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
+import { getCachedActiveProviderById } from "@/lib/cache/public-catalog";
 import { getPatientSession } from "@/lib/patient-session";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { toTitleCase } from "@/lib/format-name";
@@ -21,13 +22,8 @@ export async function generateMetadata({
   const locale = await getServerLocale();
   const service = createServiceClient();
 
-  const [{ data: row }, defaultService] = await Promise.all([
-    service
-      .from("providers")
-      .select("full_name, specialty")
-      .eq("id", providerId)
-      .eq("profile_status", "active")
-      .maybeSingle(),
+  const [row, defaultService] = await Promise.all([
+    getCachedActiveProviderById(providerId),
     getDefaultService(service).catch(() => null),
   ]);
 
@@ -57,15 +53,8 @@ export default async function DoctorBookingPage({
   const locale = await getServerLocale();
   const service = createServiceClient();
 
-  const [{ data: row }, defaultService, patientSession] = await Promise.all([
-    service
-      .from("providers")
-      .select(
-        "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
-      )
-      .eq("id", providerId)
-      .eq("profile_status", "active")
-      .maybeSingle(),
+  const [row, defaultService, patientSession] = await Promise.all([
+    getCachedActiveProviderById(providerId),
     getDefaultService(service),
     getPatientSession(),
   ]);

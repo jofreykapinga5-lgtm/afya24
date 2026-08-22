@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Stethoscope } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
+import { getCachedActiveProviders } from "@/lib/cache/public-catalog";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { DoctorCard } from "@/components/doctor-card";
 import { Reveal } from "@/components/motion/reveal";
@@ -28,17 +29,12 @@ export default async function DoctorsPage({
   const specialtyFilter = specialty?.trim().toLowerCase() ?? "";
 
   const service = createServiceClient();
-  const [{ data: providerRows }, defaultService] = await Promise.all([
-    service
-      .from("providers")
-      .select(
-        "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
-      )
-      .eq("profile_status", "active"),
+  const [providerRows, defaultService] = await Promise.all([
+    getCachedActiveProviders(),
     getDefaultService(service).catch(() => null),
   ]);
 
-  const providers = ((providerRows ?? []) as ProviderRow[]).map((row) =>
+  const providers = (providerRows as ProviderRow[]).map((row) =>
     mapProviderRow(row, defaultService?.basePrice ?? 0, locale)
   );
 

@@ -11,14 +11,11 @@ import { PatientReviews } from "@/components/home/patient-reviews";
 import { EmailCapture } from "@/components/home/email-capture";
 import { SiteFooter } from "@/components/home/site-footer";
 import { Reveal } from "@/components/motion/reveal";
-import { createServiceClient } from "@/lib/supabase/service";
-import { getDefaultService } from "@/lib/default-service";
+import { getCachedHomepageData } from "@/lib/cache/public-catalog";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { t } from "@/lib/i18n";
 import type { Provider } from "@/lib/types";
-
-const MAX_SLOTS_PER_DOCTOR = 5;
 
 function formatSlotTime(iso: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -47,69 +44,20 @@ function formatNextAvailable(iso: string) {
   return `${weekday}, ${monthDay}`;
 }
 
-type ProviderSlotInfo = { chips: string[]; earliestIso: string | null };
-
-async function getUpcomingSlotsByProvider(
-  service: ReturnType<typeof createServiceClient>,
-  providerIds: string[]
-) {
-  const slotsByProvider = new Map<string, ProviderSlotInfo>();
-  if (providerIds.length === 0) return slotsByProvider;
-
-  const { data: slotRows } = await service
-    .from("provider_availability_slots")
-    .select("provider_id, starts_at")
-    .in("provider_id", providerIds)
-    .eq("status", "open")
-    .gte("starts_at", new Date().toISOString())
-    .order("starts_at", { ascending: true });
-
-  for (const slot of slotRows ?? []) {
-    const existing = slotsByProvider.get(slot.provider_id) ?? { chips: [], earliestIso: null };
-    if (!existing.earliestIso) existing.earliestIso = slot.starts_at;
-    if (existing.chips.length < MAX_SLOTS_PER_DOCTOR) {
-      existing.chips.push(formatSlotTime(slot.starts_at));
-    }
-    slotsByProvider.set(slot.provider_id, existing);
-  }
-
-  return slotsByProvider;
-}
-
 export default async function Home() {
   const locale = await getServerLocale();
   let doctors: Provider[] = [];
   let labs: PublicLabLocation[] = [];
 
   try {
-    const service = createServiceClient();
-    const [{ data: providerRows }, { data: labRows }, defaultService] = await Promise.all([
-      service
-        .from("providers")
-        .select(
-          "id, full_name, specialty, credentials, bio, photo_url, languages, rating_summary, available_now, consultation_modes"
-        )
-        .eq("profile_status", "active")
-        .order("available_now", { ascending: false })
-        .limit(8),
-      service
-        .from("lab_locations")
-        .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
-        .eq("status", "active")
-        .order("region", { ascending: true })
-        .limit(100),
-      getDefaultService(service).catch(() => null),
-    ]);
+    const { providers, labs: labRows, defaultServicePrice, slotEntries } = await getCachedHomepageData();
+    const slotsByProvider = new Map(slotEntries);
 
-    const rows = (providerRows ?? []) as ProviderRow[];
-    const slotsByProvider = await getUpcomingSlotsByProvider(
-      service,
-      rows.map((row) => row.id)
-    );
+    const rows = providers as ProviderRow[];
     doctors = rows.map((row) => {
       const slotInfo = slotsByProvider.get(row.id);
-      return mapProviderRow(row, defaultService?.basePrice ?? 0, locale, {
-        chips: slotInfo?.chips ?? [],
+      return mapProviderRow(row, defaultServicePrice, locale, {
+        chips: (slotInfo?.chips ?? []).map(formatSlotTime),
         nextAvailableAt: slotInfo?.earliestIso ? formatNextAvailable(slotInfo.earliestIso) : undefined,
       });
     });

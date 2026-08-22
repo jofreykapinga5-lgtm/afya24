@@ -1176,6 +1176,9 @@ const dict = {
   },
   admin_audit_prescription_signed: { en: "Prescription signed", sw: "Dawa imesainiwa" },
   admin_audit_lab_order_approved: { en: "Lab order approved", sw: "Agizo la maabara limeidhinishwa" },
+  admin_audit_pharmacy_item_added: { en: "Pharmacy item added", sw: "Bidhaa ya duka la dawa imeongezwa" },
+  admin_audit_pharmacy_item_updated: { en: "Pharmacy item updated", sw: "Bidhaa ya duka la dawa imesasishwa" },
+  admin_audit_pharmacy_item_deleted: { en: "Pharmacy item deleted", sw: "Bidhaa ya duka la dawa imefutwa" },
 
   doctor_apply_title: { en: "Doctor application", sw: "Ombi la udaktari" },
   doctor_apply_success_title: { en: "Application submitted", sw: "Ombi limetumwa" },
@@ -1659,4 +1662,7 @@ export const adminAuditActionKey: Record<string, TranslationKey> = {
   pharmacy_order_status_changed: "admin_audit_pharmacy_order_status_changed",
   prescription_signed: "admin_audit_prescription_signed",
   lab_order_approved: "admin_audit_lab_order_approved",
+  pharmacy_item_added: "admin_audit_pharmacy_item_added",
+  pharmacy_item_updated: "admin_audit_pharmacy_item_updated",
+  pharmacy_item_deleted: "admin_audit_pharmacy_item_deleted",
 };

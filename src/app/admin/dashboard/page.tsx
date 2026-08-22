@@ -24,8 +24,15 @@ import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
 import { toTitleCase } from "@/lib/format-name";
 import type { AppointmentPaymentRow } from "@/components/admin/payments-panel";
 import type { ProviderApplicationRow } from "@/components/admin/applications-panel";
-import { appointments, auditLogs, labOrders } from "@/lib/mock-data";
 import type {
+  Appointment,
+  AppointmentStatus,
+  AuditActionType,
+  AuditLogEntry,
+  ConsultationMode,
+  LabOrder,
+  LabOrderStatus,
+  PaymentStatus,
   PharmacyCategory,
   PharmacyItem,
   PharmacyItemBadge,
@@ -33,12 +40,15 @@ import type {
   PharmacyOrder,
   Service,
   ServiceCategory,
+  StaffRole,
   StockStatus,
+  WhatsappDeliveryStatus,
 } from "@/lib/types";
 import { signOut } from "../actions";
 
 type DbProviderRow = {
   id: string;
+  user_id: string;
   full_name: string;
   specialty: string;
   credentials: string | null;
@@ -57,10 +67,33 @@ type PaymentAppointmentRow = {
   id: string;
   scheduled_at: string;
   payment_status: string;
+  status: string;
+  provider_id: string;
+  service_id: string;
   price: number | string | null;
   currency: string | null;
   patients: { full_name: string; hospital_reference_number: string | null } | null;
   providers: { full_name: string } | null;
+  consultation_orders: { consultation_mode: string }[] | null;
+};
+
+type DbAuditLogRow = {
+  id: string;
+  actor_user_id: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  created_at: string;
+};
+
+type DbLabOrderRow = {
+  id: string;
+  status: string;
+  map_url: string | null;
+  instructions: string | null;
+  whatsapp_delivery_status: string;
+  lab_location_id: string;
+  lab_order_tests: { lab_tests: { test_name: string } | null }[] | null;
 };
 
 type DbLabLocationRow = {
@@ -215,26 +248,38 @@ export default async function AdminDashboardPage() {
   let dbServiceCategories: DbServiceCategoryRow[] | null = null;
   let dbPharmacyItems: DbPharmacyItemRow[] | null = null;
   let dbPharmacyOrders: DbPharmacyOrderRow[] | null = null;
+  let dbAuditLogs: DbAuditLogRow[] | null = null;
+  let dbLabOrders: DbLabOrderRow[] | null = null;
+  const actorNameByUserId = new Map<string, string>();
+  const actorRoleByUserId = new Map<string, StaffRole>();
   const applicationFileUrls = new Map<string, string>();
 
   if (profile) {
     try {
       const service = createServiceClient();
-      // Four independent tables -- was four sequential round trips before
-      // this, one after another, even though none of them depend on each
-      // other's result.
-      const [providersResult, appointmentsResult, labsResult, applicationsResult, servicesResult, serviceCategoriesResult] =
+      // Independent tables -- was one sequential round trip after another
+      // before this, even though none of them depend on each other's result.
+      const [
+        providersResult,
+        appointmentsResult,
+        labsResult,
+        applicationsResult,
+        servicesResult,
+        serviceCategoriesResult,
+        auditLogsResult,
+        labOrdersResult,
+      ] =
         await Promise.all([
           service
             .from("providers")
             .select(
-              "id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
+              "id, user_id, full_name, specialty, credentials, license_number, bio, profile_status, languages, consultation_modes, available_now, availability_note, created_at, rating_summary"
             )
             .order("created_at", { ascending: false }),
           service
             .from("appointments")
             .select(
-              "id, scheduled_at, payment_status, price, currency, patients(full_name, hospital_reference_number), providers(full_name)"
+              "id, scheduled_at, payment_status, status, provider_id, service_id, price, currency, patients(full_name, hospital_reference_number), providers(full_name), consultation_orders(consultation_mode)"
             )
             .order("scheduled_at", { ascending: false })
             .limit(50),
@@ -255,6 +300,18 @@ export default async function AdminDashboardPage() {
             .select("id, category_id, name, description, base_price, status")
             .order("name", { ascending: true }),
           service.from("service_categories").select("id, name, description").order("sort_order", { ascending: true }),
+          service
+            .from("audit_logs")
+            .select("id, actor_user_id, action, entity_type, entity_id, created_at")
+            .order("created_at", { ascending: false })
+            .limit(50),
+          service
+            .from("lab_orders")
+            .select(
+              "id, status, map_url, instructions, whatsapp_delivery_status, lab_location_id, lab_order_tests(lab_tests(test_name))"
+            )
+            .order("created_at", { ascending: false })
+            .limit(50),
         ]);
 
       if (providersResult.error) {
@@ -292,6 +349,38 @@ export default async function AdminDashboardPage() {
       }
 
       dbServiceCategories = serviceCategoriesResult.data as DbServiceCategoryRow[];
+
+      if (auditLogsResult.error) {
+        throw auditLogsResult.error;
+      }
+
+      dbAuditLogs = auditLogsResult.data as DbAuditLogRow[];
+
+      if (labOrdersResult.error) {
+        throw labOrdersResult.error;
+      }
+
+      dbLabOrders = labOrdersResult.data as unknown as DbLabOrderRow[];
+
+      // audit_logs only stores actor_user_id -- resolve a display name from
+      // whichever staff table actually has one. Doctors have a name via
+      // providers (already fetched above); anyone else falls back to their
+      // email. One batched lookup for every distinct actor, not one query
+      // per log row.
+      const actorUserIds = [
+        ...new Set(dbAuditLogs.map((log) => log.actor_user_id).filter((id): id is string => Boolean(id))),
+      ];
+      const providerNameByUserId = new Map(dbProviders.map((provider) => [provider.user_id, provider.full_name]));
+      if (actorUserIds.length > 0) {
+        const { data: actorUsers } = await service
+          .from("users")
+          .select("id, email, role")
+          .in("id", actorUserIds);
+        (actorUsers ?? []).forEach((user) => {
+          actorNameByUserId.set(user.id, providerNameByUserId.get(user.id) ?? user.email);
+          actorRoleByUserId.set(user.id, user.role as StaffRole);
+        });
+      }
 
       const applicationFilePaths = dbApplications
         .map((application) => application.file_path)
@@ -402,6 +491,60 @@ export default async function AdminDashboardPage() {
       (appointment.patients as unknown as { hospital_reference_number: string | null } | null)
         ?.hospital_reference_number ?? "—",
     providerName: (appointment.providers as unknown as { full_name: string } | null)?.full_name ?? "Doctor",
+  }));
+
+  // Same honesty rule as realPayments above -- intakeStatus/chatStatus/
+  // voiceStatus/videoStatus have no real column anywhere (confirmed: the
+  // admin UI never actually reads them, they're pure mock-data leftovers
+  // in the shared Appointment type), so they get a harmless static default
+  // rather than fabricated per-row values.
+  const realAppointments: Appointment[] = (paymentAppointments ?? []).map((appointment) => ({
+    id: appointment.id,
+    patientReference:
+      (appointment.patients as unknown as { hospital_reference_number: string | null } | null)
+        ?.hospital_reference_number ?? "—",
+    providerId: appointment.provider_id,
+    serviceId: appointment.service_id,
+    scheduledAt: new Date(appointment.scheduled_at).toLocaleString("en-TZ", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Africa/Dar_es_Salaam",
+    }),
+    consultationMode: (appointment.consultation_orders?.[0]?.consultation_mode ?? "chat") as ConsultationMode,
+    status: appointment.status as AppointmentStatus,
+    paymentStatus: appointment.payment_status as PaymentStatus,
+    intakeStatus: "complete",
+    chatStatus: "not_started",
+    voiceStatus: "not_started",
+    videoStatus: "not_started",
+  }));
+
+  const realAuditLogs: AuditLogEntry[] = (dbAuditLogs ?? []).map((log) => ({
+    id: log.id,
+    actorName: log.actor_user_id ? (actorNameByUserId.get(log.actor_user_id) ?? "Unknown") : "System",
+    // System-initiated events (e.g. the payment gateway webhook) have no
+    // real staff role -- "admin" is the closest harmless fit for display,
+    // not a claim that an admin literally clicked anything.
+    actorRole: (log.actor_user_id ? actorRoleByUserId.get(log.actor_user_id) : undefined) ?? "admin",
+    action: log.action as AuditActionType,
+    entityLabel: log.entity_type + (log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""),
+    createdAt: new Date(log.created_at).toLocaleString("en-TZ", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Africa/Dar_es_Salaam",
+    }),
+  }));
+
+  const realLabOrders: LabOrder[] = (dbLabOrders ?? []).map((order) => ({
+    id: order.id,
+    tests: (order.lab_order_tests ?? [])
+      .map((entry) => entry.lab_tests?.test_name)
+      .filter((name): name is string => Boolean(name)),
+    status: order.status as LabOrderStatus,
+    labLocationId: order.lab_location_id,
+    mapUrl: order.map_url ?? "",
+    whatsappDeliveryStatus: order.whatsapp_delivery_status as WhatsappDeliveryStatus,
+    instructions: order.instructions ?? "",
   }));
 
   const mappedProviderMeta =
@@ -676,13 +819,13 @@ export default async function AdminDashboardPage() {
                   providerApplications={providerApplications}
                   serviceCategories={realServiceCategories}
                   services={realServices}
-                  appointments={appointments}
+                  appointments={realAppointments}
                   payments={realPayments}
                   pharmacyItems={realPharmacyItems}
                   pharmacyOrders={realPharmacyOrders}
-                  labOrders={labOrders}
+                  labOrders={realLabOrders}
                   labLocations={realLabLocations}
-                  auditLogs={auditLogs}
+                  auditLogs={realAuditLogs}
                 />
               </div>
             ) : (

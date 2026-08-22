@@ -333,7 +333,10 @@ export type AuditActionType =
   | "lab_location_updated"
   | "pharmacy_order_status_changed"
   | "prescription_signed"
-  | "lab_order_approved";
+  | "lab_order_approved"
+  | "pharmacy_item_added"
+  | "pharmacy_item_updated"
+  | "pharmacy_item_deleted";
 
 export interface AuditLogEntry {
   id: string;

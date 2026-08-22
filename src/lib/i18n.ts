@@ -18,6 +18,35 @@ const dict = {
     en: "Afya24 is a direct-pay telehealth platform: describe your issue, get matched with a licensed doctor, and consult by chat, voice, or video.",
     sw: "Afya24 ni jukwaa la matibabu ya mtandaoni la kulipa moja kwa moja: eleza tatizo lako, upangiwe daktari mwenye leseni, kisha uongee naye kwa ujumbe, sauti, au video.",
   },
+  // Dedicated search-result/browser-tab copy for pages beyond the homepage --
+  // kept separate from each page's own on-page body text (which carries
+  // placeholders like "{n} doctors available" or "coming soon" language
+  // that doesn't read well as permanent search-result copy).
+  seo_doctors_description: {
+    en: "Browse licensed doctors on Afya24 by specialty, price, language, and availability, and consult by chat, voice, or video.",
+    sw: "Vinjari madaktari wenye leseni kwenye Afya24 kwa utaalamu, bei, lugha, na upatikanaji, kisha uongee nao kwa ujumbe, sauti, au video.",
+  },
+  seo_doctor_profile_description: {
+    en: "{name}, {specialty} on Afya24. Consultation fee from TZS {price}. Book and consult by chat, voice, or video.",
+    sw: "{name}, {specialty} kwenye Afya24. Ada ya ushauri kuanzia TZS {price}. Weka miadi na uongee naye kwa ujumbe, sauti, au video.",
+  },
+  seo_pharmacy_title: { en: "Pharmacy - Afya24", sw: "Duka la Dawa - Afya24" },
+  seo_pharmacy_description: {
+    en: "Order medicines on Afya24 after a doctor-approved prescription -- transparent pricing, checkout, and delivery details.",
+    sw: "Agiza dawa kwenye Afya24 baada ya dawa kuidhinishwa na daktari -- bei wazi, malipo, na maelezo ya usafirishaji.",
+  },
+  seo_terms_description: {
+    en: "Afya24's terms of service for patients and providers using the platform.",
+    sw: "Masharti ya huduma ya Afya24 kwa wagonjwa na watoa huduma wanaotumia jukwaa hili.",
+  },
+  seo_privacy_description: {
+    en: "How Afya24 collects, uses, and protects your personal and health information.",
+    sw: "Jinsi Afya24 inavyokusanya, kutumia, na kulinda taarifa zako binafsi na za kiafya.",
+  },
+  seo_help_description: {
+    en: "Get help with Afya24 -- booking, payments, prescriptions, and account questions.",
+    sw: "Pata msaada kuhusu Afya24 -- kuweka miadi, malipo, dawa, na maswali ya akaunti.",
+  },
   brand_tagline: {
     en: "Talk to a doctor in minutes",
     sw: "Ongea na daktari kwa dakika chache",

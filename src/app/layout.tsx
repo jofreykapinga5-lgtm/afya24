@@ -18,9 +18,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Falls back to localhost in dev; APP_BASE_URL is the same env var the
+// Snippe webhook URL is built from (see consultation/actions.ts), so
+// there's one source of truth for "what is our real production URL."
+const siteUrl = process.env.APP_BASE_URL ?? "http://localhost:3000";
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   return {
+    metadataBase: new URL(siteUrl),
     title: t("site_title", locale),
     description: t("site_description", locale),
   };

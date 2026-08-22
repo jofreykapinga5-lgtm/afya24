@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, Stethoscope } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
@@ -7,6 +8,14 @@ import { DoctorCard } from "@/components/doctor-card";
 import { Reveal } from "@/components/motion/reveal";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  return {
+    title: t("doctors_page_title", locale),
+    description: t("seo_doctors_description", locale),
+  };
+}
 
 export default async function DoctorsPage({
   searchParams,

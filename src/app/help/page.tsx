@@ -1,8 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  return {
+    title: t("help_title", locale),
+    description: t("seo_help_description", locale),
+  };
+}
 
 const faqs: { titleKey: TranslationKey; bodyKey: TranslationKey }[] = [
   { titleKey: "help_q1_title", bodyKey: "help_q1_body" },

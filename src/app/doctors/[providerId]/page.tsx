@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -10,6 +11,39 @@ import { Reveal } from "@/components/motion/reveal";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { BookingForm } from "./booking-form";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ providerId: string }>;
+}): Promise<Metadata> {
+  const { providerId } = await params;
+  const locale = await getServerLocale();
+  const service = createServiceClient();
+
+  const [{ data: row }, defaultService] = await Promise.all([
+    service
+      .from("providers")
+      .select("full_name, specialty")
+      .eq("id", providerId)
+      .eq("profile_status", "active")
+      .maybeSingle(),
+    getDefaultService(service).catch(() => null),
+  ]);
+
+  if (!row) {
+    return { title: t("doctors_page_title", locale) };
+  }
+
+  const name = toTitleCase(row.full_name);
+  return {
+    title: `${name} - ${row.specialty} | Afya24`,
+    description: t("seo_doctor_profile_description", locale)
+      .replace("{name}", name)
+      .replace("{specialty}", row.specialty)
+      .replace("{price}", String(defaultService?.basePrice ?? "")),
+  };
+}
 
 export default async function DoctorBookingPage({
   params,

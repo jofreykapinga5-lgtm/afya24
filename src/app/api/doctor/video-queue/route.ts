@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { listRoomParticipantIdentities } from "@/lib/video/livekit";
 import { hasRecentQueueHeartbeat, patientAccessCutoff } from "@/lib/video/queue";
+import { toTitleCase } from "@/lib/format-name";
 
 type AppointmentRow = {
   id: string;
@@ -158,7 +159,7 @@ export async function GET() {
         patientId: appointment.patient_id,
         scheduledAt: appointment.scheduled_at,
         status: appointment.status,
-        patientName: appointment.patients?.full_name ?? "Patient",
+        patientName: toTitleCase(appointment.patients?.full_name ?? "Patient"),
         patientReference: appointment.patients?.hospital_reference_number ?? "",
         urgencyLevel: summary?.urgency_level ?? "low",
         summaryText: summary?.summary_text ?? "",

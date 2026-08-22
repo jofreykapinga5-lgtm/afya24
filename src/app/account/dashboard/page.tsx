@@ -26,6 +26,7 @@ import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { getDefaultService } from "@/lib/default-service";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { getServerLocale } from "@/lib/locale-cookie";
+import { toTitleCase } from "@/lib/format-name";
 import {
   t,
   appointmentStatusKey,
@@ -237,7 +238,7 @@ export default async function AccountDashboardPage() {
     mapProviderRow(row, defaultService?.basePrice ?? 0, locale)
   );
 
-  const patientName = patient?.full_name ?? user.email ?? "Patient";
+  const patientName = (patient?.full_name ? toTitleCase(patient.full_name) : null) ?? user.email ?? "Patient";
   const patientReference = patient?.hospital_reference_number ?? "—";
   const patientPhone = patient?.phone ?? user.phone ?? "—";
   const patientInitial = patientName.slice(0, 1).toUpperCase();

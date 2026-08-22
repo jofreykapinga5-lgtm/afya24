@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey } from "@/lib/i18n";
+import { toTitleCase } from "@/lib/format-name";
 import type { AppointmentPaymentRow } from "@/components/admin/payments-panel";
 import type { ProviderApplicationRow } from "@/components/admin/applications-panel";
 import { appointments, auditLogs, labOrders } from "@/lib/mock-data";
@@ -394,7 +395,9 @@ export default async function AdminDashboardPage() {
     // patients/providers are many-to-one FKs, so PostgREST embeds each as a
     // single object -- confirmed against the real API response, not just
     // the untyped client's generic (and here, misleading) inferred shape.
-    patientName: (appointment.patients as unknown as { full_name: string } | null)?.full_name ?? "Patient",
+    patientName: toTitleCase(
+      (appointment.patients as unknown as { full_name: string } | null)?.full_name ?? "Patient"
+    ),
     patientReference:
       (appointment.patients as unknown as { hospital_reference_number: string | null } | null)
         ?.hospital_reference_number ?? "—",

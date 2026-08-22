@@ -3,6 +3,7 @@ import { getDoctorDashboardContext } from "../doctor-context";
 import { DoctorCallPanel } from "../call-panel";
 import { DoctorVideoQueue } from "../video-queue";
 import { hasRecentQueueHeartbeat, patientAccessCutoff } from "@/lib/video/queue";
+import { toTitleCase } from "@/lib/format-name";
 
 type WaitingAppointment = {
   id: string;
@@ -88,7 +89,7 @@ export default async function DoctorPatientsPage() {
       patientId: appointment.patient_id,
       scheduledAt: appointment.scheduled_at,
       status: "waiting",
-      patientName: appointment.patients?.full_name ?? "Patient",
+      patientName: toTitleCase(appointment.patients?.full_name ?? "Patient"),
       patientReference: appointment.patients?.hospital_reference_number ?? "",
       urgencyLevel: summary?.urgency_level ?? "low",
       summaryText: summary?.summary_text ?? "",

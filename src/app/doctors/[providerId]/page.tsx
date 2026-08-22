@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getPatientSession } from "@/lib/patient-session";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
+import { toTitleCase } from "@/lib/format-name";
 import { Reveal } from "@/components/motion/reveal";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
@@ -46,11 +47,12 @@ export default async function DoctorBookingPage({
   // consultation" button with no indication of why their details aren't
   // being asked for again, which reads as a missing section rather than an
   // intentional shortcut.
-  const existingPatientName = patientSession
+  const existingPatientNameRaw = patientSession
     ? (
         await service.from("patients").select("full_name").eq("id", patientSession.patientId).maybeSingle()
       ).data?.full_name ?? null
     : null;
+  const existingPatientName = existingPatientNameRaw ? toTitleCase(existingPatientNameRaw) : null;
 
   return (
     <main className="min-h-[calc(100dvh-3.5rem)] flex-1 bg-[#f7fbfb]">

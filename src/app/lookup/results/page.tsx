@@ -6,6 +6,7 @@ import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, appointmentStatusKey } from "@/lib/i18n";
+import { toTitleCase } from "@/lib/format-name";
 import { endPatientSession } from "../actions";
 
 export default async function LookupResultsPage() {
@@ -70,7 +71,9 @@ export default async function LookupResultsPage() {
         <Reveal delay={0}>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#071923]">{patient?.full_name}</h1>
+              <h1 className="text-xl font-bold tracking-tight text-[#071923]">
+                {patient?.full_name ? toTitleCase(patient.full_name) : ""}
+              </h1>
               <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-semibold text-[#087a7b]">
                 {t("dashboard_reference_prefix", locale)} {patient?.hospital_reference_number}
               </p>

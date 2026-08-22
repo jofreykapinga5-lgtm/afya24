@@ -11,6 +11,34 @@ import type { Locale, QualificationResult } from "@/lib/types";
 
 const REJOIN_WINDOW_HOURS = 24;
 
+// A returning patient clicking "book" for a doctor they already have an
+// open appointment with shouldn't get a brand new one -- whether that
+// existing appointment is already paid (rejoin the same call) or still
+// pending (resume the same payment instead of abandoning it and starting
+// over). /consultation/[id]/pay already redirects straight through to the
+// call room when payment_status is "paid", so returning either kind here is
+// safe even though every caller always routes through /pay next.
+async function findResumableAppointment(
+  service: ReturnType<typeof createServiceClient>,
+  patientId: string,
+  providerId: string
+): Promise<string | null> {
+  const rejoinWindowStart = new Date(Date.now() - REJOIN_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const { data: existingAppointment } = await service
+    .from("appointments")
+    .select("id")
+    .eq("patient_id", patientId)
+    .eq("provider_id", providerId)
+    .in("payment_status", ["pending", "paid"])
+    .in("status", ["waiting", "in_progress"])
+    .gte("scheduled_at", rejoinWindowStart)
+    .order("scheduled_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (existingAppointment?.id as string) ?? null;
+}
+
 export async function bookConsultation(input: {
   providerId: string;
   locale: Locale;
@@ -21,29 +49,10 @@ export async function bookConsultation(input: {
     throw new Error("Your session expired. Please start the intake chat again.");
   }
 
-  // A returning patient clicking "book" with an already-resolved session
-  // shouldn't be charged again for a visit they already paid for -- if they
-  // still have a paid, not-yet-finished appointment with this exact doctor
-  // from within the last 24 hours, hand that one back instead of creating
-  // (and billing) a brand new one. /consultation/[id]/pay already redirects
-  // straight through to the call room when payment_status is "paid", so
-  // this is safe even though the caller always routes through /pay next.
   const service = createServiceClient();
-  const rejoinWindowStart = new Date(Date.now() - REJOIN_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
-  const { data: existingAppointment } = await service
-    .from("appointments")
-    .select("id")
-    .eq("patient_id", session.patientId)
-    .eq("provider_id", input.providerId)
-    .eq("payment_status", "paid")
-    .in("status", ["waiting", "in_progress"])
-    .gte("scheduled_at", rejoinWindowStart)
-    .order("scheduled_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (existingAppointment) {
-    return existingAppointment.id as string;
+  const existingAppointmentId = await findResumableAppointment(service, session.patientId, input.providerId);
+  if (existingAppointmentId) {
+    return existingAppointmentId;
   }
 
   return bookConsultationForPatient({
@@ -54,13 +63,17 @@ export async function bookConsultation(input: {
   });
 }
 
-// For a patient who skips Afya24's AI intake and books a doctor directly --
-// no qualification chat means no patient record or session exists yet, so
-// this creates both from the form fields (same shape as the AI flow's
-// createPatientAccountRecord) before booking exactly like the normal path.
-// The reference number this mints is still the patient's real, permanent
-// file number -- it's surfaced to them on the payment page rather than here,
-// since that's the moment the booking is actually confirmed as real.
+// For a patient who skips Afya24's AI intake and books a doctor directly.
+// Used to unconditionally create a fresh patient + session every time this
+// ran, even for a patient who already had a live session from an earlier,
+// unpaid attempt (e.g. they filled this same form, reached /pay, left
+// without paying, and came back and filled it again) -- that silently
+// overwrote their session cookie with a brand new patientId, so the old
+// appointment's ownership check on /pay stopped matching and it looked to
+// them like their details had simply vanished. Reusing an existing session
+// (and updating that same patient row with whatever they just typed, in
+// case they corrected something) keeps their identity -- and therefore
+// their pending appointment -- continuous across the whole flow.
 export async function bookConsultationDirect(input: {
   providerId: string;
   locale: Locale;
@@ -83,18 +96,45 @@ export async function bookConsultationDirect(input: {
     throw new Error("Too many attempts. Please wait a few minutes and try again.");
   }
 
-  const record = await createPatientAccountRecord({
-    fullName,
-    phone: normalizeTanzanianPhoneToE164(phone),
-    dateOfBirth: input.dateOfBirth,
-    gender: input.gender,
-    preferredLanguage: input.locale,
-  });
+  const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
+  const service = createServiceClient();
+  const existingSession = await getPatientSession();
+  const existingPatient = existingSession
+    ? await service.from("patients").select("id").eq("id", existingSession.patientId).maybeSingle()
+    : null;
 
-  await createPatientSession(record.patientId);
+  let patientId: string;
+  if (existingPatient?.data) {
+    patientId = existingPatient.data.id as string;
+    await service
+      .from("patients")
+      .update({
+        full_name: fullName,
+        phone: normalizedPhone,
+        date_of_birth: input.dateOfBirth,
+        gender: input.gender,
+        preferred_language: input.locale,
+      })
+      .eq("id", patientId);
+  } else {
+    const record = await createPatientAccountRecord({
+      fullName,
+      phone: normalizedPhone,
+      dateOfBirth: input.dateOfBirth,
+      gender: input.gender,
+      preferredLanguage: input.locale,
+    });
+    patientId = record.patientId;
+    await createPatientSession(patientId);
+  }
+
+  const existingAppointmentId = await findResumableAppointment(service, patientId, input.providerId);
+  if (existingAppointmentId) {
+    return existingAppointmentId;
+  }
 
   return bookConsultationForPatient({
-    patientId: record.patientId,
+    patientId,
     providerId: input.providerId,
     locale: input.locale,
     qualification: null,

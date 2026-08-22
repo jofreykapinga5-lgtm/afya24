@@ -563,7 +563,6 @@ const dict = {
   doctor_badge_highly_rated: { en: "Highly rated", sw: "Anapendwa sana" },
   doctor_badge_loyal_patients: { en: "Loyal patients", sw: "Wagonjwa waaminifu" },
   doctor_carousel_more: { en: "More", sw: "Zaidi" },
-  doctor_carousel_book_visit: { en: "Book visit", sw: "Weka miadi" },
   pharmacy_your_cart: { en: "Your cart", sw: "Kikapu chako" },
   pharmacy_cart_empty: {
     en: "Your cart is empty. Add an item from the catalog to get started.",

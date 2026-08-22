@@ -6,6 +6,19 @@ import { t, type TranslationKey } from "@/lib/i18n";
 
 const avatarTints = ["bg-primary", "bg-brand-teal", "bg-info", "bg-[#0a5c8a]"];
 
+const QUOTE_MAX_WORDS = 16;
+
+// Doctor bios are free text of arbitrary length, but line-clamp alone cuts
+// them off at whatever character a fixed pixel height lands on -- often
+// mid-word or mid-sentence, reading as broken rather than intentionally
+// shortened. Trimming at a word boundary first, then keeping line-clamp only
+// as a rare-case safety net, always ends on a clean "..." instead.
+function truncateWords(text: string, maxWords: number) {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text.trim();
+  return `${words.slice(0, maxWords).join(" ")}…`;
+}
+
 function initials(name: string) {
   return name
     .replace("Dr. ", "")
@@ -115,7 +128,7 @@ export function DoctorCarouselCard({
 
       {provider.quote && (
         <p className="mt-3.5 line-clamp-2 rounded-xl bg-[#f6f8f8] px-3.5 py-2.5 text-sm leading-relaxed text-muted-foreground">
-          &ldquo;{provider.quote}&rdquo;
+          &ldquo;{truncateWords(provider.quote, QUOTE_MAX_WORDS)}&rdquo;
         </p>
       )}
 
@@ -158,9 +171,9 @@ export function DoctorCarouselCard({
         <Button
           className="h-11 w-full rounded-full font-semibold"
           nativeButton={false}
-          render={<Link href="/doctors" />}
+          render={<Link href={`/doctors/${provider.id}`} />}
         >
-          {t("doctor_carousel_book_visit", locale)}
+          {t("doctor_card_view", locale)}
         </Button>
       </div>
     </article>

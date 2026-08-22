@@ -109,20 +109,15 @@ export function BookingForm({
         className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7"
       >
         {hasSession && existingPatientName && (
-          <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl bg-[#f4f8f9] px-4 py-3 text-sm font-semibold text-[#071923]">
-            <span className="flex min-w-0 items-center gap-2.5">
-              <UserRound className="size-4 shrink-0 text-[#01b7bb]" />
-              <span className="truncate">
-                {t("doctor_booking_continuing_as", locale)} {existingPatientName}
-              </span>
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3.5 py-1.5 text-xs font-semibold text-primary ring-1 ring-primary/10">
+              <UserRound className="size-3.5 shrink-0" />
+              {t("doctor_booking_continuing_as", locale)} {existingPatientName.trim().split(/\s+/)[0]}
             </span>
             <form action={startOverAsNewPatient.bind(null, provider.id)}>
-              <button
-                type="submit"
-                className="shrink-0 rounded-full text-xs font-semibold text-[#60717a] underline decoration-dotted underline-offset-2 outline-none hover:text-[#083273] focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
+              <Button type="submit" size="sm" variant="outline" className="h-auto rounded-full px-3.5 py-1.5 text-xs">
                 {t("doctor_booking_not_you", locale)}
-              </button>
+              </Button>
             </form>
           </div>
         )}

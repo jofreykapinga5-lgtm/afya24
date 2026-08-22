@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPatientSession } from "@/lib/patient-session";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const BUCKET = "patient-attachments";
 const MAX_BYTES = 12 * 1024 * 1024;
@@ -37,6 +38,11 @@ export async function POST(request: Request) {
   const session = await getPatientSession();
   if (!session) {
     return NextResponse.json({ error: "Patient session is required." }, { status: 401 });
+  }
+
+  const { allowed } = await checkRateLimit("upload", session.patientId);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many uploads. Please wait a few minutes and try again." }, { status: 429 });
   }
 
   const formData = await request.formData().catch(() => null);

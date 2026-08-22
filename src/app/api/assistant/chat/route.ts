@@ -7,6 +7,7 @@ import { createPatientAccountRecord } from "@/lib/patient-account";
 import { createAccountClaimToken } from "@/lib/patient-session";
 import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
+import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
 import type { Locale } from "@/lib/types";
 
 export const maxDuration = 30;
@@ -105,6 +106,13 @@ const createPatientAccount = tool({
 });
 
 export async function POST(request: Request) {
+  const { allowed } = await checkRateLimit("aiChat", getClientIpFromRequest(request));
+  if (!allowed) {
+    return new Response("Too many requests. Please wait a few minutes and try again.", {
+      status: 429,
+    });
+  }
+
   const { messages, locale }: { messages: UIMessage[]; locale?: Locale } = await request.json();
 
   const result = streamText({

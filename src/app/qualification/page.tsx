@@ -114,11 +114,16 @@ export default function QualificationPage() {
   const recordingChunksRef = useRef<BlobPart[]>([]);
   const recordingStreamRef = useRef<MediaStream | null>(null);
 
+  const [chatError, setChatError] = useState<string | null>(null);
+
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/assistant/chat",
       body: { locale },
     }),
+    onError: () => {
+      setChatError(t("qualification_chat_error", locale));
+    },
   });
 
   useEffect(() => {
@@ -260,6 +265,7 @@ export default function QualificationPage() {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!input.trim()) return;
+    setChatError(null);
     sendMessage({ text: input });
     setInput("");
   }
@@ -618,6 +624,11 @@ export default function QualificationPage() {
             {attachmentError ? (
               <p className="mb-2 rounded-xl bg-urgent-soft px-3 py-2 text-xs font-medium text-urgent">
                 {attachmentError}
+              </p>
+            ) : null}
+            {chatError ? (
+              <p className="mb-2 rounded-xl bg-urgent-soft px-3 py-2 text-xs font-medium text-urgent">
+                {chatError}
               </p>
             ) : null}
             <div className="flex items-center gap-2">

@@ -182,7 +182,7 @@ function CallStage() {
       </div>
 
       {remoteTrack && localTrack ? (
-        <div className="absolute right-4 bottom-4 w-24 sm:w-32">
+        <div className="absolute right-4 bottom-28 w-24 sm:right-6 sm:bottom-32 sm:w-32">
           <VideoTile
             trackRef={localTrack}
             mirrored
@@ -190,6 +190,15 @@ function CallStage() {
           />
         </div>
       ) : null}
+
+      {/* Overlaid on the video itself (translucent pill, same treatment as
+          the status bar above) rather than stacked below it in a separate
+          row -- a fixed-height controls row competing for space with the
+          video inside a height-capped wrapper was cropping into the
+          patient's frame instead of just sitting below it. */}
+      <div className="absolute inset-x-0 bottom-4 flex justify-center px-4 sm:bottom-6">
+        <CallControls />
+      </div>
     </div>
   );
 }
@@ -393,9 +402,6 @@ export function CallRoom({
       className="flex flex-1 flex-col bg-slate-950"
     >
       <CallStage />
-      <div className="flex justify-center px-4 pt-3 pb-6 sm:pb-8">
-        <CallControls />
-      </div>
       <RoomAudioRenderer />
     </LiveKitRoom>
   );

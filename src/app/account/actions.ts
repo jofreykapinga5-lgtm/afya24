@@ -7,10 +7,17 @@ import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function signUp(formData: FormData) {
   const locale = await getServerLocale();
   const signupErrorPath = "/account/sign-up?error=";
+
+  const { allowed } = await checkRateLimit("signup", await getClientIp());
+  if (!allowed) {
+    redirect(`${signupErrorPath}${encodeURIComponent(t("error_rate_limited", locale))}`);
+  }
+
   const phone = String(formData.get("phone") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("fullName") ?? "").trim();
@@ -88,6 +95,12 @@ export async function signUp(formData: FormData) {
 }
 
 export async function signIn(formData: FormData) {
+  const locale = await getServerLocale();
+  const { allowed } = await checkRateLimit("auth", await getClientIp());
+  if (!allowed) {
+    redirect(`/account?error=${encodeURIComponent(t("error_rate_limited", locale))}`);
+  }
+
   const phone = String(formData.get("phone") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 

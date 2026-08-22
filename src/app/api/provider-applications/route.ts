@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
@@ -21,6 +22,11 @@ function extensionFor(file: File) {
 }
 
 export async function POST(request: Request) {
+  const { allowed } = await checkRateLimit("providerApplication", getClientIpFromRequest(request));
+  if (!allowed) {
+    return NextResponse.json({ error: t("error_rate_limited", "en") }, { status: 429 });
+  }
+
   const formData = await request.formData().catch(() => null);
   if (!formData) {
     // No locale available yet -- form itself failed to parse.

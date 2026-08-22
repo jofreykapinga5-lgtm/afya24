@@ -7,6 +7,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { createPatientSession, clearPatientSession } from "@/lib/patient-session";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function constantTimeEquals(a: string, b: string) {
   const bufA = Buffer.from(a);
@@ -39,6 +40,14 @@ export async function lookupPatient(formData: FormData) {
 
   if (!referenceNumber || !dateOfBirth) {
     redirect(`${errorBasePath}?error=${encodeURIComponent(t("error_enter_reference_dob", locale))}`);
+  }
+
+  // The per-reference-number check below only limits repeated DOB guesses
+  // against ONE reference number -- this IP check is what stops someone
+  // enumerating many DIFFERENT reference numbers from the same source.
+  const { allowed } = await checkRateLimit("lookup", await getClientIp());
+  if (!allowed) {
+    redirect(`${errorBasePath}?error=${encodeURIComponent(t("error_rate_limited", locale))}`);
   }
 
   const supabase = createServiceClient();

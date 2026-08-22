@@ -6,6 +6,7 @@ import { createPatientAccountRecord } from "@/lib/patient-account";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { Locale, QualificationResult } from "@/lib/types";
 
 const REJOIN_WINDOW_HOURS = 24;
@@ -73,6 +74,13 @@ export async function bookConsultationDirect(input: {
 
   if (!fullName || !phone || !input.dateOfBirth) {
     throw new Error("Full name, phone number, and date of birth are required.");
+  }
+
+  // Same account-creation risk as /account/sign-up (no session exists yet
+  // to gate on) -- reuses the signup bucket rather than a dedicated one.
+  const { allowed } = await checkRateLimit("signup", await getClientIp());
+  if (!allowed) {
+    throw new Error("Too many attempts. Please wait a few minutes and try again.");
   }
 
   const record = await createPatientAccountRecord({

@@ -481,6 +481,10 @@ const dict = {
     en: "Too many attempts for this reference number. Please try again later.",
     sw: "Majaribio mengi sana kwa nambari hii ya rejea. Tafadhali jaribu tena baadaye.",
   },
+  error_rate_limited: {
+    en: "Too many attempts. Please wait a few minutes and try again.",
+    sw: "Umejaribu mara nyingi sana. Tafadhali subiri dakika chache kisha ujaribu tena.",
+  },
   error_confirm_link_invalid: {
     en: "That confirmation link is invalid or has expired.",
     sw: "Kiungo hicho cha uthibitisho si sahihi au kimeisha muda.",
@@ -998,6 +1002,10 @@ const dict = {
   qualification_session_error: {
     en: "We couldn't set up your file. Please try filling in your details below.",
     sw: "Hatukuweza kuandaa faili yako. Tafadhali jaza maelezo yako hapa chini.",
+  },
+  qualification_chat_error: {
+    en: "Sorry, that message didn't go through. Please wait a moment and try again.",
+    sw: "Samahani, ujumbe huo haukufika. Tafadhali subiri kidogo kisha ujaribu tena.",
   },
   qualification_fallback_title: {
     en: "Let's get your file set up",

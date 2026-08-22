@@ -13,12 +13,16 @@ import type { Locale } from "@/lib/types";
 type JoinInfo = { serverUrl: string; token: string };
 
 const NOTES_SAVE_DEBOUNCE_MS = 1200;
-// A fixed height here (independent of the panel's width) let the video area
-// become far wider than a camera's natural aspect ratio on the dedicated
-// /doctor/dashboard/patients page, so object-cover cropped heavily into the
-// patient's face. aspect-video keeps height proportional to width; the
-// max-width keeps it from growing to an oversized letterbox on a wide panel.
-const VIDEO_WRAPPER_CLASS = "mx-auto aspect-video w-full max-w-2xl";
+// Height used to be pure aspect-video (16:9 of the panel's width), which
+// looked right on a fully maximized wide monitor but shrank to a sliver on
+// the dashboard's fixed 380px-sidebar grid whenever the browser window
+// itself wasn't very wide -- the video, the doctor's primary focus while a
+// call is active, ended up smaller than the patient-history list beside it.
+// Driving height off the viewport instead (capped both ends) keeps the call
+// consistently prominent regardless of window width; VideoTile's
+// object-cover already crops any resulting shape cleanly, so this doesn't
+// reintroduce the old wide-panel distortion the aspect-video switch fixed.
+const VIDEO_WRAPPER_CLASS = "mx-auto w-full max-w-4xl h-[min(56vh,32rem)] min-h-[260px]";
 
 // Lives on the dashboard's dedicated /doctor/dashboard/patients page --
 // idle by default (the same placeholder card this section always showed),

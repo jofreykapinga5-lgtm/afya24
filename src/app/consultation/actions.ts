@@ -14,6 +14,7 @@ import {
   type SnippeChannelProvider,
 } from "@/lib/payments/snippe";
 import { applySnippePaymentResult } from "@/lib/payments/reconcile";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Turns the lightweight, no-password patient record the AI created into a
 // real account -- attaches a Supabase Auth user to the SAME patients row
@@ -161,6 +162,15 @@ export async function initiateSnippePayment(input: {
     if (appointment.payment_status === "paid") {
       const hospitalReferenceNumber = await ensurePatientReferenceNumber(service, appointment.patient_id);
       return { ok: true, alreadyPaid: true, reference: null, hospitalReferenceNumber };
+    }
+
+    // Keyed by appointment, not IP -- each attempt can push a real
+    // M-Pesa/Airtel prompt to the patient's phone, so this caps repeat
+    // pushes for this specific appointment regardless of session/IP,
+    // beyond what the 60s pending-reuse window below already absorbs.
+    const { allowed } = await checkRateLimit("payment", input.appointmentId);
+    if (!allowed) {
+      return { ok: false, message: "Too many payment attempts. Please wait a few minutes and try again." };
     }
 
     const since = new Date(Date.now() - PENDING_PAYMENT_REUSE_WINDOW_MS).toISOString();

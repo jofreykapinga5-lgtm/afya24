@@ -69,9 +69,15 @@ export function PaymentsPanel({ locale, payments }: { locale: Locale; payments: 
                   </StatusPill>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
+                  {/* Pinned timeZone -- without it this renders in the
+                      server's runtime zone (UTC on Vercel) during SSR but the
+                      viewer's local zone on hydration, causing a text
+                      mismatch (React hydration error) for every Tanzanian
+                      viewer. */}
                   {new Date(payment.scheduledAt).toLocaleString(locale === "sw" ? "sw-TZ" : "en-TZ", {
                     dateStyle: "medium",
                     timeStyle: "short",
+                    timeZone: "Africa/Dar_es_Salaam",
                   })}
                 </TableCell>
                 <TableCell className="pr-4 text-right">

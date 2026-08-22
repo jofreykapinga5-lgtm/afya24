@@ -137,6 +137,7 @@ function formatDateTime(iso: string, locale: Locale) {
   return new Date(iso).toLocaleString(locale === "sw" ? "sw-TZ" : "en-TZ", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Africa/Dar_es_Salaam",
   });
 }
 

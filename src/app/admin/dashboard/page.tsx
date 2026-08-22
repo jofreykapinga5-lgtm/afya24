@@ -411,6 +411,7 @@ export default async function AdminDashboardPage() {
           joinedAt: new Date(provider.created_at).toLocaleDateString("en-TZ", {
             month: "short",
             year: "numeric",
+            timeZone: "Africa/Dar_es_Salaam",
           }),
         }))
       : [];

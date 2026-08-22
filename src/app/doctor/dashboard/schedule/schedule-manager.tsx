@@ -217,8 +217,10 @@ function formatDateRange(start: string, end: string) {
   return `${startDate.toLocaleString("en-TZ", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Africa/Dar_es_Salaam",
   })} to ${endDate.toLocaleTimeString("en-TZ", {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "Africa/Dar_es_Salaam",
   })}`;
 }

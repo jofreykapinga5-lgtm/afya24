@@ -105,7 +105,7 @@ export default async function LookupResultsPage() {
                         <span className="text-sm font-medium text-[#071923]">
                           {new Date(appointment.scheduled_at).toLocaleString(
                             locale === "sw" ? "sw-TZ" : "en-TZ",
-                            { dateStyle: "medium", timeStyle: "short" }
+                            { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Dar_es_Salaam" }
                           )}
                         </span>
                         <span className="ml-3 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#60717a] ring-1 ring-[#e5eef0]">

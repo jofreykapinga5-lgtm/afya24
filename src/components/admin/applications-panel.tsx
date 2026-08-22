@@ -102,6 +102,7 @@ export function ApplicationsPanel({ applications }: { applications: ProviderAppl
                     month: "short",
                     day: "numeric",
                     year: "numeric",
+                    timeZone: "Africa/Dar_es_Salaam",
                   })}
                 </TableCell>
                 <TableCell className="pr-4">

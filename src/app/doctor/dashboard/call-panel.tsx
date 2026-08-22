@@ -124,6 +124,7 @@ function PatientHistory({
                   day: "numeric",
                   month: "short",
                   year: "numeric",
+                  timeZone: "Africa/Dar_es_Salaam",
                 })}{" "}
                 {t("doctor_call_panel_history_with", locale)} {visit.providerName}
               </p>

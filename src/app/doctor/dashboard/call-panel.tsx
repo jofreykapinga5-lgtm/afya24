@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, PhoneOff, Save, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, PhoneOff, Save, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CallRoom } from "@/components/video/call-room";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +22,9 @@ const NOTES_SAVE_DEBOUNCE_MS = 1200;
 // consistently prominent regardless of window width; VideoTile's
 // object-cover already crops any resulting shape cleanly, so this doesn't
 // reintroduce the old wide-panel distortion the aspect-video switch fixed.
-const VIDEO_WRAPPER_CLASS = "mx-auto w-full max-w-4xl h-[min(56vh,32rem)] min-h-[260px]";
+// The dashboard shell drops its sidebar/header while a call is active (see
+// dashboard-shell.tsx's inCallFocusMode), freeing real space this claims.
+const VIDEO_WRAPPER_CLASS = "mx-auto w-full max-w-5xl h-[min(72vh,42rem)] min-h-[260px]";
 
 // Lives on the dashboard's dedicated /doctor/dashboard/patients page --
 // idle by default (the same placeholder card this section always showed),
@@ -88,6 +90,11 @@ function PatientHistory({
   locale: Locale;
 }) {
   const [visits, setVisits] = useState<PatientVisit[] | null>(null);
+  // Collapsed by default -- during a live call the video and notes are what
+  // matter, not a running history dump underneath them. Still one click
+  // away rather than gone, since checking a returning patient's last visit
+  // mid-consult is a real clinical need, just not the default view.
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,9 +116,20 @@ function PatientHistory({
 
   return (
     <div className="border-b border-[#eef2f3] p-5">
-      <p className="text-sm font-bold text-[#071923]">{t("doctor_call_panel_history_title", locale)}</p>
+      <button
+        type="button"
+        onClick={() => setExpanded((current) => !current)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <p className="text-sm font-bold text-[#071923]">{t("doctor_call_panel_history_title", locale)}</p>
+        {expanded ? (
+          <ChevronDown className="size-4 shrink-0 text-[#8a969c]" />
+        ) : (
+          <ChevronRight className="size-4 shrink-0 text-[#8a969c]" />
+        )}
+      </button>
 
-      {visits === null ? (
+      {!expanded ? null : visits === null ? (
         <p className="mt-2 text-xs text-[#8a969c]">{t("doctor_call_panel_history_loading", locale)}</p>
       ) : visits.length === 0 ? (
         <p className="mt-2 text-xs text-[#8a969c]">{t("doctor_call_panel_history_empty", locale)}</p>

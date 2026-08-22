@@ -258,7 +258,12 @@ function ActiveCallPanel({
             </div>
           </div>
         ) : (
-          <CallRoom serverUrl={join.serverUrl} token={join.token} onReconnect={requestJoinInfo} />
+          <CallRoom
+            serverUrl={join.serverUrl}
+            token={join.token}
+            onReconnect={requestJoinInfo}
+            onHangup={handleClose}
+          />
         )}
       </div>
 

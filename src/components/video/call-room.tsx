@@ -82,7 +82,7 @@ function formatDuration(totalSeconds: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function CallControls() {
+function CallControls({ onHangup }: { onHangup?: () => void }) {
   const locale = useAppStore((state) => state.locale);
   const room = useRoomContext();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled } = useLocalParticipant();
@@ -125,7 +125,12 @@ function CallControls() {
         type="button"
         size="icon"
         className="size-14 rounded-full bg-urgent text-white hover:bg-urgent/90"
-        onClick={() => room.disconnect()}
+        // The doctor's dashboard panel needs its own end-of-call bookkeeping
+        // (mark the appointment completed so patient-history picks it up
+        // next visit, flush notes, collapse the panel) -- see call-panel.tsx.
+        // Falling back to a plain room.disconnect() keeps the patient's
+        // full-screen page (which has no such bookkeeping) unaffected.
+        onClick={() => (onHangup ? onHangup() : room.disconnect())}
         aria-label={t("video_leave_call", locale)}
       >
         <PhoneOff className="size-6" />
@@ -134,7 +139,7 @@ function CallControls() {
   );
 }
 
-function CallStage() {
+function CallStage({ onHangup }: { onHangup?: () => void }) {
   const locale = useAppStore((state) => state.locale);
   const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: true }], {
     onlySubscribed: false,
@@ -209,7 +214,7 @@ function CallStage() {
           video inside a height-capped wrapper was cropping into the
           patient's frame instead of just sitting below it. */}
       <div className="absolute inset-x-0 bottom-4 flex justify-center px-4 sm:bottom-6">
-        <CallControls />
+        <CallControls onHangup={onHangup} />
       </div>
     </div>
   );
@@ -304,6 +309,7 @@ export function CallRoom({
   initialVideoEnabled = true,
   showAccountUpgrade = false,
   onReconnect,
+  onHangup,
 }: {
   serverUrl: string;
   token: string;
@@ -314,6 +320,10 @@ export function CallRoom({
   // page owns that fetch). Absent for the very rare caller that can't offer
   // one -- the ended screen just skips the reconnect button in that case.
   onReconnect?: () => Promise<{ serverUrl: string; token: string }>;
+  // Runs instead of a plain room.disconnect() when the in-call hangup
+  // button is pressed -- see CallControls' comment on why the doctor's
+  // dashboard needs this and the patient's page doesn't pass it.
+  onHangup?: () => void;
 }) {
   const locale = useAppStore((state) => state.locale);
   const [connection, setConnection] = useState({ serverUrl, token, attempt: 0 });
@@ -413,7 +423,7 @@ export function CallRoom({
       }}
       className="flex flex-1 flex-col bg-slate-950"
     >
-      <CallStage />
+      <CallStage onHangup={onHangup} />
       <RoomAudioRenderer />
     </LiveKitRoom>
   );

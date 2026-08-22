@@ -59,14 +59,15 @@ export function BookingForm({
     });
   }
 
+  function handleStartOver() {
+    startTransition(async () => {
+      await startOverAsNewPatient(provider.id);
+    });
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-
-    if (hasSession) {
-      bookWithSession();
-      return;
-    }
 
     const formData = new FormData(event.currentTarget);
     const fullName = String(formData.get("fullName") ?? "").trim();
@@ -95,77 +96,112 @@ export function BookingForm({
     });
   }
 
+  if (hasSession && existingPatientName) {
+    const firstName = existingPatientName.trim().split(/\s+/)[0];
+    return (
+      <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
+        {qualificationResult && (
+          <p className="mb-4 text-xs text-[#60717a]">{t("doctor_booking_summary_note", locale)}</p>
+        )}
+
+        {error && (
+          <p role="alert" className="mb-4 rounded-xl bg-[#fff4f0] px-4 py-3 text-sm text-[#9b2c12]">
+            {error}
+          </p>
+        )}
+
+        {/* Two standalone buttons, not a <form> -- neither is submitting
+            fields, and nesting startOverAsNewPatient's own form inside this
+            component's form (the previous shape) is invalid HTML: browsers
+            can't nest <form> elements, so the server-rendered markup and
+            React's client tree disagreed on structure, surfacing as a real
+            hydration error plus a "form was unexpectedly submitted" crash
+            in production. */}
+        <div className="grid gap-3">
+          <Button
+            type="button"
+            disabled={pending}
+            onClick={bookWithSession}
+            className="h-12 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          >
+            <UserRound className="size-4" />
+            {pending
+              ? t("doctor_booking_confirm_pending", locale)
+              : `${t("doctor_booking_continuing_as", locale)} ${firstName}`}
+            <ArrowRight className="size-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending}
+            onClick={handleStartOver}
+            className="h-11 w-full rounded-full font-semibold"
+          >
+            {t("doctor_booking_not_you", locale)}
+          </Button>
+        </div>
+
+        <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-[#60717a]">
+          <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#01b7bb]" />
+          {t("doctor_booking_trust_note", locale)}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
-      {!hasSession && (
-        <ReturningPatientLookup
-          locale={locale}
-          redirectTo={`/doctors/${provider.id}`}
-          error={lookupError}
-        />
-      )}
+      <ReturningPatientLookup
+        locale={locale}
+        redirectTo={`/doctors/${provider.id}`}
+        error={lookupError}
+      />
       <form
         onSubmit={handleSubmit}
         className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7"
       >
-        {hasSession && existingPatientName && (
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3.5 py-1.5 text-xs font-semibold text-primary ring-1 ring-primary/10">
-              <UserRound className="size-3.5 shrink-0" />
-              {t("doctor_booking_continuing_as", locale)} {existingPatientName.trim().split(/\s+/)[0]}
-            </span>
-            <form action={startOverAsNewPatient.bind(null, provider.id)}>
-              <Button type="submit" size="sm" variant="outline" className="h-auto rounded-full px-3.5 py-1.5 text-xs">
-                {t("doctor_booking_not_you", locale)}
-              </Button>
-            </form>
-          </div>
-        )}
+        <div className="grid gap-4">
+          <p className="text-sm font-bold text-[#071923]">{t("doctor_direct_booking_title", locale)}</p>
 
-        {!hasSession && (
-          <div className="grid gap-4">
-            <p className="text-sm font-bold text-[#071923]">{t("doctor_direct_booking_title", locale)}</p>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <BookingField label={t("doctor_direct_booking_name_label", locale)} span2>
-                <Input name="fullName" required autoComplete="name" className="rounded-xl bg-[#f8fbfd]" />
-              </BookingField>
-              <BookingField label={t("doctor_direct_booking_phone_label", locale)}>
-                <Input
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder={t("doctor_direct_booking_phone_placeholder", locale)}
-                  required
-                  className="rounded-xl bg-[#f8fbfd]"
-                />
-              </BookingField>
-              <BookingField label={t("doctor_direct_booking_gender_label", locale)}>
-                <Select
-                  name="gender"
-                  value={gender}
-                  onValueChange={(value) => setGender((value as Gender | null) ?? "")}
-                >
-                  <SelectTrigger className="w-full rounded-xl bg-[#f8fbfd]">
-                    <SelectValue placeholder={t("doctor_direct_booking_gender_placeholder", locale)} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="female">{t("doctor_direct_booking_gender_female", locale)}</SelectItem>
-                    <SelectItem value="male">{t("doctor_direct_booking_gender_male", locale)}</SelectItem>
-                    <SelectItem value="other">{t("doctor_direct_booking_gender_other", locale)}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </BookingField>
-              <BookingField label={t("doctor_direct_booking_dob_label", locale)} span2>
-                <DobSelect locale={locale} />
-              </BookingField>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <BookingField label={t("doctor_direct_booking_name_label", locale)} span2>
+              <Input name="fullName" required autoComplete="name" className="rounded-xl bg-[#f8fbfd]" />
+            </BookingField>
+            <BookingField label={t("doctor_direct_booking_phone_label", locale)}>
+              <Input
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={t("doctor_direct_booking_phone_placeholder", locale)}
+                required
+                className="rounded-xl bg-[#f8fbfd]"
+              />
+            </BookingField>
+            <BookingField label={t("doctor_direct_booking_gender_label", locale)}>
+              <Select
+                name="gender"
+                value={gender}
+                onValueChange={(value) => setGender((value as Gender | null) ?? "")}
+              >
+                <SelectTrigger className="w-full rounded-xl bg-[#f8fbfd]">
+                  <SelectValue placeholder={t("doctor_direct_booking_gender_placeholder", locale)} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="female">{t("doctor_direct_booking_gender_female", locale)}</SelectItem>
+                  <SelectItem value="male">{t("doctor_direct_booking_gender_male", locale)}</SelectItem>
+                  <SelectItem value="other">{t("doctor_direct_booking_gender_other", locale)}</SelectItem>
+                </SelectContent>
+              </Select>
+            </BookingField>
+            <BookingField label={t("doctor_direct_booking_dob_label", locale)} span2>
+              <DobSelect locale={locale} />
+            </BookingField>
           </div>
-        )}
+        </div>
 
         {qualificationResult && (
-          <p className={!hasSession ? "mt-5 border-t border-[#eef2f3] pt-4 text-xs text-[#60717a]" : "text-xs text-[#60717a]"}>
+          <p className="mt-5 border-t border-[#eef2f3] pt-4 text-xs text-[#60717a]">
             {t("doctor_booking_summary_note", locale)}
           </p>
         )}

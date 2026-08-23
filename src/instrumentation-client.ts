@@ -7,6 +7,11 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "https://ef8a751eb2132e62a2bba7967a08a09b@o4511950935228416.ingest.de.sentry.io/4511950952071248",
 
+  // Only a real Vercel deployment reports here -- see sentry.server.config.ts.
+  // NEXT_PUBLIC_IS_VERCEL is process.env.VERCEL, inlined for the browser
+  // bundle via next.config.ts's `env` field.
+  enabled: process.env.NEXT_PUBLIC_IS_VERCEL === "1",
+
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
 

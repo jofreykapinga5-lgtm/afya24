@@ -2,6 +2,14 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Lets the client-side Sentry init (instrumentation-client.ts) tell a
+  // real Vercel deployment apart from someone's local machine running a
+  // production build (`npm run start`) to QA a change -- server/edge code
+  // can read process.env.VERCEL directly, but only NEXT_PUBLIC_-prefixed
+  // vars reach the browser bundle.
+  env: {
+    NEXT_PUBLIC_IS_VERCEL: process.env.VERCEL ?? "",
+  },
   allowedDevOrigins: ["*.trycloudflare.com"],
   experimental: {
     serverActions: {

@@ -8,6 +8,9 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "https://ef8a751eb2132e62a2bba7967a08a09b@o4511950935228416.ingest.de.sentry.io/4511950952071248",
 
+  // Only a real Vercel deployment reports here -- see sentry.server.config.ts.
+  enabled: process.env.VERCEL === "1",
+
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,
 

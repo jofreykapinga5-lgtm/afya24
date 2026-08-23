@@ -13,6 +13,15 @@ import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { BookingForm } from "./booking-form";
 
+function initials(name: string) {
+  return name
+    .replace("Dr. ", "")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2);
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -88,19 +97,42 @@ export default async function DoctorBookingPage({
           {t("doctor_booking_back", locale)}
         </Link>
 
+        {/* Below sm, the full card (bio, rating, licensed badge) pushes the
+            booking form -- the patient's actual task here -- well below the
+            fold. Swapped for a slim summary bar that still surfaces the two
+            things that matter mid-booking (who, and the price) without the
+            scroll cost; the full card comes back at sm and up where there's
+            room for it above the form without delay. */}
         <Reveal delay={0}>
-          <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_14px_40px_-32px_rgba(8,50,115,0.45)] ring-1 ring-[#e5eef0] sm:hidden">
+            <span className="relative inline-flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#083273] text-sm font-bold text-white ring-2 ring-[#e8f7f4]">
+              {provider.photoUrl ? (
+                <img src={provider.photoUrl} alt="" loading="lazy" className="size-full object-cover" />
+              ) : (
+                initials(provider.name)
+              )}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-sm font-bold text-[#071923]">{provider.name}</h1>
+              <p className="truncate text-xs text-[#60717a]">{provider.specialty}</p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-[#8a969c]">
+                {t("doctor_booking_price_label", locale)}
+              </p>
+              <p className="text-sm font-bold tabular-nums text-[#083273]">TZS {provider.price}</p>
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={0}>
+          <div className="hidden rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:block sm:p-7">
             <div className="flex items-start gap-4">
               <span className="relative inline-flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#083273] text-lg font-bold text-white ring-4 ring-[#e8f7f4]">
                 {provider.photoUrl ? (
                   <img src={provider.photoUrl} alt="" loading="lazy" className="size-full object-cover" />
                 ) : (
-                  provider.name
-                    .replace("Dr. ", "")
-                    .split(" ")
-                    .map((part) => part[0])
-                    .join("")
-                    .slice(0, 2)
+                  initials(provider.name)
                 )}
               </span>
               <div className="min-w-0 flex-1">

@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -201,9 +200,6 @@ export function ProvidersPanel({
               <Field label="Credentials">
                 <Input name="credentials" placeholder="MBChB, KMPDC" />
               </Field>
-              <Field label="Bio">
-                <Textarea name="bio" placeholder="Short provider bio for profile review." />
-              </Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <fieldset className="rounded-lg border border-border p-3">
                   <legend className="px-1 text-sm font-medium">Languages</legend>
@@ -235,6 +231,7 @@ export function ProvidersPanel({
             <TableRow>
               <TableHead className="pl-4">{t("admin_col_provider", locale)}</TableHead>
               <TableHead>{t("admin_col_specialty", locale)}</TableHead>
+              <TableHead>Rating on card</TableHead>
               <TableHead>Availability</TableHead>
               <TableHead>Sessions</TableHead>
               <TableHead>{t("admin_col_status", locale)}</TableHead>
@@ -244,7 +241,7 @@ export function ProvidersPanel({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   {t("admin_no_results", locale)}
                 </TableCell>
               </TableRow>
@@ -276,13 +273,6 @@ export function ProvidersPanel({
                           </DoctorDetail>
                           <DoctorDetail label="Modes">{provider.consultationModes.join(", ")}</DoctorDetail>
                           <DoctorDetail label="Bio">{provider.bio}</DoctorDetail>
-                          <DoctorDetail label="Rating shown on doctor card">
-                            <UpdateRatingForm
-                              providerId={provider.id}
-                              rating={provider.rating}
-                              reviewCount={provider.reviewCount}
-                            />
-                          </DoctorDetail>
                           <DoctorDetail label="Availability note">
                             <Input
                               key={provider.nextAvailableAt}
@@ -298,6 +288,13 @@ export function ProvidersPanel({
                       </details>
                     </TableCell>
                     <TableCell className="min-w-40 text-muted-foreground">{provider.specialty}</TableCell>
+                    <TableCell className="min-w-44">
+                      <UpdateRatingForm
+                        providerId={provider.id}
+                        rating={provider.rating}
+                        reviewCount={provider.reviewCount}
+                      />
+                    </TableCell>
                     <TableCell className="min-w-48">
                       <div className="grid gap-2">
                         <StatusPill tone={provider.isAvailableNow ? "positive" : "neutral"}>
@@ -426,7 +423,7 @@ function UpdateRatingForm({
   reviewCount: number;
 }) {
   return (
-    <form action={updateProviderRating} className="flex items-center gap-1.5">
+    <form action={updateProviderRating} className="flex flex-wrap items-center gap-1">
       <input type="hidden" name="providerId" value={providerId} />
       <Star className="size-3.5 shrink-0 fill-pending text-pending" aria-hidden="true" />
       <input
@@ -437,9 +434,9 @@ function UpdateRatingForm({
         step={0.1}
         defaultValue={rating}
         aria-label="Rating out of 5"
-        className="h-7 w-14 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        title="Rating out of 5"
+        className="h-7 w-12 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       />
-      <span className="text-xs text-muted-foreground">/5 ·</span>
       <input
         name="reviewCount"
         type="number"
@@ -447,10 +444,10 @@ function UpdateRatingForm({
         step={1}
         defaultValue={reviewCount}
         aria-label="Number of reviews"
-        className="h-7 w-16 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        title="Number of reviews"
+        className="h-7 w-14 rounded-md border border-border bg-white px-1.5 text-center text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       />
-      <span className="text-xs text-muted-foreground">reviews</span>
-      <SubmitButton size="sm" variant="outline" className="ml-1 h-7 px-2.5 text-xs">
+      <SubmitButton size="sm" variant="outline" className="h-7 px-2.5 text-xs">
         Save
       </SubmitButton>
     </form>

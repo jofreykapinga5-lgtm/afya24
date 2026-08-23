@@ -1,5 +1,6 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { withRetry, RetryableError } from "@/lib/retry";
 
 // Thin wrapper around Snippe (api.snippe.sh), a Tanzania mobile-money
 // payment gateway (M-Pesa, Airtel Money, Halotel, Mixx by Yas). Mirrors
@@ -24,30 +25,42 @@ type SnippeEnvelope<T> =
   | { status: "success"; code: number; data: T }
   | { status: "error"; code: number; error_code: string; message: string };
 
+// Retried on a network blip or a 5xx (Snippe briefly overloaded) -- never
+// on a 4xx, which is a real business response (invalid signature, payment
+// not found) the caller already handles. Safe to retry a POST here too:
+// every write goes through createSnippeCollectionPayment, which always
+// carries an Idempotency-Key, so a retried create returns the original
+// payment instead of charging the patient twice.
 async function snippeRequest<T>(
   path: string,
   init: RequestInit & { idempotencyKey?: string } = {}
 ): Promise<SnippeEnvelope<T>> {
-  const { idempotencyKey, ...requestInit } = init;
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...requestInit,
-    headers: {
-      Authorization: `Bearer ${snippeApiKey()}`,
-      "Content-Type": "application/json",
-      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
-      ...requestInit.headers,
-    },
+  return withRetry(async () => {
+    const { idempotencyKey, ...requestInit } = init;
+    const response = await fetch(`${BASE_URL}${path}`, {
+      ...requestInit,
+      headers: {
+        Authorization: `Bearer ${snippeApiKey()}`,
+        "Content-Type": "application/json",
+        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+        ...requestInit.headers,
+      },
+    });
+
+    if (response.status >= 500) {
+      throw new RetryableError(`Snippe server error (${response.status})`);
+    }
+
+    const text = await response.text();
+    let body: unknown;
+    try {
+      body = text ? JSON.parse(text) : null;
+    } catch {
+      throw new RetryableError(`Snippe returned a non-JSON response (${response.status})`);
+    }
+
+    return body as SnippeEnvelope<T>;
   });
-
-  const text = await response.text();
-  let body: unknown;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    throw new Error(`Snippe returned a non-JSON response (${response.status})`);
-  }
-
-  return body as SnippeEnvelope<T>;
 }
 
 export async function createSnippeCollectionPayment(input: {

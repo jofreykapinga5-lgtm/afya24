@@ -1563,12 +1563,6 @@ export const pharmacyBadgeKey: Record<string, TranslationKey> = {
   sale: "pharmacy_badge_sale",
 };
 
-export const pharmacyStockKey: Record<string, TranslationKey> = {
-  in_stock: "pharmacy_stock_in",
-  low_stock: "pharmacy_stock_low",
-  out_of_stock: "pharmacy_stock_out",
-};
-
 export const pharmacyOrderStatusKey: Record<string, TranslationKey> = {
   pending: "pharmacy_order_pending",
   preparing: "pharmacy_order_preparing",
@@ -1613,12 +1607,6 @@ export const adminPaymentStatusKey: Record<string, TranslationKey> = {
   pending: "admin_payment_status_pending",
   paid: "admin_payment_status_paid",
   failed: "admin_payment_status_failed",
-};
-
-export const adminPaymentMethodKey: Record<string, TranslationKey> = {
-  mpesa: "admin_payment_method_mpesa",
-  card: "admin_payment_method_card",
-  cash: "admin_payment_method_cash",
 };
 
 export const adminPharmacyOrderStatusKey: Record<string, TranslationKey> = {

@@ -12,7 +12,6 @@ export interface ServiceCategory {
   id: string;
   name: string;
   description: string;
-  icon: string;
   popularServices: string[];
 }
 
@@ -42,19 +41,6 @@ export interface QualificationResult {
   medications?: string[];
   allergies?: string[];
   existingConditions?: string[];
-}
-
-export interface AiQualification {
-  id: string;
-  patientReference: string | null;
-  complaint: string;
-  questions: string[];
-  answers: string[];
-  patientConfirmedSummary: string;
-  urgencyLevel: UrgencyLevel;
-  recommendedSpecialties: string[];
-  recommendedProviderIds: string[];
-  summaryForDoctor: string;
 }
 
 // Used to back the specialty dropdown on both the doctor application form
@@ -94,12 +80,6 @@ export interface Provider {
   bio: string;
   quote?: string;
   timeSlots?: string[];
-}
-
-export interface LanguagePreference {
-  patientReference: string | null;
-  locale: Locale;
-  preferredConsultationLanguage: Locale;
 }
 
 export type CheckoutStatus = "pending" | "paid" | "failed";
@@ -143,26 +123,6 @@ export interface Appointment {
   videoStatus: SessionChannelStatus;
 }
 
-export interface PatientFile {
-  reference: string;
-  displayName: string;
-  age: number;
-  sex: "female" | "male" | "other";
-  allergies: string[];
-  conditions: string[];
-  medications: string[];
-  pastVisits: number;
-}
-
-export interface Intake {
-  reasonForVisit: string;
-  symptoms: string[];
-  duration: string;
-  severity: "mild" | "moderate" | "severe";
-  medications: string[];
-  attachments: string[];
-}
-
 export interface Prescription {
   medicationName: string;
   dosage: string;
@@ -174,15 +134,6 @@ export interface Referral {
   reason: string;
   referredTo: string;
   notes: string;
-}
-
-export interface VisitOutcome {
-  summary: string;
-  prescription: Prescription[];
-  labOrders: string[];
-  referrals: Referral[];
-  doctorSignature: string;
-  signedAt: string;
 }
 
 export type LabLocationStatus = "active" | "inactive";
@@ -296,7 +247,6 @@ export interface PharmacyOrder {
 // implements these now; real API responses should match later.
 
 export type StaffRole = "admin" | "doctor" | "pharmacy_staff" | "lab_staff";
-export type StaffStatus = "active" | "suspended" | "invited";
 export type ProviderStatus = "active" | "pending" | "suspended";
 
 export interface AdminProviderMeta {

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminDashboard, type AdminTab } from "@/components/admin/admin-dashboard";
+import { AdminNavList } from "@/components/admin/admin-nav-list";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -688,19 +689,14 @@ export default async function AdminDashboardPage() {
             <span className="sr-only">Open admin menu</span>
           </summary>
           <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl bg-white p-2 text-[#071923] shadow-[0_24px_60px_-28px_rgba(8,50,115,0.75)] ring-1 ring-[#dfe8eb]">
-            {visibleNavItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition hover:bg-[#f4f8f9]"
-                >
-                  <Icon className="size-4 text-[#01b7bb]" />
-                  {item.label}
-                </a>
-              );
-            })}
+            <AdminNavList
+              items={visibleNavItems.map((item) => ({
+                label: item.label,
+                href: item.href,
+                icon: <item.icon className="size-4 text-[#01b7bb]" />,
+              }))}
+              variant="menu"
+            />
           </div>
         </details>
       </div>
@@ -721,23 +717,14 @@ export default async function AdminDashboardPage() {
             </Link>
 
             <nav className="mt-8 grid gap-1.5">
-              {visibleNavItems.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition ${
-                      index === 0
-                        ? "bg-[#e8f7f4] text-[#083273]"
-                        : "text-[#60717a] hover:bg-[#f4f8f9] hover:text-[#083273]"
-                    }`}
-                  >
-                    <Icon className="size-4" />
-                    {item.label}
-                  </a>
-                );
-              })}
+              <AdminNavList
+                items={visibleNavItems.map((item) => ({
+                  label: item.label,
+                  href: item.href,
+                  icon: <item.icon className="size-4" />,
+                }))}
+                variant="sidebar"
+              />
             </nav>
 
             <div className="mt-10 rounded-[1.35rem] bg-[#f4f8f9] p-4 ring-1 ring-[#dfe8eb] lg:mt-auto">

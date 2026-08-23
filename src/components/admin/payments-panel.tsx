@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { confirmAppointmentPayment, markAppointmentPaymentFailed } from "@/app/admin/actions";
@@ -31,10 +33,21 @@ const statusTone: Record<AppointmentPaymentRow["status"], StatusTone> = {
   failed: "urgent",
 };
 
+// Keeps the table short enough that the page doesn't turn into one long
+// scroll of near-identical rows -- "Load more" reveals the rest in the same
+// batch size instead of dumping every row (and every appointment table can
+// grow unbounded) on screen at once.
+const PAGE_SIZE = 8;
+
 export function PaymentsPanel({ locale, payments }: { locale: Locale; payments: AppointmentPaymentRow[] }) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visiblePayments = payments.slice(0, visibleCount);
+  const remaining = payments.length - visiblePayments.length;
+
   return (
-    <div className="rounded-xl border border-border">
-      <Table>
+    <div className="space-y-3">
+      <div className="overflow-hidden rounded-xl border border-border">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="pl-4">{t("admin_col_patient_ref", locale)}</TableHead>
@@ -53,7 +66,7 @@ export function PaymentsPanel({ locale, payments }: { locale: Locale; payments: 
               </TableCell>
             </TableRow>
           ) : (
-            payments.map((payment) => (
+            visiblePayments.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell className="pl-4">
                   <div className="font-medium">{payment.patientName}</div>
@@ -73,10 +86,14 @@ export function PaymentsPanel({ locale, payments }: { locale: Locale; payments: 
                       server's runtime zone (UTC on Vercel) during SSR but the
                       viewer's local zone on hydration, causing a text
                       mismatch (React hydration error) for every Tanzanian
-                      viewer. */}
+                      viewer. No year/weekday -- this column was the single
+                      biggest contributor to the table needing its own
+                      horizontal scrollbar. */}
                   {new Date(payment.scheduledAt).toLocaleString(locale === "sw" ? "sw-TZ" : "en-TZ", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
                     timeZone: "Africa/Dar_es_Salaam",
                   })}
                 </TableCell>
@@ -101,6 +118,20 @@ export function PaymentsPanel({ locale, payments }: { locale: Locale; payments: 
           )}
         </TableBody>
       </Table>
+      </div>
+
+      {remaining > 0 ? (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 rounded-full px-4 text-sm"
+            onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+          >
+            {t("admin_action_load_more", locale).replace("{count}", String(Math.min(remaining, PAGE_SIZE)))}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

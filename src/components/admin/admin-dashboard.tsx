@@ -125,6 +125,12 @@ export function AdminDashboard({
     setActiveTab(tab);
     if (window.location.hash !== `#${tab}`) {
       window.history.replaceState(null, "", `#${tab}`);
+      // replaceState doesn't fire "hashchange" on its own -- the sidebar
+      // nav (rendered outside this component, in the server-rendered page
+      // shell) listens for that event to know which link to highlight, so
+      // a quick-action button like "Confirm pay" needs to trigger it
+      // manually to keep the sidebar in sync.
+      window.dispatchEvent(new Event("hashchange"));
     }
   }
 

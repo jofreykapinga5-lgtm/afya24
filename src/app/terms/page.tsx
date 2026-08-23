@@ -1,6 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowLeft } from "lucide-react";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
 
@@ -27,13 +26,13 @@ export default async function TermsPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-14 sm:px-6">
-      <Link
-        href="/"
-        className="mb-8 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <ArrowLeft className="size-3.5" />
-        {t("back_to_home", locale)}
-      </Link>
+      <div className="mb-8">
+        <Breadcrumbs
+          items={[{ name: t("breadcrumb_home", locale), path: "/" }]}
+          current={t("terms_title", locale)}
+          currentPath="/terms"
+        />
+      </div>
 
       <h1 className="text-3xl font-bold tracking-tight">{t("terms_title", locale)}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t("legal_last_updated", locale)}</p>

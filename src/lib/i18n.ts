@@ -18,6 +18,7 @@ const dict = {
     en: "Afya24 is a direct-pay telehealth platform: describe your issue, get matched with a licensed doctor, and consult by chat, voice, or video.",
     sw: "Afya24 ni jukwaa la matibabu ya mtandaoni: eleza tatizo lako, upangiwe daktari mwenye leseni, kisha uongee naye kwa ujumbe, sauti, au video.",
   },
+  breadcrumb_home: { en: "Home", sw: "Nyumbani" },
   // Dedicated search-result/browser-tab copy for pages beyond the homepage --
   // kept separate from each page's own on-page body text (which carries
   // placeholders like "{n} doctors available" or "coming soon" language

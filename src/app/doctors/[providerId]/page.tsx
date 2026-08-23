@@ -1,7 +1,6 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Star } from "lucide-react";
+import { ShieldCheck, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getCachedActiveProviderById } from "@/lib/cache/public-catalog";
@@ -9,6 +8,8 @@ import { getPatientSession } from "@/lib/patient-session";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { toTitleCase } from "@/lib/format-name";
 import { Reveal } from "@/components/motion/reveal";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { physicianJsonLd } from "@/lib/structured-data";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { BookingForm } from "./booking-form";
@@ -89,13 +90,31 @@ export default async function DoctorBookingPage({
   return (
     <main className="min-h-[calc(100dvh-3.5rem)] flex-1 bg-[#f7fbfb]">
       <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
-        <Link
-          href="/doctors"
-          className="mb-6 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-[#60717a] outline-none transition-colors hover:text-[#071923] focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <ArrowLeft className="size-3.5" />
-          {t("doctor_booking_back", locale)}
-        </Link>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              physicianJsonLd({
+                name: provider.name,
+                specialty: provider.specialty,
+                path: `/doctors/${providerId}`,
+                photoUrl: provider.photoUrl || null,
+                priceValue: provider.price,
+                languages: provider.languages,
+              })
+            ),
+          }}
+        />
+        <div className="mb-6">
+          <Breadcrumbs
+            items={[
+              { name: t("breadcrumb_home", locale), path: "/" },
+              { name: t("nav_doctors", locale), path: "/doctors" },
+            ]}
+            current={provider.name}
+            currentPath={`/doctors/${providerId}`}
+          />
+        </div>
 
         {/* Below sm, the full card (bio, rating, licensed badge) pushes the
             booking form -- the patient's actual task here -- well below the

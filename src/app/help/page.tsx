@@ -1,7 +1,8 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowLeft, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { faqPageJsonLd } from "@/lib/structured-data";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
 
@@ -28,13 +29,26 @@ export default async function HelpPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-14 sm:px-6">
-      <Link
-        href="/"
-        className="mb-8 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <ArrowLeft className="size-3.5" />
-        {t("back_to_home", locale)}
-      </Link>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            faqPageJsonLd(
+              faqs.map((faq) => ({
+                question: t(faq.titleKey, locale),
+                answer: t(faq.bodyKey, locale),
+              }))
+            )
+          ),
+        }}
+      />
+      <div className="mb-8">
+        <Breadcrumbs
+          items={[{ name: t("breadcrumb_home", locale), path: "/" }]}
+          current={t("help_title", locale)}
+          currentPath="/help"
+        />
+      </div>
 
       <h1 className="text-3xl font-bold tracking-tight">{t("help_title", locale)}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t("help_subtitle", locale)}</p>

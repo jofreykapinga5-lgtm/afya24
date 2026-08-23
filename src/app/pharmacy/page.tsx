@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { getPublishedPharmacyItems } from "@/lib/pharmacy-items";
 import { PharmacyCatalog } from "@/components/pharmacy-catalog";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { t } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,5 +17,15 @@ export default async function PharmacyPage() {
   const locale = await getServerLocale();
   const items = await getPublishedPharmacyItems();
 
-  return <PharmacyCatalog items={items} locale={locale} />;
+  const jsonLd = breadcrumbJsonLd([
+    { name: t("breadcrumb_home", locale), path: "/" },
+    { name: t("nav_pharmacy", locale), path: "/pharmacy" },
+  ]);
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <PharmacyCatalog items={items} locale={locale} />
+    </>
+  );
 }

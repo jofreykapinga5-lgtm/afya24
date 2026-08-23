@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { CookieConsent } from "@/components/cookie-consent";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { createClient } from "@/lib/supabase/server";
+import { organizationJsonLd } from "@/lib/structured-data";
 import { t } from "@/lib/i18n";
 
 const geistSans = Geist({
@@ -72,6 +73,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+        />
         <QueryProvider>
           <SiteHeader patientName={patientName} />
           {children}

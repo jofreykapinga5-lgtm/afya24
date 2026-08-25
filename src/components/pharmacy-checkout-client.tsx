@@ -42,15 +42,15 @@ export function PharmacyCheckoutClient({
   function handlePlaceOrder() {
     setError(null);
     startTransition(async () => {
-      try {
-        const orderId = await placePharmacyOrder({
-          lines: cartLines.map(({ line }) => ({ itemId: line.itemId, quantity: line.quantity })),
-          fulfillmentMethod: fulfillment,
-        });
+      const result = await placePharmacyOrder({
+        lines: cartLines.map(({ line }) => ({ itemId: line.itemId, quantity: line.quantity })),
+        fulfillmentMethod: fulfillment,
+      });
+      if (result.ok) {
         clearCart();
-        setPlacedOrderId(orderId);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not place your order. Please try again.");
+        setPlacedOrderId(result.orderId);
+      } else {
+        setError(result.message || "Could not place your order. Please try again.");
       }
     });
   }

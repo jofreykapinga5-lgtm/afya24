@@ -126,6 +126,32 @@ async function joinRoom(appointmentId: string, locale: Locale, queueCheckOnly: b
     if (heartbeatError) {
       throw new Error(`Could not join the patient queue: ${heartbeatError.message}`);
     }
+
+    // Ensures a video_sessions row (with a real LiveKit room_name) exists
+    // even while this patient is still blocked behind a busy doctor, below.
+    // The doctor's own queue view (api/doctor/video-queue/route.ts) requires
+    // this row to recognize a waiting patient as a real in-app video/voice
+    // consultation -- without it, a patient stuck on the WAITING_TURN screen
+    // never reached the token-issuing code further down (previously the
+    // only place this row was created), so they silently never appeared in
+    // the doctor's queue at all, no matter how fresh their heartbeat was.
+    // ignoreDuplicates so this never resets started_at/status on a later
+    // real (re)connect -- that upsert, further down, stays the one that
+    // actually matters once a token is issued.
+    const room = await getOrCreateRoomForAppointment(appointment.id);
+    await service.from("video_sessions").upsert(
+      {
+        appointment_id: appointment.id,
+        provider_id: appointment.provider_id,
+        patient_id: appointment.patient_id,
+        room_provider: "livekit",
+        room_name: room.name,
+        join_url: room.url,
+        status: "active",
+        started_at: now,
+      },
+      { onConflict: "appointment_id", ignoreDuplicates: true }
+    );
   }
 
   // A patient can only join once the doctor is actually free for them --

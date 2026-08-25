@@ -30,6 +30,12 @@ export function DoctorPatientTabs({
   // listens for hashchange so browser back/forward between the two
   // Overview stat links (#queue / #completed) updates the visible tab too.
   const [tab, setTab] = useState<Tab>("queue");
+  // Owned here, not inside DoctorVideoQueue -- the tab label's "(N)" count
+  // needs the same live-polled list the queue itself renders, or the two
+  // silently drift apart (confirmed: the label showed "(0)" while the
+  // queue below it listed 2 real patients, since the label only ever saw
+  // this component's first-render prop, never the poll's updates).
+  const [queueItems, setQueueItems] = useState(initialQueueItems);
 
   useEffect(() => {
     function sync() {
@@ -38,6 +44,28 @@ export function DoctorPatientTabs({
     sync();
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshQueue() {
+      try {
+        const response = await fetch("/api/doctor/video-queue", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { items?: QueueItem[] };
+        if (!cancelled) setQueueItems(data.items ?? []);
+      } catch {
+        // Keep the last known queue on transient network errors.
+      }
+    }
+
+    refreshQueue();
+    const intervalId = window.setInterval(refreshQueue, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   function selectTab(next: Tab) {
@@ -55,7 +83,7 @@ export function DoctorPatientTabs({
             tab === "queue" ? "bg-[#01b7bb] text-white" : "text-[#64747c] hover:bg-[#f4f8f9]"
           }`}
         >
-          {t("doctor_tab_queue", locale)} ({initialQueueItems.length})
+          {t("doctor_tab_queue", locale)} ({queueItems.length})
         </button>
         <button
           type="button"
@@ -69,7 +97,7 @@ export function DoctorPatientTabs({
       </div>
 
       {tab === "queue" ? (
-        <DoctorVideoQueue initialItems={initialQueueItems} />
+        <DoctorVideoQueue items={queueItems} />
       ) : (
         <DoctorCompletedList items={initialCompletedItems} />
       )}

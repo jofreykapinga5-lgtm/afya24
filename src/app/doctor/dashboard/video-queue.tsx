@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { FileAudio, FileText, ImageIcon, Paperclip, Phone, TriangleAlert, UserRound, UsersRound, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { joinWaitingAppointment } from "../actions";
@@ -41,11 +41,17 @@ function AttachmentKindIcon({ kind }: { kind: string }) {
   return <FileText className="size-3.5" />;
 }
 
-export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }) {
+// Items and their live-polled refresh are owned by the parent
+// (DoctorPatientTabs) now, not here -- the tab switcher's "Foleni (N)"
+// count needs the same up-to-date list this renders, and a count derived
+// from a copy stuck in this component's own state would silently drift
+// from what's actually on screen (confirmed: it showed "Foleni (0)" while
+// visibly listing 2 patients, since the tab label only ever saw the
+// server's first-render snapshot).
+export function DoctorVideoQueue({ items }: { items: QueueItem[] }) {
   const locale = useAppStore((state) => state.locale);
   const activeCallId = useAppStore((state) => state.activeDoctorCall?.appointmentId);
   const setActiveDoctorCall = useAppStore((state) => state.setActiveDoctorCall);
-  const [items, setItems] = useState(initialItems);
   const [pending, startTransition] = useTransition();
   const [joinError, setJoinError] = useState<string | null>(null);
 
@@ -84,27 +90,6 @@ export function DoctorVideoQueue({ initialItems }: { initialItems: QueueItem[] }
     });
   }
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function refreshQueue() {
-      try {
-        const response = await fetch("/api/doctor/video-queue", { cache: "no-store" });
-        if (!response.ok) return;
-        const data = (await response.json()) as { items?: QueueItem[] };
-        if (!cancelled) setItems(data.items ?? []);
-      } catch {
-        // Keep the last known queue on transient network errors.
-      }
-    }
-
-    refreshQueue();
-    const intervalId = window.setInterval(refreshQueue, 3000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, []);
 
   return (
     <section id="patients" className="rounded-[1.35rem] bg-white p-5 shadow-[0_14px_40px_-35px_rgba(8,50,115,0.65)] ring-1 ring-[#dfe8eb]">

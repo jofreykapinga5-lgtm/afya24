@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createPatientSession, clearPatientSession, getPatientSession } from "@/lib/patient-session";
 import { createPatientAccountRecord } from "@/lib/patient-account";
@@ -8,6 +8,7 @@ import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { t } from "@/lib/i18n";
 import type { Locale, QualificationResult } from "@/lib/types";
 
 const REJOIN_WINDOW_HOURS = 24;
@@ -40,28 +41,41 @@ async function findResumableAppointment(
   return (existingAppointment?.id as string) ?? null;
 }
 
+export type BookConsultationResult = { ok: true; appointmentId: string } | { ok: false; message: string };
+
+// Returns a result object rather than throwing -- a thrown Error from a
+// Server Action never reaches the client's try/catch with a readable
+// message in production (React error #441, confirmed against this exact
+// action; see the same pattern in consultation/actions.ts's
+// initiateSnippePayment). Returning a value sidesteps that entirely.
 export async function bookConsultation(input: {
   providerId: string;
   locale: Locale;
   qualification: QualificationResult | null;
-}): Promise<string> {
-  const session = await getPatientSession();
-  if (!session) {
-    throw new Error("Your session expired. Please start the intake chat again.");
-  }
+}): Promise<BookConsultationResult> {
+  try {
+    const session = await getPatientSession();
+    if (!session) {
+      return { ok: false, message: "Your session expired. Please start the intake chat again." };
+    }
 
-  const service = createServiceClient();
-  const existingAppointmentId = await findResumableAppointment(service, session.patientId, input.providerId);
-  if (existingAppointmentId) {
-    return existingAppointmentId;
-  }
+    const service = createServiceClient();
+    const existingAppointmentId = await findResumableAppointment(service, session.patientId, input.providerId);
+    if (existingAppointmentId) {
+      return { ok: true, appointmentId: existingAppointmentId };
+    }
 
-  return bookConsultationForPatient({
-    patientId: session.patientId,
-    providerId: input.providerId,
-    locale: input.locale,
-    qualification: input.qualification,
-  });
+    const appointmentId = await bookConsultationForPatient({
+      patientId: session.patientId,
+      providerId: input.providerId,
+      locale: input.locale,
+      qualification: input.qualification,
+    });
+    return { ok: true, appointmentId };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not book this consultation." };
+  }
 }
 
 // For a patient who skips Afya24's AI intake and books a doctor directly.
@@ -75,6 +89,14 @@ export async function bookConsultation(input: {
 // (and updating that same patient row with whatever they just typed, in
 // case they corrected something) keeps their identity -- and therefore
 // their pending appointment -- continuous across the whole flow.
+export type BookConsultationDirectResult =
+  | { ok: true; appointmentId: string }
+  | { ok: false; message: string };
+
+// Returns a result object rather than throwing -- see bookConsultation's
+// comment above; the phone-collision check below in particular needs its
+// message to actually reach the patient, not crash into a generic React
+// error #441 in production.
 export async function bookConsultationDirect(input: {
   providerId: string;
   locale: Locale;
@@ -82,64 +104,87 @@ export async function bookConsultationDirect(input: {
   phone: string;
   dateOfBirth: string;
   gender: "female" | "male" | "other";
-}): Promise<string> {
-  const fullName = input.fullName.trim();
-  const phone = input.phone.trim();
+}): Promise<BookConsultationDirectResult> {
+  try {
+    const fullName = input.fullName.trim();
+    const phone = input.phone.trim();
 
-  if (!fullName || !phone || !input.dateOfBirth) {
-    throw new Error("Full name, phone number, and date of birth are required.");
-  }
+    if (!fullName || !phone || !input.dateOfBirth) {
+      return { ok: false, message: "Full name, phone number, and date of birth are required." };
+    }
 
-  // Same account-creation risk as /account/sign-up (no session exists yet
-  // to gate on) -- reuses the signup bucket rather than a dedicated one.
-  const { allowed } = await checkRateLimit("signup", await getClientIp());
-  if (!allowed) {
-    throw new Error("Too many attempts. Please wait a few minutes and try again.");
-  }
+    // Same account-creation risk as /account/sign-up (no session exists yet
+    // to gate on) -- reuses the signup bucket rather than a dedicated one.
+    const { allowed } = await checkRateLimit("signup", await getClientIp());
+    if (!allowed) {
+      return { ok: false, message: "Too many attempts. Please wait a few minutes and try again." };
+    }
 
-  const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
-  const service = createServiceClient();
-  const existingSession = await getPatientSession();
-  const existingPatient = existingSession
-    ? await service.from("patients").select("id").eq("id", existingSession.patientId).maybeSingle()
-    : null;
+    const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
+    const service = createServiceClient();
+    const existingSession = await getPatientSession();
+    const existingPatient = existingSession
+      ? await service.from("patients").select("id").eq("id", existingSession.patientId).maybeSingle()
+      : null;
 
-  let patientId: string;
-  if (existingPatient?.data) {
-    patientId = existingPatient.data.id as string;
-    await service
-      .from("patients")
-      .update({
-        full_name: fullName,
+    let patientId: string;
+    if (existingPatient?.data) {
+      patientId = existingPatient.data.id as string;
+      await service
+        .from("patients")
+        .update({
+          full_name: fullName,
+          phone: normalizedPhone,
+          date_of_birth: input.dateOfBirth,
+          gender: input.gender,
+          preferred_language: input.locale,
+        })
+        .eq("id", patientId);
+    } else {
+      // No session, so this looks like a first-time visitor -- but the phone
+      // number alone might already belong to a patient record from a
+      // different device/browser. Rather than silently reusing (or worse,
+      // overwriting) a stranger's record -- a phone can be shared within a
+      // family -- this blocks and points them at support, matching the
+      // "confirm before assuming identity" approach already used for
+      // session-based recognition (see the "Continuing as {name}" flow on
+      // this same page).
+      const { data: phoneMatch } = await service
+        .from("patients")
+        .select("id")
+        .eq("phone", normalizedPhone)
+        .maybeSingle();
+      if (phoneMatch) {
+        return { ok: false, message: t("doctor_direct_booking_phone_exists", input.locale) };
+      }
+
+      const record = await createPatientAccountRecord({
+        fullName,
         phone: normalizedPhone,
-        date_of_birth: input.dateOfBirth,
+        dateOfBirth: input.dateOfBirth,
         gender: input.gender,
-        preferred_language: input.locale,
-      })
-      .eq("id", patientId);
-  } else {
-    const record = await createPatientAccountRecord({
-      fullName,
-      phone: normalizedPhone,
-      dateOfBirth: input.dateOfBirth,
-      gender: input.gender,
-      preferredLanguage: input.locale,
+        preferredLanguage: input.locale,
+      });
+      patientId = record.patientId;
+      await createPatientSession(patientId);
+    }
+
+    const existingAppointmentId = await findResumableAppointment(service, patientId, input.providerId);
+    if (existingAppointmentId) {
+      return { ok: true, appointmentId: existingAppointmentId };
+    }
+
+    const appointmentId = await bookConsultationForPatient({
+      patientId,
+      providerId: input.providerId,
+      locale: input.locale,
+      qualification: null,
     });
-    patientId = record.patientId;
-    await createPatientSession(patientId);
+    return { ok: true, appointmentId };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not book this consultation." };
   }
-
-  const existingAppointmentId = await findResumableAppointment(service, patientId, input.providerId);
-  if (existingAppointmentId) {
-    return existingAppointmentId;
-  }
-
-  return bookConsultationForPatient({
-    patientId,
-    providerId: input.providerId,
-    locale: input.locale,
-    qualification: null,
-  });
 }
 
 // The "Continuing as {name}" shortcut on the doctor page assumes whoever

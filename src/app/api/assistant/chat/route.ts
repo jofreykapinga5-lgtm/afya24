@@ -8,6 +8,7 @@ import { createAccountClaimToken } from "@/lib/patient-session";
 import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
 import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
+import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import type { Locale } from "@/lib/types";
 
 export const maxDuration = 30;
@@ -80,8 +81,8 @@ const createPatientAccount = tool({
     // patient restarted the chat within the same visit) instead of creating
     // a duplicate patients row.
     const existing = await getPatientSession();
+    const service = createServiceClient();
     if (existing) {
-      const service = createServiceClient();
       const { data } = await service
         .from("patients")
         .select("id")
@@ -95,9 +96,26 @@ const createPatientAccount = tool({
       }
     }
 
+    const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
+
+    // No session, so this looks like a first-time patient -- but the phone
+    // number might already belong to a file from an earlier visit or a
+    // different device. A phone can be shared within a family, so this
+    // returns a status the model handles conversationally (see
+    // system-prompt.ts) instead of silently reusing or overwriting a file
+    // that might belong to someone else.
+    const { data: phoneMatch } = await service
+      .from("patients")
+      .select("id")
+      .eq("phone", normalizedPhone)
+      .maybeSingle();
+    if (phoneMatch) {
+      return { status: "phone_already_registered" as const };
+    }
+
     const record = await createPatientAccountRecord({
       fullName,
-      phone,
+      phone: normalizedPhone,
       dateOfBirth,
       preferredLanguage,
     });

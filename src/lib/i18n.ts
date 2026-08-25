@@ -582,6 +582,10 @@ const dict = {
     en: "Please fill in your name, phone number, sex, and date of birth.",
     sw: "Tafadhali jaza jina lako, namba ya simu, jinsia, na tarehe ya kuzaliwa.",
   },
+  doctor_direct_booking_phone_exists: {
+    en: "We already have a patient record under this phone number. If this is you, use Find my visit with your reference number. If not, contact support@afya24.com for help.",
+    sw: "Tayari tuna rekodi ya mgonjwa kwa namba hii ya simu. Kama ni wewe, tumia Tafuta ziara yangu na nambari yako ya rejea. Kama sio wewe, wasiliana na support@afya24.com kwa msaada.",
+  },
   pharmacy_checkout_no_session_body: {
     en: "Checkout needs a patient file. Describe what's going on to Afya24, or look yourself up if you're a returning patient, then come back to check out.",
     sw: "Malipo yanahitaji faili la mgonjwa. Mwambie Afya24 kinachoendelea, au jitafute kama wewe ni mgonjwa wa zamani, kisha urudi kulipa.",

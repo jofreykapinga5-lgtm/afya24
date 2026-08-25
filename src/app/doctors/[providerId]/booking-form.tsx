@@ -42,19 +42,19 @@ export function BookingForm({
 
   function bookWithSession() {
     startTransition(async () => {
-      try {
-        const appointmentId = await bookConsultation({
-          providerId: provider.id,
-          locale,
-          qualification: qualificationResult,
-        });
-        router.push(`/consultation/${appointmentId}/pay`);
-      } catch (err) {
+      const result = await bookConsultation({
+        providerId: provider.id,
+        locale,
+        qualification: qualificationResult,
+      });
+      if (result.ok) {
+        router.push(`/consultation/${result.appointmentId}/pay`);
+      } else {
         // Show the real reason instead of a generic "try again" -- the fix
         // is usually specific (session expired, no doctors available, a
         // database error) and "try again" alone won't help when the same
         // click will just fail the same way again.
-        setError(err instanceof Error ? err.message : t("doctor_booking_error", locale));
+        setError(result.message || t("doctor_booking_error", locale));
       }
     });
   }
@@ -80,18 +80,18 @@ export function BookingForm({
     }
 
     startTransition(async () => {
-      try {
-        const appointmentId = await bookConsultationDirect({
-          providerId: provider.id,
-          locale,
-          fullName,
-          phone,
-          dateOfBirth,
-          gender,
-        });
-        router.push(`/consultation/${appointmentId}/pay`);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t("doctor_booking_error", locale));
+      const result = await bookConsultationDirect({
+        providerId: provider.id,
+        locale,
+        fullName,
+        phone,
+        dateOfBirth,
+        gender,
+      });
+      if (result.ok) {
+        router.push(`/consultation/${result.appointmentId}/pay`);
+      } else {
+        setError(result.message || t("doctor_booking_error", locale));
       }
     });
   }

@@ -147,7 +147,19 @@ export default function QualificationPage() {
   const toolAccountResult = useMemo<AccountResult | null>(() => {
     for (const message of messages) {
       for (const part of message.parts) {
-        if (part.type === "tool-createPatientAccount" && part.state === "output-available") {
+        // The tool can also resolve to { status: "phone_already_registered" }
+        // (no patientId/claimToken) when the phone number already belongs to
+        // an existing patient file -- the model handles that conversationally
+        // in chat text, so this guard keeps that non-result from being
+        // treated as a real account (which would fire the session-claim
+        // fetch below with an undefined claimToken).
+        if (
+          part.type === "tool-createPatientAccount" &&
+          part.state === "output-available" &&
+          part.output &&
+          typeof part.output === "object" &&
+          "patientId" in part.output
+        ) {
           return part.output as AccountResult;
         }
       }
@@ -242,22 +254,22 @@ export default function QualificationPage() {
 
     setFallbackError(null);
     startFallbackTransition(async () => {
-      try {
-        const record = await createPatientAccountFallback({
-          fullName,
-          phone,
-          dateOfBirth,
-          preferredLanguage: locale,
-        });
+      const result = await createPatientAccountFallback({
+        fullName,
+        phone,
+        dateOfBirth,
+        preferredLanguage: locale,
+      });
+      if (result.ok) {
         setFallbackAccountResult({
-          patientId: record.patientId,
+          patientId: result.patientId,
           fullName,
           phone,
           dateOfBirth,
         });
         setSessionEstablished(true);
-      } catch {
-        setFallbackError(t("qualification_fallback_error", locale));
+      } else {
+        setFallbackError(result.message || t("qualification_fallback_error", locale));
       }
     });
   }

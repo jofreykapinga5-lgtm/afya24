@@ -5,6 +5,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
+import { patientAccessCutoff } from "@/lib/video/queue";
 import { t, appointmentStatusKey } from "@/lib/i18n";
 import { toTitleCase } from "@/lib/format-name";
 import { endPatientSession } from "../actions";
@@ -42,9 +43,16 @@ export default async function LookupResultsPage() {
 
   const { data: appointments } = await supabase
     .from("appointments")
-    .select("id, scheduled_at, status, consultation_mode:consultation_orders(consultation_mode)")
+    .select("id, scheduled_at, status, payment_status, consultation_mode:consultation_orders(consultation_mode)")
     .eq("patient_id", session.patientId)
     .order("scheduled_at", { ascending: false });
+
+  // The doctor's own queue only ever shows a waiting/in-progress appointment
+  // within this same window (see patientAccessCutoff in lib/video/queue.ts)
+  // -- offering a "Join" button here past that point, or for anything not
+  // actually paid, would let a patient click through to a call the doctor's
+  // side has already stopped treating as live.
+  const accessCutoff = new Date(patientAccessCutoff());
 
   return (
     <main className="min-h-[calc(100dvh-3.5rem)] flex-1 bg-[#f7fbfb]">
@@ -97,7 +105,10 @@ export default async function LookupResultsPage() {
             {appointments && appointments.length > 0 ? (
               <ul className="mt-4 space-y-2">
                 {appointments.map((appointment) => {
-                  const canJoin = appointment.status === "waiting" || appointment.status === "in_progress";
+                  const canJoin =
+                    (appointment.status === "waiting" || appointment.status === "in_progress") &&
+                    appointment.payment_status === "paid" &&
+                    new Date(appointment.scheduled_at) >= accessCutoff;
                   const mode = appointment.consultation_mode?.[0]?.consultation_mode ?? "video";
                   return (
                     <li

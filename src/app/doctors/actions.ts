@@ -143,18 +143,29 @@ export async function bookConsultationDirect(input: {
     } else {
       // No session, so this looks like a first-time visitor -- but the phone
       // number alone might already belong to a patient record from a
-      // different device/browser. Rather than silently reusing (or worse,
-      // overwriting) a stranger's record -- a phone can be shared within a
-      // family -- this blocks and points them at support, matching the
-      // "confirm before assuming identity" approach already used for
-      // session-based recognition (see the "Continuing as {name}" flow on
-      // this same page).
+      // different device/browser (e.g. they paid, closed the browser, and
+      // came back later on a different device -- the session cookie never
+      // made the trip). Before blocking, check whether that matched patient
+      // has a live appointment with *this* provider within the rejoin
+      // window -- a phone match plus a real paid/pending appointment with
+      // the specific doctor they're booking again is strong evidence this
+      // really is the same patient, safe to resume without asking them to
+      // pay twice. A phone match with no such appointment stays blocked and
+      // pointed at support -- a phone can be shared within a family, and
+      // silently reusing (or worse, overwriting) a stranger's record isn't
+      // safe just because the number matches.
       const { data: phoneMatch } = await service
         .from("patients")
         .select("id")
         .eq("phone", normalizedPhone)
         .maybeSingle();
       if (phoneMatch) {
+        const matchedPatientId = phoneMatch.id as string;
+        const resumableId = await findResumableAppointment(service, matchedPatientId, input.providerId);
+        if (resumableId) {
+          await createPatientSession(matchedPatientId);
+          return { ok: true, appointmentId: resumableId };
+        }
         return { ok: false, message: t("doctor_direct_booking_phone_exists", input.locale) };
       }
 

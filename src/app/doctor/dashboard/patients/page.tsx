@@ -26,6 +26,7 @@ type WaitingAppointment = {
 
 type CompletedAppointment = {
   id: string;
+  patient_id: string;
   updated_at: string;
   patients: { full_name: string; hospital_reference_number: string } | null;
   consultation_orders: { consultation_mode: string }[] | null;
@@ -59,7 +60,7 @@ export default async function DoctorPatientsPage() {
   const { data: completedAppointments } = provider
     ? await service
         .from("appointments")
-        .select("id, updated_at, patients(full_name, hospital_reference_number), consultation_orders(consultation_mode)")
+        .select("id, patient_id, updated_at, patients(full_name, hospital_reference_number), consultation_orders(consultation_mode)")
         .eq("provider_id", provider.id)
         .eq("status", "completed")
         .gte("scheduled_at", todayStart.toISOString())
@@ -70,6 +71,7 @@ export default async function DoctorPatientsPage() {
 
   const initialCompletedItems = (completedAppointments ?? []).map((appointment) => ({
     id: appointment.id,
+    patientId: appointment.patient_id,
     patientName: toTitleCase(appointment.patients?.full_name ?? "Patient"),
     patientReference: appointment.patients?.hospital_reference_number ?? "",
     consultationMode:

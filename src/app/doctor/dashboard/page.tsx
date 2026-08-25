@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Stethoscope } from "lucide-react";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, staffRoleKey, staffStatusKey, adminProviderStatusKey } from "@/lib/i18n";
@@ -66,8 +67,16 @@ export default async function DoctorOverviewPage() {
           </p>
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-          <MiniStat label={t("doctor_dashboard_stat_queue", locale)} value={String(queueCount ?? 0)} />
-          <MiniStat label={t("doctor_dashboard_stat_done", locale)} value={String(completedToday ?? 0)} />
+          <MiniStat
+            label={t("doctor_dashboard_stat_queue", locale)}
+            value={String(queueCount ?? 0)}
+            href="/doctor/dashboard/patients#queue"
+          />
+          <MiniStat
+            label={t("doctor_dashboard_stat_done", locale)}
+            value={String(completedToday ?? 0)}
+            href="/doctor/dashboard/patients#completed"
+          />
           <MiniStat label={t("doctor_dashboard_stat_slots", locale)} value={String(openSlotsCount ?? 0)} />
         </div>
       </article>
@@ -126,13 +135,26 @@ export default async function DoctorOverviewPage() {
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-[#f8fbfd] px-2 py-3">
+function MiniStat({ label, value, href }: { label: string; value: string; href?: string }) {
+  const content = (
+    <>
       <p className="text-sm font-bold capitalize text-[#071923]">{value}</p>
       <p className="mt-0.5 text-[11px] text-[#64747c]">{label}</p>
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="block rounded-2xl bg-[#f8fbfd] px-2 py-3 outline-none transition-colors hover:bg-[#e8f7f4] focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="rounded-2xl bg-[#f8fbfd] px-2 py-3">{content}</div>;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {

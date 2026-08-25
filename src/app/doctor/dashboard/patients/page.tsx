@@ -1,7 +1,7 @@
 import { listRoomParticipantIdentities } from "@/lib/video/livekit";
 import { getDoctorDashboardContext } from "../doctor-context";
 import { DoctorCallPanel } from "../call-panel";
-import { DoctorVideoQueue } from "../video-queue";
+import { DoctorPatientTabs } from "../patient-tabs";
 import { hasRecentQueueHeartbeat, patientAccessCutoff } from "@/lib/video/queue";
 import { toTitleCase } from "@/lib/format-name";
 
@@ -24,6 +24,13 @@ type WaitingAppointment = {
   files: { id: string; original_filename: string | null; attachment_kind: string | null; storage_path: string }[] | null;
 };
 
+type CompletedAppointment = {
+  id: string;
+  updated_at: string;
+  patients: { full_name: string; hospital_reference_number: string } | null;
+  consultation_orders: { consultation_mode: string }[] | null;
+};
+
 export default async function DoctorPatientsPage() {
   const { provider, service } = await getDoctorDashboardContext();
 
@@ -40,6 +47,35 @@ export default async function DoctorPatientsPage() {
         .order("scheduled_at", { ascending: true })
         .returns<WaitingAppointment[]>()
     : { data: [] as WaitingAppointment[] };
+
+  // Matches the Overview page's "completedToday" stat scoping, so clicking
+  // that stat and landing here shows the same set the doctor just saw a
+  // count for.
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+  const { data: completedAppointments } = provider
+    ? await service
+        .from("appointments")
+        .select("id, updated_at, patients(full_name, hospital_reference_number), consultation_orders(consultation_mode)")
+        .eq("provider_id", provider.id)
+        .eq("status", "completed")
+        .gte("scheduled_at", todayStart.toISOString())
+        .lt("scheduled_at", tomorrowStart.toISOString())
+        .order("updated_at", { ascending: false })
+        .returns<CompletedAppointment[]>()
+    : { data: [] as CompletedAppointment[] };
+
+  const initialCompletedItems = (completedAppointments ?? []).map((appointment) => ({
+    id: appointment.id,
+    patientName: toTitleCase(appointment.patients?.full_name ?? "Patient"),
+    patientReference: appointment.patients?.hospital_reference_number ?? "",
+    consultationMode:
+      appointment.consultation_orders?.[0]?.consultation_mode === "voice" ? ("voice" as const) : ("video" as const),
+    completedAt: appointment.updated_at,
+  }));
 
   const videoAppointments = (waitingAppointments ?? []).filter(
     (appointment) =>
@@ -107,7 +143,7 @@ export default async function DoctorPatientsPage() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[380px_1fr] lg:items-start">
-      <DoctorVideoQueue initialItems={initialVideoQueueItems} />
+      <DoctorPatientTabs initialQueueItems={initialVideoQueueItems} initialCompletedItems={initialCompletedItems} />
       <DoctorCallPanel />
     </div>
   );

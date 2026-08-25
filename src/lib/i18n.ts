@@ -1350,6 +1350,18 @@ const dict = {
     en: "No active calls right now.",
     sw: "Hakuna simu zinazoendelea kwa sasa.",
   },
+  doctor_tab_queue: { en: "Queue", sw: "Foleni" },
+  doctor_tab_completed: { en: "Completed", sw: "Wamehudumiwa" },
+  doctor_completed_title: { en: "Served patients", sw: "Wagonjwa waliohudumiwa" },
+  doctor_completed_body: {
+    en: "Consultations you've completed today.",
+    sw: "Ushauri ulioukamilisha leo.",
+  },
+  doctor_completed_empty: {
+    en: "No completed consultations yet today.",
+    sw: "Hakuna ushauri uliokamilika leo bado.",
+  },
+  doctor_completed_at_label: { en: "Completed", sw: "Imekamilika" },
   doctor_dashboard_open_menu: { en: "Open doctor menu", sw: "Fungua menyu ya daktari" },
   doctor_avail_visible_label: { en: "Visible to patients", sw: "Anaonekana kwa wagonjwa" },
   doctor_avail_offline_label: { en: "Offline", sw: "Nje ya mtandao" },

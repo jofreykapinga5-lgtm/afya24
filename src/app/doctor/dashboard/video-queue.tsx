@@ -14,7 +14,7 @@ const urgencyLabelKey: Record<string, TranslationKey> = {
   emergency: "urgency_emergency_label",
 };
 
-type QueueItem = {
+export type QueueItem = {
   id: string;
   patientId: string;
   scheduledAt: string;

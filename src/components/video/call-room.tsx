@@ -7,6 +7,7 @@ import type { AudioCaptureOptions, RoomConnectOptions, RoomOptions, VideoCapture
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  StartAudio,
   useConnectionQualityIndicator,
   useConnectionState,
   useLocalParticipant,
@@ -197,6 +198,20 @@ function CallStage({ onHangup }: { onHangup?: () => void }) {
           </div>
         ) : null}
       </div>
+
+      {/* Browsers commonly block autoplay of the remote participant's audio
+          (an <audio> element attached programmatically, not the direct
+          result of a click) until the user performs a real interaction --
+          without a visible way to unblock it, a patient or doctor can sit
+          in a call with working video and completely silent audio, with no
+          indication anything is wrong. LiveKit's StartAudio hides itself
+          via inline style once playback is actually allowed, so this is
+          normally invisible and only appears for the browsers/sessions
+          that actually need it. */}
+      <StartAudio
+        label={t("video_tap_to_enable_audio", locale)}
+        className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#01b7bb] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_40px_-16px_rgba(1,183,187,0.75)] outline-none transition-transform hover:scale-105 focus-visible:ring-3 focus-visible:ring-white/50"
+      />
 
       {remoteTrack && localTrack ? (
         <div className="absolute right-4 bottom-28 w-24 sm:right-6 sm:bottom-32 sm:w-32">

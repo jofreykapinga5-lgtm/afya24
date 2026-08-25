@@ -704,6 +704,10 @@ const dict = {
     en: "Weak connection",
     sw: "Mtandao dhaifu",
   },
+  video_tap_to_enable_audio: {
+    en: "Tap to enable sound",
+    sw: "Gusa ili kuwezesha sauti",
+  },
   video_connection_lost_title: {
     en: "Connection lost",
     sw: "Muunganisho umekatika",

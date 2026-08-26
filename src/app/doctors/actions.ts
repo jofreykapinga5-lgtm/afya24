@@ -41,6 +41,33 @@ async function findResumableAppointment(
   return (existingAppointment?.id as string) ?? null;
 }
 
+// Once a patient has paid for a visit with a doctor, they get 24 hours of
+// free follow-up access to that SAME doctor -- a real product decision, not
+// just "rejoin the call you didn't finish" (findResumableAppointment above
+// covers that separate, narrower case: an appointment still waiting/
+// in_progress). This checks for ANY paid appointment in the window,
+// completed ones included, since a doctor a patient already paid to see
+// this morning shouldn't charge again for a follow-up message this
+// afternoon.
+async function hasRecentPaidVisit(
+  service: ReturnType<typeof createServiceClient>,
+  patientId: string,
+  providerId: string
+): Promise<boolean> {
+  const rejoinWindowStart = new Date(Date.now() - REJOIN_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const { data } = await service
+    .from("appointments")
+    .select("id")
+    .eq("patient_id", patientId)
+    .eq("provider_id", providerId)
+    .eq("payment_status", "paid")
+    .gte("scheduled_at", rejoinWindowStart)
+    .limit(1)
+    .maybeSingle();
+
+  return Boolean(data);
+}
+
 export type BookConsultationResult = { ok: true; appointmentId: string } | { ok: false; message: string };
 
 // Returns a result object rather than throwing -- a thrown Error from a
@@ -217,6 +244,8 @@ async function bookConsultationForPatient(input: {
 }): Promise<string> {
   const service = createServiceClient();
   const defaultService = await getDefaultService(service);
+  const withinFreeAccessWindow = await hasRecentPaidVisit(service, input.patientId, input.providerId);
+  const paymentStatus = withinFreeAccessWindow ? "paid" : "pending";
 
   const { data: appointment, error: appointmentError } = await service
     .from("appointments")
@@ -228,8 +257,11 @@ async function bookConsultationForPatient(input: {
       status: "waiting",
       // Starts pending -- the patient is routed to /consultation/[id]/pay
       // next (see booking-form.tsx / direct-booking-form.tsx), and the
-      // Snippe payment flow is what actually flips this to "paid".
-      payment_status: "pending",
+      // Snippe payment flow is what actually flips this to "paid". Already
+      // "paid" here instead, without ever touching Snippe, if this patient
+      // paid this same doctor within the last 24h (see hasRecentPaidVisit)
+      // -- /pay redirects straight through to the call room in that case.
+      payment_status: paymentStatus,
       price: defaultService.basePrice,
       currency: "TZS",
     })
@@ -261,7 +293,7 @@ async function bookConsultationForPatient(input: {
     // payment updates the appointment; nothing currently reads this
     // duplicate status off consultation_orders, but it shouldn't silently
     // disagree with the real one.
-    status: "pending",
+    status: paymentStatus,
   });
 
   if (orderError) {

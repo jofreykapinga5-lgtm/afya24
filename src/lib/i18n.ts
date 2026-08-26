@@ -1127,6 +1127,7 @@ const dict = {
   admin_kpi_active_providers: { en: "Active providers", sw: "Watoa huduma amilifu" },
   admin_kpi_open_pharmacy: { en: "Open pharmacy orders", sw: "Maagizo ya dawa yaliyo wazi" },
   admin_kpi_open_labs: { en: "Open lab orders", sw: "Maagizo ya maabara yaliyo wazi" },
+  doctor_new_patient_title_flash: { en: "🔔 New patient waiting!", sw: "🔔 Mgonjwa mpya anasubiri!" },
   admin_recent_activity: { en: "Recent activity", sw: "Shughuli za hivi karibuni" },
   admin_feedback_title: { en: "Patient feedback", sw: "Maoni ya wagonjwa" },
   admin_feedback_subtitle: {

@@ -214,9 +214,20 @@ function ActiveCallPanel({
 
   function startSave(value: string) {
     setSaveState("saving");
-    saveDoctorNotes(appointmentId, value).then((result) => {
-      setSaveState(result.ok ? "saved" : "idle");
-    });
+    saveDoctorNotes(appointmentId, value)
+      .then((result) => {
+        setSaveState(result.ok ? "saved" : "idle");
+      })
+      .catch(() => {
+        // The action itself already returns {ok:false} for a normal
+        // failure (handled above) -- this only catches the rarer case of
+        // the request dispatch itself failing (a real network drop
+        // mid-save, plausible on the variable mobile connections this app
+        // targets). Without it, that case was an unhandled rejection and
+        // left saveState stuck on "saving" forever with no indication
+        // anything went wrong.
+        setSaveState("idle");
+      });
   }
 
   function handleNotesChange(value: string) {

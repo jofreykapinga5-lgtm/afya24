@@ -296,3 +296,15 @@ export interface AuditLogEntry {
   entityLabel: string;
   createdAt: string;
 }
+
+export interface ConsultationFeedback {
+  id: string;
+  rating: number;
+  feedbackText: string | null;
+  testimonialText: string | null;
+  testimonialConsent: boolean;
+  patientName: string;
+  patientReference: string;
+  providerName: string;
+  createdAt: string;
+}

@@ -13,6 +13,7 @@ import {
   Pill,
   ScrollText,
   ShieldCheck,
+  Star,
   Stethoscope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import type {
   AppointmentStatus,
   AuditActionType,
   AuditLogEntry,
+  ConsultationFeedback,
   ConsultationMode,
   LabOrder,
   LabOrderStatus,
@@ -76,6 +78,17 @@ type PaymentAppointmentRow = {
   patients: { full_name: string; hospital_reference_number: string | null } | null;
   providers: { full_name: string } | null;
   consultation_orders: { consultation_mode: string }[] | null;
+};
+
+type DbFeedbackRow = {
+  id: string;
+  rating: number;
+  feedback_text: string | null;
+  testimonial_text: string | null;
+  testimonial_consent: boolean;
+  created_at: string;
+  patients: { full_name: string; hospital_reference_number: string | null } | null;
+  providers: { full_name: string } | null;
 };
 
 type DbAuditLogRow = {
@@ -185,12 +198,24 @@ const navItems = [
   { label: "Payments", href: "#payments", icon: CreditCard },
   { label: "Pharmacy", href: "#pharmacy", icon: Pill },
   { label: "Labs", href: "#labs", icon: FlaskConical },
+  { label: "Feedback", href: "#feedback", icon: Star },
   { label: "Audit log", href: "#audit", icon: ScrollText },
 ];
 
 function allowedTabsForRole(role: string | null | undefined): AdminTab[] {
   if (role === "admin") {
-    return ["overview", "providers", "applications", "services", "appointments", "payments", "pharmacy", "labs", "audit"];
+    return [
+      "overview",
+      "providers",
+      "applications",
+      "services",
+      "appointments",
+      "payments",
+      "pharmacy",
+      "labs",
+      "feedback",
+      "audit",
+    ];
   }
   if (role === "pharmacy_staff") return ["pharmacy"];
   if (role === "lab_staff") return ["labs"];
@@ -241,6 +266,7 @@ export default async function AdminDashboardPage() {
 
   let adminDataWarning: string | null = null;
   let pharmacyDataWarning: string | null = null;
+  let feedbackDataWarning: string | null = null;
   let dbProviders: DbProviderRow[] | null = null;
   let paymentAppointments: PaymentAppointmentRow[] | null = null;
   let dbLabLocations: DbLabLocationRow[] | null = null;
@@ -251,6 +277,7 @@ export default async function AdminDashboardPage() {
   let dbPharmacyOrders: DbPharmacyOrderRow[] | null = null;
   let dbAuditLogs: DbAuditLogRow[] | null = null;
   let dbLabOrders: DbLabOrderRow[] | null = null;
+  let dbFeedback: DbFeedbackRow[] | null = null;
   const actorNameByUserId = new Map<string, string>();
   const actorRoleByUserId = new Map<string, StaffRole>();
   const applicationFileUrls = new Map<string, string>();
@@ -443,6 +470,32 @@ export default async function AdminDashboardPage() {
         error instanceof Error
           ? error.message
           : "Pharmacy data could not be loaded. Check Supabase configuration and migrations.";
+    }
+
+    // Isolated for the same reason as the pharmacy block above --
+    // consultation_feedback is a newer migration (0020), so a database that
+    // hasn't been migrated yet would otherwise take every other tab down
+    // with it.
+    try {
+      const service = createServiceClient();
+      const { data, error } = await service
+        .from("consultation_feedback")
+        .select(
+          "id, rating, feedback_text, testimonial_text, testimonial_consent, created_at, patients(full_name, hospital_reference_number), providers(full_name)"
+        )
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) {
+        throw error;
+      }
+
+      dbFeedback = data as unknown as DbFeedbackRow[];
+    } catch (error) {
+      feedbackDataWarning =
+        error instanceof Error
+          ? error.message
+          : "Feedback data could not be loaded. Check Supabase configuration and migrations.";
     }
   }
 
@@ -668,6 +721,22 @@ export default async function AdminDashboardPage() {
     ),
   }));
 
+  const realFeedback: ConsultationFeedback[] = (dbFeedback ?? []).map((entry) => ({
+    id: entry.id,
+    rating: entry.rating,
+    feedbackText: entry.feedback_text,
+    testimonialText: entry.testimonial_text,
+    testimonialConsent: entry.testimonial_consent,
+    patientName: toTitleCase(
+      (entry.patients as unknown as { full_name: string } | null)?.full_name ?? "Patient"
+    ),
+    patientReference:
+      (entry.patients as unknown as { hospital_reference_number: string | null } | null)
+        ?.hospital_reference_number ?? "—",
+    providerName: (entry.providers as unknown as { full_name: string } | null)?.full_name ?? "Doctor",
+    createdAt: entry.created_at,
+  }));
+
   return (
     <main className="min-h-[100dvh] bg-[#edf3f6] px-3 py-3 text-[#101820] sm:px-5 lg:px-6">
       <div className="sticky top-0 z-40 mx-auto mb-3 flex w-full max-w-7xl items-center justify-between rounded-2xl border border-[#dfe8eb] bg-white/94 px-4 py-3 shadow-[0_18px_45px_-32px_rgba(8,50,115,0.35)] backdrop-blur lg:hidden">
@@ -796,6 +865,17 @@ export default async function AdminDashboardPage() {
               </div>
             ) : null}
 
+            {feedbackDataWarning ? (
+              <div className="mb-4 rounded-[1.1rem] bg-[#fff4f0] p-4 text-sm text-[#9b2c12] ring-1 ring-[#ffd4c6]">
+                <p className="font-bold">Feedback data could not load.</p>
+                <p className="mt-1">{feedbackDataWarning}</p>
+                <p className="mt-2 text-xs text-[#9b2c12]/80">
+                  Run migration 0020_consultation_feedback.sql against this Supabase project, then
+                  reload.
+                </p>
+              </div>
+            ) : null}
+
             {profile ? (
               <div id="admin-tabs">
                 <AdminDashboard
@@ -812,6 +892,7 @@ export default async function AdminDashboardPage() {
                   pharmacyOrders={realPharmacyOrders}
                   labOrders={realLabOrders}
                   labLocations={realLabLocations}
+                  feedback={realFeedback}
                   auditLogs={realAuditLogs}
                 />
               </div>

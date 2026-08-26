@@ -419,3 +419,75 @@ export async function selectConnectionMode(appointmentId: string, mode: "voice" 
     .update({ consultation_mode: mode })
     .eq("appointment_id", appointmentId);
 }
+
+// Called from the "call ended" screen (CallRoom), before the account-upgrade
+// offer -- patient-facing, skippable, one row per appointment. rating is
+// required to submit at all (the Skip link bypasses the whole form instead);
+// feedbackText is private quality feedback for admin/doctor review,
+// testimonialText is a separate opt-in quote only usable publicly if the
+// patient ticked the consent checkbox. Result-object return, not a throw --
+// same reason as every other patient-facing action in this file (see
+// initiateSnippePayment's comment).
+export type SubmitFeedbackResult = { ok: true } | { ok: false; message: string };
+
+export async function submitConsultationFeedback(input: {
+  appointmentId: string;
+  rating: number;
+  feedbackText: string;
+  testimonialText: string;
+  testimonialConsent: boolean;
+}): Promise<SubmitFeedbackResult> {
+  try {
+    const session = await getPatientSession();
+    if (!session) {
+      return { ok: false, message: "Your session expired." };
+    }
+    if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5) {
+      return { ok: false, message: "Please choose a star rating." };
+    }
+
+    const service = createServiceClient();
+    const { data: appointment, error: appointmentError } = await service
+      .from("appointments")
+      .select("id, patient_id, provider_id")
+      .eq("id", input.appointmentId)
+      .maybeSingle();
+
+    if (appointmentError || !appointment) {
+      return { ok: false, message: appointmentError?.message ?? "Appointment not found." };
+    }
+    if (appointment.patient_id !== session.patientId) {
+      return { ok: false, message: "Not authorized for this appointment." };
+    }
+
+    // A testimonial someone typed but didn't consent to share publicly is
+    // stored as private-only -- consent only counts alongside actual text.
+    const testimonialText = input.testimonialText.trim();
+    const testimonialConsent = testimonialText.length > 0 && input.testimonialConsent;
+
+    const { error: upsertError } = await service.from("consultation_feedback").upsert(
+      {
+        appointment_id: appointment.id,
+        patient_id: appointment.patient_id,
+        provider_id: appointment.provider_id,
+        rating: input.rating,
+        feedback_text: input.feedbackText.trim() || null,
+        testimonial_text: testimonialText || null,
+        testimonial_consent: testimonialConsent,
+      },
+      { onConflict: "appointment_id" }
+    );
+
+    if (upsertError) {
+      return { ok: false, message: upsertError.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("submitConsultationFeedback failed", error);
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Could not submit your feedback.",
+    };
+  }
+}

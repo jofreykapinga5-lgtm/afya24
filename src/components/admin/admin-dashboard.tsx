@@ -22,6 +22,7 @@ import { ProviderStatusForm, ProvidersPanel } from "@/components/admin/providers
 import { ServicesPanel } from "@/components/admin/services-panel";
 import { AppointmentsPanel } from "@/components/admin/appointments-panel";
 import { PaymentsPanel, type AppointmentPaymentRow } from "@/components/admin/payments-panel";
+import { FeedbackPanel } from "@/components/admin/feedback-panel";
 import { PharmacyPanel } from "@/components/admin/pharmacy-panel";
 import { LabsPanel } from "@/components/admin/labs-panel";
 import { ApplicationsPanel, type ProviderApplicationRow } from "@/components/admin/applications-panel";
@@ -31,6 +32,7 @@ import type {
   AdminProviderMeta,
   Appointment,
   AuditLogEntry,
+  ConsultationFeedback,
   LabLocation,
   LabOrder,
   Locale,
@@ -51,6 +53,7 @@ export type AdminTab =
   | "payments"
   | "pharmacy"
   | "labs"
+  | "feedback"
   | "audit";
 
 const providerStatusTone: Record<ProviderStatus, "positive" | "pending" | "urgent"> = {
@@ -68,6 +71,7 @@ const adminTabs: AdminTab[] = [
   "payments",
   "pharmacy",
   "labs",
+  "feedback",
   "audit",
 ];
 
@@ -90,6 +94,7 @@ export function AdminDashboard({
   pharmacyOrders,
   labOrders,
   labLocations,
+  feedback,
   auditLogs,
 }: {
   locale: Locale;
@@ -105,6 +110,7 @@ export function AdminDashboard({
   pharmacyOrders: PharmacyOrder[];
   labOrders: LabOrder[];
   labLocations: LabLocation[];
+  feedback: ConsultationFeedback[];
   auditLogs: AuditLogEntry[];
 }) {
   const [activeTab, setActiveTab] = useState<AdminTab>(allowedTabs[0] ?? "overview");
@@ -415,6 +421,10 @@ export function AdminDashboard({
 
         <TabsContent value="labs" className="mt-0" keepMounted>
           <LabsPanel locale={locale} labOrders={labOrders} labLocations={labLocations} />
+        </TabsContent>
+
+        <TabsContent value="feedback" className="mt-0" keepMounted>
+          <FeedbackPanel locale={locale} entries={feedback} />
         </TabsContent>
 
         <TabsContent value="audit" className="mt-0" keepMounted>

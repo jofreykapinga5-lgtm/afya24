@@ -38,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   type AdminActionState,
   createProviderAccount,

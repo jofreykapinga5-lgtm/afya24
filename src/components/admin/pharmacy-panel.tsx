@@ -38,7 +38,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   createPharmacyItem,
   deletePharmacyItem,

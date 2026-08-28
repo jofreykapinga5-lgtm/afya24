@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { SubmitButton } from "@/components/submit-button";
 import { createLabLocation, updateLabLocationStatus } from "@/app/admin/actions";
 import {
   Table,

@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { SubmitButton } from "@/components/submit-button";
 import { updateProviderApplicationStatus } from "@/app/admin/actions";
 import {
   Table,

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, TriangleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -97,9 +97,12 @@ export default async function DoctorSignInPage({
             />
           </div>
 
-          <Button type="submit" className="h-11 w-full rounded-xl">
+          <SubmitButton
+            className="h-11 w-full rounded-xl"
+            pendingText={t("doctor_sign_in_pending", locale)}
+          >
             {t("doctor_sign_in_cta", locale)}
-          </Button>
+          </SubmitButton>
         </form>
       </div>
     </main>

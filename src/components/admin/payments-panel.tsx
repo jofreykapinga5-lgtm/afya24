@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { StatusPill, type StatusTone } from "@/components/admin/status-pill";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { SubmitButton } from "@/components/submit-button";
 import { confirmAppointmentPayment, markAppointmentPaymentFailed } from "@/app/admin/actions";
 import { adminPaymentStatusKey, t, type TranslationKey } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";

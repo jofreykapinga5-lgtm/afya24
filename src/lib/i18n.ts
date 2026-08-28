@@ -454,6 +454,7 @@ const dict = {
   },
   doctor_email_label: { en: "Email", sw: "Barua pepe" },
   doctor_sign_in_cta: { en: "Sign in", sw: "Ingia" },
+  doctor_sign_in_pending: { en: "Signing in…", sw: "Inaingia…" },
   doctor_dashboard_role: { en: "Role", sw: "Wadhifa" },
   doctor_dashboard_status: { en: "Status", sw: "Hali" },
   doctor_dashboard_no_profile: {

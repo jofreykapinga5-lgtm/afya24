@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { updateServicePrice, updateServiceStatus } from "@/app/admin/actions";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   Table,
   TableBody,

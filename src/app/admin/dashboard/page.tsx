@@ -16,7 +16,7 @@ import {
   Star,
   Stethoscope,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { AdminDashboard, type AdminTab } from "@/components/admin/admin-dashboard";
 import { AdminNavList } from "@/components/admin/admin-nav-list";
 import { createClient } from "@/lib/supabase/server";
@@ -832,10 +832,10 @@ export default async function AdminDashboardPage() {
                 </div>
               )}
               <form action={signOut}>
-                <Button type="submit" variant="outline" className="h-10 rounded-full bg-white px-4">
+                <SubmitButton variant="outline" className="h-10 rounded-full bg-white px-4">
                   <LogOut className="size-4" />
                   <span className="hidden sm:inline">{t("dashboard_sign_out", locale)}</span>
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           </header>

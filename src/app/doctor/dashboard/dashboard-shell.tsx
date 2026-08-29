@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { useAppStore } from "@/lib/store";
 import { DoctorSidebarNav, type SidebarNavItem } from "./sidebar-nav";
 import { DoctorDashboardMobileMenu, type DoctorMobileMenuItem } from "./mobile-menu";
@@ -98,10 +98,10 @@ export function DoctorDashboardShell({
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#071923]">{doctorName}</h1>
             </div>
             <form action={onSignOut}>
-              <Button variant="outline" type="submit" className="h-10 rounded-full bg-white px-4">
+              <SubmitButton variant="outline" className="h-10 rounded-full bg-white px-4">
                 <LogOut className="size-4" />
                 <span className="hidden sm:inline">{signOutLabel}</span>
-              </Button>
+              </SubmitButton>
             </form>
           </header>
 

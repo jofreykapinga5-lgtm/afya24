@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { ImageUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { updateDoctorPublicProfile } from "../actions";
 import { useAppStore } from "@/lib/store";
@@ -68,9 +68,12 @@ export function DoctorProfileForm({
         />
       </label>
 
-      <Button type="submit" className="h-11 justify-self-start rounded-full bg-[#01b7bb] px-5 font-bold text-white hover:bg-[#019ea2]">
+      <SubmitButton
+        pendingText={t("common_please_wait", locale)}
+        className="h-11 justify-self-start rounded-full bg-[#01b7bb] px-5 font-bold text-white hover:bg-[#019ea2]"
+      >
         {t("doctor_profile_save", locale)}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

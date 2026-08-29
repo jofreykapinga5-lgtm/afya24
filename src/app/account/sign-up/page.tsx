@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
+import { SubmitButton } from "@/components/submit-button";
 import { signUp } from "../actions";
 
 const benefitKeys: TranslationKey[] = [
@@ -129,12 +130,12 @@ export default async function AccountSignUpPage({
               </span>
             </label>
 
-            <button
-              type="submit"
-              className="h-12 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25 active:translate-y-px"
+            <SubmitButton
+              pendingText={t("common_please_wait", locale)}
+              className="h-12 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25"
             >
               {t("account_create_cta", locale)}
-            </button>
+            </SubmitButton>
           </form>
 
           <div className="mt-4 rounded-2xl bg-[#f8fbfa] p-3 text-center text-sm text-[#5d6970]">

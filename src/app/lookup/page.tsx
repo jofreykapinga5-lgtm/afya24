@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Search, TriangleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/submit-button";
 import { Reveal } from "@/components/motion/reveal";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
@@ -65,13 +65,13 @@ export default async function LookupPage({
                 <DobSelect locale={locale} />
               </div>
 
-              <Button
-                type="submit"
+              <SubmitButton
                 size="lg"
+                pendingText={t("common_please_wait", locale)}
                 className="h-12 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
               >
                 {t("lookup_submit_cta", locale)}
-              </Button>
+              </SubmitButton>
             </form>
           </div>
         </Reveal>

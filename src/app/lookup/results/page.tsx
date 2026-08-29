@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, CalendarClock, TriangleAlert, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Reveal } from "@/components/motion/reveal";
 import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -66,13 +67,12 @@ export default async function LookupResultsPage() {
             {t("back_to_home", locale)}
           </Link>
           <form action={endPatientSession}>
-            <Button
-              type="submit"
+            <SubmitButton
               variant="outline"
               className="h-9 rounded-full border-[#dfe8eb] bg-white text-[#60717a] hover:border-[#01b7bb]/40 hover:bg-[#f1fbfa] hover:text-[#071923]"
             >
               {t("lookup_end_session", locale)}
-            </Button>
+            </SubmitButton>
           </form>
         </div>
 

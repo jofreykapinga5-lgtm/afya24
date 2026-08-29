@@ -480,6 +480,7 @@ const dict = {
   lookup_dob_month: { en: "Month", sw: "Mwezi" },
   lookup_dob_year: { en: "Year", sw: "Mwaka" },
   lookup_submit_cta: { en: "Find my visit", sw: "Tafuta ziara yangu" },
+  common_please_wait: { en: "Please wait…", sw: "Tafadhali subiri…" },
   lookup_expired_title: {
     en: "This lookup session has expired",
     sw: "Kikao hiki cha utafutaji kimeisha muda",

@@ -10,7 +10,7 @@ import {
   Menu,
   UsersRound,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { signOut } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
@@ -62,10 +62,10 @@ export function DoctorDashboardMobileMenu({ items }: { items: DoctorMobileMenuIt
           })}
           <div className="mt-1 border-t border-[#e1e9ec] p-2">
             <form action={signOut}>
-              <Button type="submit" variant="outline" className="h-10 w-full rounded-full bg-white">
+              <SubmitButton variant="outline" className="h-10 w-full rounded-full bg-white">
                 <LogOut className="size-4" />
                 {t("dashboard_sign_out", locale)}
-              </Button>
+              </SubmitButton>
             </form>
           </div>
         </div>

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { ChevronDown, Search, TriangleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/submit-button";
 import { DobSelect } from "@/app/lookup/dob-select";
 import { lookupPatient } from "@/app/lookup/actions";
 import { t } from "@/lib/i18n";
@@ -72,12 +72,12 @@ export function ReturningPatientLookup({
             <DobSelect locale={locale} />
           </div>
 
-          <Button
-            type="submit"
+          <SubmitButton
+            pendingText={t("common_please_wait", locale)}
             className="mt-1 h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
           >
             {t("doctor_booking_returning_patient_confirm", locale)}
-          </Button>
+          </SubmitButton>
         </form>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Phone, Search, TriangleAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/submit-button";
 import { DobSelect } from "@/app/lookup/dob-select";
 import { lookupPatient } from "@/app/lookup/actions";
 import { signIn } from "./actions";
@@ -79,12 +80,12 @@ export function LoginForm({ locale, error }: { locale: Locale; error?: string })
             required
             className="h-13 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
           />
-          <button
-            type="submit"
-            className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25 active:translate-y-px"
+          <SubmitButton
+            pendingText={t("common_please_wait", locale)}
+            className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25"
           >
             {t("header_log_in", locale)}
-          </button>
+          </SubmitButton>
         </form>
       ) : (
         <form action={lookupPatient} className="mt-5 space-y-3">
@@ -106,12 +107,12 @@ export function LoginForm({ locale, error }: { locale: Locale; error?: string })
             <span className="text-sm font-bold text-[#071923]">{t("lookup_dob_label", locale)}</span>
             <DobSelect locale={locale} />
           </div>
-          <button
-            type="submit"
-            className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white outline-none transition hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25 active:translate-y-px"
+          <SubmitButton
+            pendingText={t("common_please_wait", locale)}
+            className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25"
           >
             {t("header_log_in", locale)}
-          </button>
+          </SubmitButton>
         </form>
       )}
     </div>

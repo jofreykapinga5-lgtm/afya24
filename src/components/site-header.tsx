@@ -10,6 +10,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { signOut } from "@/app/account/actions";
 import {
   Sheet,
@@ -250,13 +251,13 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
                       {t("header_my_account", locale)}
                     </SheetClose>
                     <form action={signOut}>
-                      <button
-                        type="submit"
-                        className="flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-destructive/10 px-4 text-sm font-semibold text-destructive outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      <SubmitButton
+                        variant="ghost"
+                        className="h-11 w-full rounded-full bg-destructive/10 px-4 text-sm font-semibold text-destructive hover:bg-destructive/20 focus-visible:ring-3 focus-visible:ring-ring/50"
                       >
                         <LogOut className="size-3.5" />
                         {t("header_log_out", locale)}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </>
                 ) : (
@@ -367,14 +368,14 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
                       {t("header_my_account", locale)}
                     </Link>
                     <form action={signOut}>
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        variant="ghost"
                         role="menuitem"
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-destructive outline-none hover:bg-secondary focus:bg-secondary"
+                        className="w-full justify-start gap-2 rounded-none px-3 py-2 text-left text-destructive hover:bg-secondary focus:bg-secondary"
                       >
                         <LogOut className="size-3.5" />
                         {t("header_log_out", locale)}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </>
                 ) : (

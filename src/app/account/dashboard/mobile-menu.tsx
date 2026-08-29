@@ -13,6 +13,7 @@ import {
   Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { signOut } from "../actions";
@@ -72,10 +73,10 @@ export function PatientDashboardMobileMenu() {
               {t("start_assessment_cta", locale)}
             </Button>
             <form action={signOut} className="mt-2">
-              <Button type="submit" variant="outline" className="h-10 w-full rounded-full bg-white">
+              <SubmitButton variant="outline" className="h-10 w-full rounded-full bg-white">
                 <LogOut className="size-4" />
                 {t("dashboard_sign_out", locale)}
-              </Button>
+              </SubmitButton>
             </form>
           </div>
         </div>

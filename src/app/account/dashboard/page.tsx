@@ -21,6 +21,7 @@ import {
   Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { getDefaultService } from "@/lib/default-service";
@@ -332,10 +333,10 @@ export default async function AccountDashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               <form action={signOut}>
-                <Button variant="outline" type="submit" className="h-10 rounded-full bg-white px-4">
+                <SubmitButton variant="outline" className="h-10 rounded-full bg-white px-4">
                   <LogOut className="size-4" />
                   <span className="hidden sm:inline">{t("dashboard_sign_out", locale)}</span>
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           </header>

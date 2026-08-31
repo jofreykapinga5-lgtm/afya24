@@ -48,12 +48,9 @@ export default async function AccountSignUpPage({
 
       <div className="mx-auto w-full max-w-sm px-4 py-8 sm:px-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-[#071923] sm:text-[28px]">
+          <h1 className="text-[28px] font-bold tracking-tight text-[#071923] sm:text-3xl">
             {t("account_signup_title", locale)}
           </h1>
-          <p className="mt-2 text-sm leading-5 text-[#5d6970]">
-            {t("account_signup_body", locale)}
-          </p>
         </div>
 
         {error && (

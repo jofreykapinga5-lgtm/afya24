@@ -401,12 +401,8 @@ const dict = {
   },
   complete_profile_cta: { en: "Finish setting up my account", sw: "Maliza kuweka akaunti yangu" },
   account_signup_title: {
-    en: "Fast, upfront healthcare starts here",
-    sw: "Huduma za afya za haraka, kwa bei wazi, huanzia hapa",
-  },
-  account_signup_body: {
-    en: "Create your account. It only takes a minute, and keeps your appointments, prescriptions, and visit summaries in one place.",
-    sw: "Fungua akaunti yako. Inachukua dakika moja tu, na huhifadhi miadi, dawa, na muhtasari za ziara zako mahali pamoja.",
+    en: "Create your account",
+    sw: "Fungua akaunti yako",
   },
   account_fullname_placeholder: { en: "Full name", sw: "Jina kamili" },
   account_phone_hint_placeholder: {

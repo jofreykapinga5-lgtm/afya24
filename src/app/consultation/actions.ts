@@ -17,13 +17,19 @@ import { applySnippePaymentResult } from "@/lib/payments/reconcile";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 // Turns the lightweight, no-password patient record the AI created into a
-// real account -- attaches a Supabase Auth user to the SAME patients row
-// rather than the old /account/sign-up path of creating a second, unlinked
-// row for the same person. Reuses the phone already collected during
-// intake. No password prompt -- the patient's date of birth (already on
-// file; both intake paths require it) becomes the account password, in the
-// same YYYY-MM-DD form the /lookup DOB-alternative already uses, so sign-in
-// later needs only their phone number and the birthdate they already know.
+// real account -- attaches a Supabase Auth user to the SAME patients row,
+// rather than creating a second, unlinked row for the same person. Reuses
+// the phone already collected during intake. No password prompt -- the
+// patient's date of birth (already on file; both intake paths require it)
+// becomes the account password, the same YYYY-MM-DD form the sign-up page's
+// DobSelect already uses, so sign-in later needs only their phone number
+// and the birthdate they already know.
+//
+// Idempotent by design (an existing full account is `ok: true`, not an
+// error) -- this is called both as an optional post-call upsell (gated on
+// !patientHasFullAccount, so it should never actually hit that case) and as
+// a required gate before viewing matched doctors, where "you already have
+// an account" is a pass, not a failure the caller needs to handle specially.
 export type UpgradeAccountResult = { ok: true } | { ok: false; message: string };
 
 // Returns a result object rather than throwing -- see initiateSnippePayment's
@@ -35,7 +41,7 @@ export async function upgradeToFullAccount(): Promise<UpgradeAccountResult> {
   try {
     const session = await getPatientSession();
     if (!session) {
-      return { ok: false, message: "Your session expired. Please look yourself up again to continue." };
+      return { ok: false, message: "Your session expired. Please log in again to continue." };
     }
 
     const service = createServiceClient();
@@ -49,7 +55,7 @@ export async function upgradeToFullAccount(): Promise<UpgradeAccountResult> {
       return { ok: false, message: "Could not find your patient record." };
     }
     if (patient.user_id) {
-      return { ok: false, message: "This visit already has a full account. Sign in instead." };
+      return { ok: true };
     }
     if (!patient.phone) {
       return { ok: false, message: "No phone number on file to create an account with." };

@@ -70,7 +70,7 @@ export function SiteFooter() {
               </p>
               <ul className="space-y-3">
                 <li>
-                  <Link href="/lookup" className={linkClass}>
+                  <Link href="/account" className={linkClass}>
                     {t("footer_find_my_visit", locale)}
                   </Link>
                 </li>

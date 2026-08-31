@@ -4,7 +4,7 @@ import { ShieldCheck, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getCachedActiveProviderById } from "@/lib/cache/public-catalog";
-import { getPatientSession } from "@/lib/patient-session";
+import { getFullAccountPatientSession } from "@/lib/patient-session";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { toTitleCase } from "@/lib/format-name";
 import { Reveal } from "@/components/motion/reveal";
@@ -53,20 +53,21 @@ export async function generateMetadata({
 
 export default async function DoctorBookingPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ providerId: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { providerId } = await params;
-  const { error: lookupError } = await searchParams;
   const locale = await getServerLocale();
   const service = createServiceClient();
 
   const [row, defaultService, patientSession] = await Promise.all([
     getCachedActiveProviderById(providerId),
     getDefaultService(service),
-    getPatientSession(),
+    // A real account, not just a name/DOB collected mid-chat -- booking now
+    // requires one everywhere (see BookingForm), so this is also the gate
+    // that decides whether to show "Continue as X" or a login/sign-up
+    // prompt instead of the old name/phone/DOB manual-details form.
+    getFullAccountPatientSession(),
   ]);
 
   if (!row) {
@@ -75,11 +76,6 @@ export default async function DoctorBookingPage({
 
   const provider = mapProviderRow(row as ProviderRow, defaultService.basePrice, locale);
 
-  // hasSession hides the whole name/phone/DOB form below (see BookingForm) --
-  // without this, a recognized returning visitor sees a bare "Start
-  // consultation" button with no indication of why their details aren't
-  // being asked for again, which reads as a missing section rather than an
-  // intentional shortcut.
   const existingPatientNameRaw = patientSession
     ? (
         await service.from("patients").select("full_name").eq("id", patientSession.patientId).maybeSingle()
@@ -199,7 +195,7 @@ export default async function DoctorBookingPage({
               locale={locale}
               hasSession={Boolean(patientSession)}
               existingPatientName={existingPatientName}
-              lookupError={lookupError}
+              redirectTo={`/doctors/${providerId}`}
             />
           </div>
         </Reveal>

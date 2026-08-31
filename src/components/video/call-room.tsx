@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ConnectionQuality, ConnectionState, DisconnectReason, Track, VideoPresets } from "livekit-client";
 import type { AudioCaptureOptions, RoomConnectOptions, RoomOptions, VideoCaptureOptions } from "livekit-client";
@@ -97,6 +97,27 @@ function CallControls({ onHangup }: { onHangup?: () => void }) {
   // defense for the rare drop mid-toggle (e.g. a reconnect starting the
   // instant the button is pressed).
   const controlsReady = connectionState === ConnectionState.Connected;
+
+  // LiveKitRoom's own audio/video props are supposed to auto-publish on
+  // connect (they call setMicrophoneEnabled/setCameraEnabled off the
+  // room's SignalConnected event), but that race isn't reliable -- caught
+  // live via testing: identical code, back-to-back runs, one published
+  // both tracks within ~1.5s and the other didn't, leaving the patient
+  // "in" the call with mic/camera silently off and no error surfaced
+  // anywhere. This is a one-time nudge once the connection genuinely
+  // settles, not a recurring poll, guarded by the ref so it can never
+  // re-enable something the patient deliberately muted afterward.
+  const hasEnsuredMediaRef = useRef(false);
+  useEffect(() => {
+    if (!controlsReady || hasEnsuredMediaRef.current) return;
+    hasEnsuredMediaRef.current = true;
+    if (!isMicrophoneEnabled) {
+      void localParticipant.setMicrophoneEnabled(true, AUDIO_CAPTURE_DEFAULTS).catch(() => {});
+    }
+    if (!isCameraEnabled) {
+      void localParticipant.setCameraEnabled(true, VIDEO_CAPTURE_DEFAULTS).catch(() => {});
+    }
+  }, [controlsReady, isMicrophoneEnabled, isCameraEnabled, localParticipant]);
 
   return (
     <div className="flex items-center justify-center gap-4 rounded-full bg-black/50 px-5 py-3 backdrop-blur-md">

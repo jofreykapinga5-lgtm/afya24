@@ -2,13 +2,9 @@
 
 import { redirect, unstable_rethrow } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
-import { createPatientSession, clearPatientSession, getPatientSession } from "@/lib/patient-session";
-import { createPatientAccountRecord } from "@/lib/patient-account";
+import { clearPatientSession, getPatientSession } from "@/lib/patient-session";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
-import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { t } from "@/lib/i18n";
 import type { Locale, QualificationResult } from "@/lib/types";
 
 const REJOIN_WINDOW_HOURS = 24;
@@ -105,132 +101,13 @@ export async function bookConsultation(input: {
   }
 }
 
-// For a patient who skips Afya24's AI intake and books a doctor directly.
-// Used to unconditionally create a fresh patient + session every time this
-// ran, even for a patient who already had a live session from an earlier,
-// unpaid attempt (e.g. they filled this same form, reached /pay, left
-// without paying, and came back and filled it again) -- that silently
-// overwrote their session cookie with a brand new patientId, so the old
-// appointment's ownership check on /pay stopped matching and it looked to
-// them like their details had simply vanished. Reusing an existing session
-// (and updating that same patient row with whatever they just typed, in
-// case they corrected something) keeps their identity -- and therefore
-// their pending appointment -- continuous across the whole flow.
-export type BookConsultationDirectResult =
-  | { ok: true; appointmentId: string }
-  | { ok: false; message: string };
-
-// Returns a result object rather than throwing -- see bookConsultation's
-// comment above; the phone-collision check below in particular needs its
-// message to actually reach the patient, not crash into a generic React
-// error #441 in production.
-export async function bookConsultationDirect(input: {
-  providerId: string;
-  locale: Locale;
-  fullName: string;
-  phone: string;
-  dateOfBirth: string;
-  gender: "female" | "male" | "other";
-}): Promise<BookConsultationDirectResult> {
-  try {
-    const fullName = input.fullName.trim();
-    const phone = input.phone.trim();
-
-    if (!fullName || !phone || !input.dateOfBirth) {
-      return { ok: false, message: "Full name, phone number, and date of birth are required." };
-    }
-
-    // Same account-creation risk as /account/sign-up (no session exists yet
-    // to gate on) -- reuses the signup bucket rather than a dedicated one.
-    const { allowed } = await checkRateLimit("signup", await getClientIp());
-    if (!allowed) {
-      return { ok: false, message: "Too many attempts. Please wait a few minutes and try again." };
-    }
-
-    const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
-    const service = createServiceClient();
-    const existingSession = await getPatientSession();
-    const existingPatient = existingSession
-      ? await service.from("patients").select("id").eq("id", existingSession.patientId).maybeSingle()
-      : null;
-
-    let patientId: string;
-    if (existingPatient?.data) {
-      patientId = existingPatient.data.id as string;
-      await service
-        .from("patients")
-        .update({
-          full_name: fullName,
-          phone: normalizedPhone,
-          date_of_birth: input.dateOfBirth,
-          gender: input.gender,
-          preferred_language: input.locale,
-        })
-        .eq("id", patientId);
-    } else {
-      // No session, so this looks like a first-time visitor -- but the phone
-      // number alone might already belong to a patient record from a
-      // different device/browser (e.g. they paid, closed the browser, and
-      // came back later on a different device -- the session cookie never
-      // made the trip). Before blocking, check whether that matched patient
-      // has a live appointment with *this* provider within the rejoin
-      // window -- a phone match plus a real paid/pending appointment with
-      // the specific doctor they're booking again is strong evidence this
-      // really is the same patient, safe to resume without asking them to
-      // pay twice. A phone match with no such appointment stays blocked and
-      // pointed at support -- a phone can be shared within a family, and
-      // silently reusing (or worse, overwriting) a stranger's record isn't
-      // safe just because the number matches.
-      const { data: phoneMatch } = await service
-        .from("patients")
-        .select("id")
-        .eq("phone", normalizedPhone)
-        .maybeSingle();
-      if (phoneMatch) {
-        const matchedPatientId = phoneMatch.id as string;
-        const resumableId = await findResumableAppointment(service, matchedPatientId, input.providerId);
-        if (resumableId) {
-          await createPatientSession(matchedPatientId);
-          return { ok: true, appointmentId: resumableId };
-        }
-        return { ok: false, message: t("doctor_direct_booking_phone_exists", input.locale) };
-      }
-
-      const record = await createPatientAccountRecord({
-        fullName,
-        phone: normalizedPhone,
-        dateOfBirth: input.dateOfBirth,
-        gender: input.gender,
-        preferredLanguage: input.locale,
-      });
-      patientId = record.patientId;
-      await createPatientSession(patientId);
-    }
-
-    const existingAppointmentId = await findResumableAppointment(service, patientId, input.providerId);
-    if (existingAppointmentId) {
-      return { ok: true, appointmentId: existingAppointmentId };
-    }
-
-    const appointmentId = await bookConsultationForPatient({
-      patientId,
-      providerId: input.providerId,
-      locale: input.locale,
-      qualification: null,
-    });
-    return { ok: true, appointmentId };
-  } catch (error) {
-    unstable_rethrow(error);
-    return { ok: false, message: error instanceof Error ? error.message : "Could not book this consultation." };
-  }
-}
-
 // The "Continuing as {name}" shortcut on the doctor page assumes whoever
 // holds this browser/phone is the same patient the saved session belongs
 // to -- not a safe assumption on a shared or borrowed phone. This clears
 // that session and sends them back to the same doctor's page, which then
-// renders as a first-time visitor and shows the normal name/phone/DOB form
-// again for whoever is actually booking now.
+// renders as a first-time visitor and prompts for login/sign-up again
+// (booking now always requires a real account) for whoever is actually
+// booking now.
 export async function startOverAsNewPatient(providerId: string) {
   await clearPatientSession();
   redirect(`/doctors/${providerId}`);

@@ -119,8 +119,8 @@ export function PharmacyCheckoutClient({
               <Link href="/" className="font-medium underline underline-offset-2">
                 {t("start_assessment_cta", locale)}
               </Link>
-              <Link href="/lookup" className="font-medium underline underline-offset-2">
-                {t("reference_lookup_link", locale)}
+              <Link href="/account" className="font-medium underline underline-offset-2">
+                {t("header_log_in", locale)}
               </Link>
             </div>
           </div>

@@ -26,8 +26,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DobSelect } from "@/app/lookup/dob-select";
+import { DobSelect } from "@/components/dob-select";
 import { createPatientAccountFallback } from "./actions";
+import { upgradeToFullAccount } from "@/app/consultation/actions";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
 import type { QualificationResult, UrgencyLevel } from "@/lib/types";
@@ -204,6 +205,27 @@ export default function QualificationPage() {
   const [sessionEstablished, setSessionEstablished] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const sessionRequestSentRef = useRef(false);
+
+  // Seeing matched doctors (and booking) now requires a real account, not
+  // just the lightweight name/phone/DOB record the AI chat creates --
+  // upgradeToFullAccount is idempotent (an existing full account is ok:true,
+  // not an error), so a returning patient who's already logged in and
+  // starts a fresh chat sails through this without noticing it happened.
+  const [accountReady, setAccountReady] = useState(false);
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountPending, startAccountTransition] = useTransition();
+
+  function handleCreateAccount() {
+    setAccountError(null);
+    startAccountTransition(async () => {
+      const result = await upgradeToFullAccount();
+      if (result.ok) {
+        setAccountReady(true);
+      } else {
+        setAccountError(result.message);
+      }
+    });
+  }
 
   useEffect(() => {
     if (!toolAccountResult || sessionRequestSentRef.current) return;
@@ -545,19 +567,55 @@ export default function QualificationPage() {
                     />
                   )}
 
-                  <Button
-                    size="lg"
-                    className="h-12 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
-                    disabled={!sessionEstablished}
-                    onClick={() =>
-                      router.push(
-                        `/doctors?specialty=${encodeURIComponent(result.recommendedSpecialties[0])}`
-                      )
-                    }
-                  >
-                    {t("qualification_view_doctors_cta", locale)}
-                    <ArrowRight className="size-4" />
-                  </Button>
+                  {/* Seeing matched doctors now requires a real account, not
+                      just the lightweight record above -- shown only once
+                      that lightweight session actually exists, so this
+                      never appears ahead of (or instead of) the recovery
+                      states above it. */}
+                  {sessionEstablished && !accountReady && (
+                    <div className="rounded-2xl bg-white p-5 ring-1 ring-[#dfe8eb]">
+                      <p className="text-sm font-bold text-[#071923]">
+                        {t("qualification_account_gate_title", locale)}
+                      </p>
+                      <p className="mt-1 text-sm text-[#60717a]">
+                        {t("qualification_account_gate_body", locale)}
+                      </p>
+                      {accountError && (
+                        <p
+                          role="alert"
+                          className="mt-3 rounded-xl bg-[#fff4f0] px-4 py-3 text-sm text-[#9b2c12]"
+                        >
+                          {accountError}
+                        </p>
+                      )}
+                      <Button
+                        size="lg"
+                        disabled={accountPending}
+                        onClick={handleCreateAccount}
+                        className="mt-4 h-12 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+                      >
+                        {accountPending
+                          ? t("common_please_wait", locale)
+                          : t("qualification_account_gate_cta", locale)}
+                        <ArrowRight className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {accountReady && (
+                    <Button
+                      size="lg"
+                      className="h-12 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+                      onClick={() =>
+                        router.push(
+                          `/doctors?specialty=${encodeURIComponent(result.recommendedSpecialties[0])}`
+                        )
+                      }
+                    >
+                      {t("qualification_view_doctors_cta", locale)}
+                      <ArrowRight className="size-4" />
+                    </Button>
+                  )}
                 </div>
               )}
 

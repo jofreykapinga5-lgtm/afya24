@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { LoginForm } from "./login-form";
@@ -17,9 +18,9 @@ const benefitKeys: TranslationKey[] = [
 export default async function AccountSignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; redirectTo?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, redirectTo } = await searchParams;
   const locale = await getServerLocale();
 
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function AccountSignInPage({
   } = await supabase.auth.getUser();
   if (user) {
     await redirectIfStaffUser(user.id);
-    redirect("/account/dashboard");
+    redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
   }
 
   return (
@@ -81,11 +82,14 @@ export default async function AccountSignInPage({
             {t("account_login_title", locale)}
           </h1>
 
-          <LoginForm locale={locale} error={error} />
+          <LoginForm locale={locale} error={error} redirectTo={redirectTo} />
 
           <div className="mt-5 rounded-2xl bg-[#f8fbfa] p-4 text-center text-sm text-[#5d6970]">
             <span>{t("account_new_to_afya24", locale)}</span>{" "}
-            <Link href="/account/sign-up" className="font-bold text-[#083273] hover:underline">
+            <Link
+              href={redirectTo ? `/account/sign-up?redirectTo=${encodeURIComponent(redirectTo)}` : "/account/sign-up"}
+              className="font-bold text-[#083273] hover:underline"
+            >
               {t("account_create_account_link", locale)}
             </Link>
           </div>

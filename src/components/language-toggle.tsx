@@ -14,7 +14,7 @@ export function LanguageToggle() {
   function handleChange(value: (typeof locales)[number]["value"]) {
     setLocale(value);
     // Zustand's persisted store only reaches Client Components. Server
-    // Components (the auth/lookup pages, terms/privacy, etc.) read this
+    // Components (the auth pages, terms/privacy, etc.) read this
     // cookie instead -- see src/lib/locale-cookie.ts. router.refresh() forces
     // the current route's server-rendered parts to re-read it immediately,
     // rather than waiting for the next navigation.

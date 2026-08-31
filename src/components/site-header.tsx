@@ -214,17 +214,6 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
                   nativeButton={false}
                   render={
                     <Link
-                      href="/lookup"
-                      className="flex min-h-11 items-center rounded-lg px-2 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                    />
-                  }
-                >
-                  {t("reference_lookup_link", locale)}
-                </SheetClose>
-                <SheetClose
-                  nativeButton={false}
-                  render={
-                    <Link
                       href="/doctor"
                       className="flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
                     />

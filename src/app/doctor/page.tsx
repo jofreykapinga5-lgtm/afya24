@@ -61,10 +61,10 @@ export default async function DoctorSignInPage({
         <h1 className="text-xl font-semibold">{t("doctor_signin_title", locale)}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {t("doctor_signin_body", locale)}{" "}
-          <Link href="/lookup" className="font-medium text-primary hover:underline">
-            {t("account_reference_lookup_phrase", locale)}
-          </Link>{" "}
-          {t("account_instead", locale)}
+          <Link href="/account" className="font-medium text-primary hover:underline">
+            {t("doctor_signin_patient_link", locale)}
+          </Link>
+          .
         </p>
 
         {error && (

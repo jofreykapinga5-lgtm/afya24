@@ -21,8 +21,7 @@ export type PlacePharmacyOrderResult = { ok: true; orderId: string } | { ok: fal
 // Returns a result object rather than throwing -- a thrown Error from a
 // Server Action never reaches the client's try/catch with a readable
 // message in production (React error #441; see the same pattern in
-// doctors/actions.ts's bookConsultationDirect and consultation/actions.ts's
-// initiateSnippePayment).
+// consultation/actions.ts's initiateSnippePayment).
 export async function placePharmacyOrder(input: {
   lines: { itemId: string; quantity: number }[];
   fulfillmentMethod: FulfillmentMethod;
@@ -30,7 +29,7 @@ export async function placePharmacyOrder(input: {
   try {
     const session = await getPatientSession();
     if (!session) {
-      return { ok: false, message: "Your session expired. Please start the intake chat or look yourself up again." };
+      return { ok: false, message: "Your session expired. Please start the intake chat or log in again." };
     }
 
     if (input.lines.length === 0) {

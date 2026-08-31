@@ -68,10 +68,6 @@ const dict = {
     en: "Start assessment",
     sw: "Anza tathmini",
   },
-  reference_lookup_link: {
-    en: "Enter your reference number",
-    sw: "Weka nambari yako ya rejea",
-  },
   health_tips_title: {
     en: "Health tips & info",
     sw: "Vidokezo vya afya",
@@ -220,8 +216,8 @@ const dict = {
     sw: "Kwa mtoto wangu, maswali yalikuwa wazi na daktari alituambia lini tutafute huduma ya haraka.",
   },
   reviews_quote_6: {
-    en: "I could check my records later with my reference number. That made follow-up easier.",
-    sw: "Niliweza kuangalia rekodi zangu baadaye kwa nambari ya rejea. Hilo lilirahisisha ufuatiliaji.",
+    en: "Setting up my account took less than a minute, and I could see my prescription right away.",
+    sw: "Kufungua akaunti yangu ilichukua chini ya dakika moja, na niliweza kuona dawa zangu mara moja.",
   },
   email_capture_badge: { en: "Stay in the loop", sw: "Endelea kufahamu" },
   email_capture_title: { en: "Get health tips and updates", sw: "Pata vidokezo vya afya na taarifa" },
@@ -364,7 +360,7 @@ const dict = {
   },
   footer_quick_links: { en: "Quick links", sw: "Viungo vya haraka" },
   footer_patient_support: { en: "Patient support", sw: "Msaada kwa mgonjwa" },
-  footer_find_my_visit: { en: "Find my visit", sw: "Tafuta ziara yangu" },
+  footer_find_my_visit: { en: "Log in to my account", sw: "Ingia kwenye akaunti yangu" },
   footer_help_center: { en: "Help center", sw: "Kituo cha msaada" },
   footer_contact_support: { en: "Contact support", sw: "Wasiliana na msaada" },
   footer_for_providers: { en: "For providers", sw: "Kwa watoa huduma" },
@@ -388,14 +384,18 @@ const dict = {
   account_password_placeholder: { en: "Password", sw: "Nenosiri" },
   account_new_to_afya24: { en: "New to Afya24?", sw: "Mgeni Afya24?" },
   account_create_account_link: { en: "Create an account", sw: "Fungua akaunti" },
-  account_prefer_lookup: { en: "Prefer not to sign up? Use", sw: "Hupendi kujisajili? Tumia" },
-  account_reference_lookup_phrase: {
-    en: "reference number lookup",
-    sw: "utafutaji wa nambari ya rejea",
+  account_divider_or: { en: "OR", sw: "AU" },
+  account_continue_with_google: { en: "Continue with Google", sw: "Endelea na Google" },
+  error_google_signin_failed: {
+    en: "Could not sign in with Google. Please try again.",
+    sw: "Imeshindwa kuingia kwa Google. Tafadhali jaribu tena.",
   },
-  account_instead: { en: "instead.", sw: "badala yake." },
-  account_login_tab_password: { en: "Phone & password", sw: "Simu na nenosiri" },
-  account_login_tab_reference: { en: "Reference number", sw: "Nambari ya rejea" },
+  complete_profile_title: { en: "One last thing", sw: "Jambo moja la mwisho" },
+  complete_profile_body: {
+    en: "Google didn't share a phone number with us, and we need one to reach you about your visits. Add it to finish setting up your account.",
+    sw: "Google haikutupatia namba ya simu, na tunahitaji moja ili kuwasiliana nawe kuhusu ziara zako. Iongeze ili kumaliza kuweka akaunti yako.",
+  },
+  complete_profile_cta: { en: "Finish setting up my account", sw: "Maliza kuweka akaunti yangu" },
   account_signup_title: {
     en: "Fast, upfront healthcare starts here",
     sw: "Huduma za afya za haraka, kwa bei wazi, huanzia hapa",
@@ -449,9 +449,10 @@ const dict = {
   appointment_status_cancelled: { en: "Cancelled", sw: "Imeghairiwa" },
   doctor_signin_title: { en: "Staff sign in", sw: "Kuingia kwa wafanyakazi" },
   doctor_signin_body: {
-    en: "Staff and provider access only. Patients don't need an account — use",
-    sw: "Ufikiaji wa wafanyakazi na watoa huduma pekee. Wagonjwa hawahitaji akaunti — tumia",
+    en: "Staff and provider access only. Patients should",
+    sw: "Ufikiaji wa wafanyakazi na watoa huduma pekee. Wagonjwa wanapaswa",
   },
+  doctor_signin_patient_link: { en: "log in or create an account", sw: "kuingia au kufungua akaunti" },
   doctor_email_label: { en: "Email", sw: "Barua pepe" },
   doctor_sign_in_cta: { en: "Sign in", sw: "Ingia" },
   doctor_sign_in_pending: { en: "Signing in…", sw: "Inaingia…" },
@@ -469,28 +470,11 @@ const dict = {
   status_active: { en: "Active", sw: "Hai" },
   status_suspended: { en: "Suspended", sw: "Imesimamishwa" },
   status_invited: { en: "Invited", sw: "Amealikwa" },
-  lookup_title: { en: "Find your visit", sw: "Tafuta ziara yako" },
-  lookup_body: {
-    en: "Enter your reference number and date of birth to view your appointments, prescriptions, and visit summaries.",
-    sw: "Weka nambari yako ya rejea na tarehe ya kuzaliwa kuona miadi, dawa, na muhtasari za ziara zako.",
-  },
-  lookup_reference_label: { en: "Reference number", sw: "Nambari ya rejea" },
   lookup_dob_label: { en: "Date of birth", sw: "Tarehe ya kuzaliwa" },
   lookup_dob_day: { en: "Day", sw: "Siku" },
   lookup_dob_month: { en: "Month", sw: "Mwezi" },
   lookup_dob_year: { en: "Year", sw: "Mwaka" },
-  lookup_submit_cta: { en: "Find my visit", sw: "Tafuta ziara yangu" },
   common_please_wait: { en: "Please wait…", sw: "Tafadhali subiri…" },
-  lookup_expired_title: {
-    en: "This lookup session has expired",
-    sw: "Kikao hiki cha utafutaji kimeisha muda",
-  },
-  lookup_expired_body: {
-    en: "For your privacy, lookup sessions expire after a while. Please look yourself up again.",
-    sw: "Kwa faragha yako, vikao vya utafutaji huisha muda baada ya muda fulani. Tafadhali jitafute tena.",
-  },
-  lookup_back_to_lookup: { en: "Back to lookup", sw: "Rudi kutafuta" },
-  lookup_end_session: { en: "End session", sw: "Maliza kikao" },
   lookup_join_call_cta: { en: "Join call", sw: "Jiunge na simu" },
   error_fill_all_fields: { en: "Fill in all fields.", sw: "Jaza sehemu zote." },
   error_must_agree_terms: {
@@ -500,18 +484,6 @@ const dict = {
   error_account_creation_failed: {
     en: "Something went wrong creating your account.",
     sw: "Hitilafu imetokea wakati wa kuunda akaunti yako.",
-  },
-  error_enter_reference_dob: {
-    en: "Enter your reference number and date of birth.",
-    sw: "Weka nambari yako ya rejea na tarehe ya kuzaliwa.",
-  },
-  error_no_matching_record: {
-    en: "We couldn't find a matching record. Check your reference number and date of birth.",
-    sw: "Hatukuweza kupata rekodi inayolingana. Angalia nambari yako ya rejea na tarehe ya kuzaliwa.",
-  },
-  error_too_many_attempts: {
-    en: "Too many attempts for this reference number. Please try again later.",
-    sw: "Majaribio mengi sana kwa nambari hii ya rejea. Tafadhali jaribu tena baadaye.",
   },
   error_rate_limited: {
     en: "Too many attempts. Please wait a few minutes and try again.",
@@ -558,6 +530,14 @@ const dict = {
   },
   doctor_booking_continuing_as: { en: "Continue as", sw: "Endelea kama" },
   doctor_booking_not_you: { en: "Not you? Start over", sw: "Sio wewe? Anza upya" },
+  doctor_booking_login_required_title: {
+    en: "Log in to book this doctor",
+    sw: "Ingia ili kuweka miadi na daktari huyu",
+  },
+  doctor_booking_login_required_body: {
+    en: "An Afya24 account keeps your visits, prescriptions, and lab results in one place. It only takes a minute.",
+    sw: "Akaunti ya Afya24 inaweka ziara zako, dawa zilizoandikwa, na majibu ya maabara mahali pamoja. Inachukua dakika moja tu.",
+  },
   doctor_booking_summary_note: {
     en: "Your Afya24 intake summary will be shared with the doctor.",
     sw: "Muhtasari wako wa Afya24 utashirikiwa na daktari.",
@@ -570,27 +550,13 @@ const dict = {
     en: "Start with Afya24 first",
     sw: "Anza na Afya24 kwanza",
   },
-  doctor_direct_booking_title: { en: "Your details", sw: "Maelezo yako" },
-  doctor_direct_booking_name_label: { en: "Full name", sw: "Jina kamili" },
-  doctor_direct_booking_phone_label: { en: "Phone number", sw: "Namba ya simu" },
-  doctor_direct_booking_phone_placeholder: { en: "0712 345 678", sw: "0712 345 678" },
-  doctor_direct_booking_gender_label: { en: "Sex", sw: "Jinsia" },
-  doctor_direct_booking_gender_placeholder: { en: "Select", sw: "Chagua" },
-  doctor_direct_booking_gender_female: { en: "Female", sw: "Mwanamke" },
-  doctor_direct_booking_gender_male: { en: "Male", sw: "Mwanaume" },
-  doctor_direct_booking_gender_other: { en: "Other", sw: "Nyingine" },
-  doctor_direct_booking_dob_label: { en: "Date of birth", sw: "Tarehe ya kuzaliwa" },
-  doctor_direct_booking_missing_fields: {
-    en: "Please fill in your name, phone number, sex, and date of birth.",
-    sw: "Tafadhali jaza jina lako, namba ya simu, jinsia, na tarehe ya kuzaliwa.",
-  },
   doctor_direct_booking_phone_exists: {
-    en: "We already have a patient record under this phone number. If this is you, use Find my visit with your reference number. If not, contact support@afya24.com for help.",
-    sw: "Tayari tuna rekodi ya mgonjwa kwa namba hii ya simu. Kama ni wewe, tumia Tafuta ziara yangu na nambari yako ya rejea. Kama sio wewe, wasiliana na support@afya24.com kwa msaada.",
+    en: "We already have a patient record under this phone number. If this is you, log in instead. If not, contact support@afya24.com for help.",
+    sw: "Tayari tuna rekodi ya mgonjwa kwa namba hii ya simu. Kama ni wewe, ingia badala yake. Kama sio wewe, wasiliana na support@afya24.com kwa msaada.",
   },
   pharmacy_checkout_no_session_body: {
-    en: "Checkout needs a patient file. Describe what's going on to Afya24, or look yourself up if you're a returning patient, then come back to check out.",
-    sw: "Malipo yanahitaji faili la mgonjwa. Mwambie Afya24 kinachoendelea, au jitafute kama wewe ni mgonjwa wa zamani, kisha urudi kulipa.",
+    en: "Checkout needs a patient file. Describe what's going on to Afya24, or log in if you're a returning patient, then come back to check out.",
+    sw: "Malipo yanahitaji faili la mgonjwa. Mwambie Afya24 kinachoendelea, au ingia kama wewe ni mgonjwa wa zamani, kisha urudi kulipa.",
   },
   doctor_lang_en: { en: "English", sw: "Kiingereza" },
   doctor_lang_sw: { en: "Swahili", sw: "Kiswahili" },
@@ -825,8 +791,8 @@ const dict = {
   payment_reference_label: { en: "Your reference number", sw: "Namba yako ya rejea" },
   payment_success_title: { en: "You've paid — thank you!", sw: "Umelipa — asante!" },
   payment_success_body: {
-    en: "Please save this reference number — you'll need it to find your visit, prescriptions, and records later.",
-    sw: "Tafadhali hifadhi namba hii ya rejea — utaihitaji kupata ziara yako, dawa, na taarifa zako baadaye.",
+    en: "This is your patient record number — save it for your own reference, or quote it if you ever contact support.",
+    sw: "Hii ni namba yako ya rekodi ya mgonjwa — ihifadhi kwa kumbukumbu yako, au itaje ukiwasiliana na msaada.",
   },
   payment_success_copy_button: { en: "Copy", sw: "Nakili" },
   payment_success_copied: { en: "Copied!", sw: "Imenakiliwa!" },
@@ -898,8 +864,8 @@ const dict = {
   },
   terms_s3_title: { en: "3. Your account", sw: "3. Akaunti yako" },
   terms_s3_body: {
-    en: "You're responsible for keeping your login credentials confidential and for the accuracy of the information you provide, including your identity, date of birth, and contact details. You can also access your records without creating an account by using your hospital reference number together with an identity check.",
-    sw: "Una jukumu la kuhifadhi siri za kuingia kwako na kuhakikisha usahihi wa taarifa unazotoa, ikiwa ni pamoja na utambulisho wako, tarehe ya kuzaliwa, na maelezo ya mawasiliano. Unaweza pia kufikia rekodi zako bila kuunda akaunti kwa kutumia nambari yako ya rejea ya hospitali pamoja na uthibitisho wa utambulisho.",
+    en: "You're responsible for keeping your login credentials confidential and for the accuracy of the information you provide, including your identity, date of birth, and contact details.",
+    sw: "Una jukumu la kuhifadhi siri za kuingia kwako na kuhakikisha usahihi wa taarifa unazotoa, ikiwa ni pamoja na utambulisho wako, tarehe ya kuzaliwa, na maelezo ya mawasiliano.",
   },
   terms_s4_title: { en: "4. Payment and pricing", sw: "4. Malipo na bei" },
   terms_s4_body: {
@@ -947,13 +913,13 @@ const dict = {
   },
   help_q4_title: { en: "Do I need to create an account first?", sw: "Ninahitaji kuunda akaunti kwanza?" },
   help_q4_body: {
-    en: "No. The AI assistant sets up a lightweight patient file for you automatically during your first chat, using just your name, phone, and date of birth. You can turn it into a full password-protected account after your first consultation.",
-    sw: "Hapana. Msaidizi wa AI huandaa faili rahisi ya mgonjwa kwa ajili yako moja kwa moja wakati wa mazungumzo yako ya kwanza, kwa kutumia jina lako, simu, na tarehe ya kuzaliwa tu. Unaweza kuibadilisha kuwa akaunti kamili yenye nywila baada ya ushauri wako wa kwanza.",
+    en: "Not to describe your symptoms — that part is free to try, no account needed. But you'll need a free account (just a phone number and password, created in under a minute) before you can see matched doctors or book a consultation.",
+    sw: "Hapana kwa kuelezea dalili zako — sehemu hiyo ni bure kujaribu, hakuna akaunti inayohitajika. Lakini utahitaji akaunti ya bure (namba ya simu na nenosiri tu, inayoundwa kwa chini ya dakika moja) kabla ya kuona madaktari waliolinganishwa au kuweka miadi ya ushauri.",
   },
-  help_q5_title: { en: "How do I find my past visit?", sw: "Ninawezaje kupata ziara yangu ya awali?" },
+  help_q5_title: { en: "How do I see my past visits?", sw: "Ninawezaje kuona ziara zangu za awali?" },
   help_q5_body: {
-    en: "Go to \"Find my visit\" and enter your reference number plus your PIN (or date of birth if you haven't set a PIN yet).",
-    sw: "Nenda \"Tafuta ziara yangu\" na uweke nambari yako ya rejea pamoja na PIN yako (au tarehe ya kuzaliwa kama bado hujaweka PIN).",
+    en: "Log in to your account any time to see your past visits, prescriptions, and lab results.",
+    sw: "Ingia kwenye akaunti yako wakati wowote kuona ziara zako za awali, dawa, na majibu ya maabara.",
   },
   help_q6_title: { en: "How much does a consultation cost?", sw: "Ushauri unagharimu kiasi gani?" },
   help_q6_body: {
@@ -986,10 +952,10 @@ const dict = {
     en: "To help doctors recognize patterns, Afya24 can surface similar past cases. These comparisons only ever use anonymized snapshots — another patient's name, contact details, or files are never exposed through this feature.",
     sw: "Ili kusaidia madaktari kutambua mifumo, Afya24 inaweza kuonyesha kesi zinazofanana za awali. Ulinganishaji huu hutumia tu picha zisizo na utambulisho — jina la mgonjwa mwingine, maelezo ya mawasiliano, au faili hazionyeshwi kamwe kupitia huduma hii.",
   },
-  privacy_s5_title: { en: "5. Reference-number access", sw: "5. Ufikiaji kwa nambari ya rejea" },
+  privacy_s5_title: { en: "5. Account security", sw: "5. Usalama wa akaunti" },
   privacy_s5_body: {
-    en: "If you use your hospital reference number instead of an account, we ask for an additional identity check before showing any record, and we log lookup attempts (including failed ones) to guard against someone else trying reference numbers that aren't theirs.",
-    sw: "Ikiwa unatumia nambari yako ya rejea ya hospitali badala ya akaunti, tunauliza uthibitisho wa ziada wa utambulisho kabla ya kuonyesha rekodi yoyote, na tunarekodi majaribio ya utafutaji (ikiwemo yaliyoshindwa) ili kulinda dhidi ya mtu mwingine anayejaribu nambari za rejea ambazo si zake.",
+    en: "Every patient account is protected by a password only you know, and repeated failed login attempts are automatically rate-limited to guard against someone else trying to guess your password.",
+    sw: "Kila akaunti ya mgonjwa inalindwa na nenosiri ambalo wewe pekee unalijua, na majaribio ya kuingia yaliyoshindwa mara kwa mara hupunguzwa kiotomatiki ili kulinda dhidi ya mtu mwingine anayejaribu kubashiri nenosiri lako.",
   },
   privacy_s6_title: { en: "6. What we don't do", sw: "6. Tusichofanya" },
   privacy_s6_body: {
@@ -1048,6 +1014,18 @@ const dict = {
   qualification_view_doctors_cta: {
     en: "View matching doctors",
     sw: "Tazama madaktari wanaolingana",
+  },
+  qualification_account_gate_title: {
+    en: "One more step: create your free account",
+    sw: "Hatua moja zaidi: fungua akaunti yako ya bure",
+  },
+  qualification_account_gate_body: {
+    en: "It only takes a second — we've already got your details. This keeps your visit, prescriptions, and lab results in one place for next time.",
+    sw: "Inachukua sekunde moja tu — tayari tuna maelezo yako. Hii inaweka ziara yako, dawa, na majibu ya maabara mahali pamoja kwa mara nyingine.",
+  },
+  qualification_account_gate_cta: {
+    en: "Create my free account",
+    sw: "Fungua akaunti yangu ya bure",
   },
   qualification_start_over: {
     en: "Start over",
@@ -1574,14 +1552,6 @@ const dict = {
   home_service_private_visit: { en: "Private visit", sw: "Ziara ya faragha" },
   home_service_dermatology: { en: "Skin concerns", sw: "Matatizo ya ngozi" },
   home_service_photo_review: { en: "Photo review", sw: "Ukaguzi wa picha" },
-  doctor_booking_returning_patient_prompt: {
-    en: "Already our patient? Enter your reference number",
-    sw: "Tayari ni mgonjwa wetu? Ingiza namba yako ya rejea",
-  },
-  doctor_booking_returning_patient_confirm: {
-    en: "Confirm and continue",
-    sw: "Thibitisha na uendelee",
-  },
   doctor_queue_in_call_cta: { en: "Go to call", sw: "Nenda kwenye simu" },
   doctor_call_panel_with: { en: "With", sw: "Pamoja na" },
   doctor_call_panel_close: { en: "End call", sw: "Maliza simu" },

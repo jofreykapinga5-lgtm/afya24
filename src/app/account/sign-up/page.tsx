@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { Check, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { SubmitButton } from "@/components/submit-button";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { signUp } from "../actions";
 
 const benefitKeys: TranslationKey[] = [
@@ -19,9 +21,9 @@ const benefitKeys: TranslationKey[] = [
 export default async function AccountSignUpPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; redirectTo?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, redirectTo } = await searchParams;
   const locale = await getServerLocale();
 
   const supabase = await createClient();
@@ -30,7 +32,7 @@ export default async function AccountSignUpPage({
   } = await supabase.auth.getUser();
   if (user) {
     await redirectIfStaffUser(user.id);
-    redirect("/account/dashboard");
+    redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
   }
 
   return (
@@ -71,6 +73,7 @@ export default async function AccountSignUpPage({
           )}
 
           <form action={signUp} className="mt-5 space-y-2.5">
+            {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
             <label htmlFor="signup-fullName" className="sr-only">
               {t("account_fullname_placeholder", locale)}
             </label>
@@ -138,9 +141,20 @@ export default async function AccountSignUpPage({
             </SubmitButton>
           </form>
 
+          <div className="my-4 flex items-center gap-3 text-xs font-semibold text-[#8a969c]">
+            <span className="h-px flex-1 bg-[#e5ecea]" />
+            {t("account_divider_or", locale)}
+            <span className="h-px flex-1 bg-[#e5ecea]" />
+          </div>
+
+          <GoogleSignInButton locale={locale} redirectTo={redirectTo} />
+
           <div className="mt-4 rounded-2xl bg-[#f8fbfa] p-3 text-center text-sm text-[#5d6970]">
             <span>{t("account_already_customer", locale)}</span>{" "}
-            <Link href="/account" className="font-bold text-[#083273] hover:underline">
+            <Link
+              href={redirectTo ? `/account?redirectTo=${encodeURIComponent(redirectTo)}` : "/account"}
+              className="font-bold text-[#083273] hover:underline"
+            >
               {t("header_log_in", locale)}
             </Link>
           </div>

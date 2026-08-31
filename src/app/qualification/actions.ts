@@ -21,7 +21,7 @@ export type CreatePatientAccountFallbackResult =
 // Returns a result object rather than throwing -- a thrown Error from a
 // Server Action never reaches the client's try/catch with a readable
 // message in production (React error #441; see the same pattern in
-// doctors/actions.ts's bookConsultationDirect).
+// consultation/actions.ts's initiateSnippePayment).
 export async function createPatientAccountFallback(input: {
   fullName: string;
   phone: string;
@@ -35,10 +35,10 @@ export async function createPatientAccountFallback(input: {
 
     const normalizedPhone = normalizeTanzanianPhoneToE164(input.phone.trim());
 
-    // Same reasoning as bookConsultationDirect in doctors/actions.ts: a phone
-    // can already belong to a patient record from an earlier visit/device, and
-    // it can be shared within a family, so this blocks rather than silently
-    // reusing or overwriting a record that might belong to someone else.
+    // A phone can already belong to a patient record from an earlier visit/
+    // device, and it can be shared within a family, so this blocks rather
+    // than silently reusing or overwriting a record that might belong to
+    // someone else.
     const service = createServiceClient();
     const { data: phoneMatch } = await service
       .from("patients")

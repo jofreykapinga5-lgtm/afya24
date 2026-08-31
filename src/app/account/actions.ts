@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { createPatientSession, clearPatientSession } from "@/lib/patient-session";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -11,11 +13,13 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function signUp(formData: FormData) {
   const locale = await getServerLocale();
+  const redirectTo = String(formData.get("redirectTo") ?? "").trim();
+  const redirectToParam = redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : "";
   const signupErrorPath = "/account/sign-up?error=";
 
   const { allowed } = await checkRateLimit("signup", await getClientIp());
   if (!allowed) {
-    redirect(`${signupErrorPath}${encodeURIComponent(t("error_rate_limited", locale))}`);
+    redirect(`${signupErrorPath}${encodeURIComponent(t("error_rate_limited", locale))}${redirectToParam}`);
   }
 
   const phone = String(formData.get("phone") ?? "").trim();
@@ -24,12 +28,12 @@ export async function signUp(formData: FormData) {
   const agreedToTerms = formData.get("agreedToTerms") === "on";
 
   if (!phone || !password || !fullName) {
-    redirect(`${signupErrorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}`);
+    redirect(`${signupErrorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}${redirectToParam}`);
   }
 
   if (!agreedToTerms) {
     redirect(
-      `${signupErrorPath}${encodeURIComponent(t("error_must_agree_terms", locale))}`
+      `${signupErrorPath}${encodeURIComponent(t("error_must_agree_terms", locale))}${redirectToParam}`
     );
   }
 
@@ -55,13 +59,13 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
-    redirect(`${signupErrorPath}${encodeURIComponent(error.message)}`);
+    redirect(`${signupErrorPath}${encodeURIComponent(error.message)}${redirectToParam}`);
   }
 
   const userId = data.user?.id;
   if (!userId) {
     redirect(
-      `${signupErrorPath}${encodeURIComponent(t("error_account_creation_failed", locale))}`
+      `${signupErrorPath}${encodeURIComponent(t("error_account_creation_failed", locale))}${redirectToParam}`
     );
   }
 
@@ -71,15 +75,21 @@ export async function signUp(formData: FormData) {
   // yet -- that's only assigned once this patient's first consultation
   // payment is confirmed (see lib/patient-account.ts's
   // ensurePatientReferenceNumber), same as every other account-creation path.
-  const { error: insertError } = await service.from("patients").insert({
-    user_id: userId,
-    full_name: fullName,
-    phone,
-  });
+  const { data: insertedPatient, error: insertError } = await service
+    .from("patients")
+    .insert({
+      user_id: userId,
+      full_name: fullName,
+      phone,
+    })
+    .select("id")
+    .single();
 
-  if (insertError) {
+  if (insertError || !insertedPatient) {
     await service.auth.admin.deleteUser(userId);
-    redirect(`${signupErrorPath}${encodeURIComponent(insertError.message)}`);
+    redirect(
+      `${signupErrorPath}${encodeURIComponent(insertError?.message ?? t("error_account_creation_failed", locale))}${redirectToParam}`
+    );
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -88,37 +98,68 @@ export async function signUp(formData: FormData) {
   });
 
   if (signInError) {
-    redirect(`/account?error=${encodeURIComponent(signInError.message)}`);
+    redirect(`/account?error=${encodeURIComponent(signInError.message)}${redirectToParam}`);
   }
 
-  redirect("/account/dashboard");
+  // Everything past this point (booking, payment, joining a call) checks
+  // getPatientSession()'s JWT cookie, not the Supabase Auth session --
+  // without this, a patient who just created a full account would still
+  // hit "session expired" the moment they tried to actually book anything.
+  await createPatientSession(insertedPatient.id);
+
+  redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
 }
 
 export async function signIn(formData: FormData) {
   const locale = await getServerLocale();
+  const redirectTo = String(formData.get("redirectTo") ?? "").trim();
+  const redirectToParam = redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : "";
+
   const { allowed } = await checkRateLimit("auth", await getClientIp());
   if (!allowed) {
-    redirect(`/account?error=${encodeURIComponent(t("error_rate_limited", locale))}`);
+    redirect(`/account?error=${encodeURIComponent(t("error_rate_limited", locale))}${redirectToParam}`);
   }
 
   const phone = String(formData.get("phone") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: patientAuthEmailFromPhone(phone),
     password,
   });
 
   if (error) {
-    redirect(`/account?error=${encodeURIComponent(error.message)}`);
+    redirect(`/account?error=${encodeURIComponent(error.message)}${redirectToParam}`);
   }
 
-  redirect("/account/dashboard");
+  // Everything past this point (booking, payment, joining a call) checks
+  // getPatientSession()'s JWT cookie, not the Supabase Auth session -- this
+  // was the actual reason a fully logged-in patient could still hit
+  // "session expired" trying to book: signIn only ever established the
+  // Supabase side.
+  const service = createServiceClient();
+  const { data: patient } = await service
+    .from("patients")
+    .select("id")
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+
+  if (patient) {
+    await createPatientSession(patient.id);
+  }
+
+  redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // signIn/signUp establish this cookie alongside the Supabase Auth session
+  // (see their comments) precisely because everything else in the app
+  // checks it, not Supabase's -- clearing only the Supabase side here would
+  // leave every booking/payment/video-join gate still thinking this patient
+  // is signed in.
+  await clearPatientSession();
   redirect("/account");
 }

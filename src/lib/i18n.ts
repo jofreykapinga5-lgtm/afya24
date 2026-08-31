@@ -390,6 +390,10 @@ const dict = {
     en: "Could not sign in with Google. Please try again.",
     sw: "Imeshindwa kuingia kwa Google. Tafadhali jaribu tena.",
   },
+  error_google_staff_not_registered: {
+    en: "This Google account isn't registered as staff. Sign in with your email and password, or contact your admin.",
+    sw: "Akaunti hii ya Google haijasajiliwa kama mfanyakazi. Ingia kwa barua pepe na nenosiri lako, au wasiliana na msimamizi wako.",
+  },
   complete_profile_title: { en: "One last thing", sw: "Jambo moja la mwisho" },
   complete_profile_body: {
     en: "Google didn't share a phone number with us, and we need one to reach you about your visits. Add it to finish setting up your account.",

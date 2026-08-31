@@ -70,7 +70,7 @@ export function LoginForm({
         <span className="h-px flex-1 bg-[#e5ecea]" />
       </div>
 
-      <GoogleSignInButton locale={locale} redirectTo={redirectTo} />
+      <GoogleSignInButton locale={locale} redirectTo={redirectTo} className="h-13 w-full rounded-full" />
     </div>
   );
 }

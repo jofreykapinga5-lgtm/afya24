@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, TriangleAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -104,6 +105,14 @@ export default async function DoctorSignInPage({
             {t("doctor_sign_in_cta", locale)}
           </SubmitButton>
         </form>
+
+        <div className="my-4 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          {t("account_divider_or", locale)}
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <GoogleSignInButton locale={locale} redirectTo={redirectTo} context="staff" />
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -31,7 +32,26 @@ function GoogleLogo() {
   );
 }
 
-export function GoogleSignInButton({ locale, redirectTo }: { locale: Locale; redirectTo?: string }) {
+export function GoogleSignInButton({
+  locale,
+  redirectTo,
+  context,
+  className,
+}: {
+  locale: Locale;
+  redirectTo?: string;
+  // "staff" tells /auth/callback this came from the staff sign-in page, not
+  // the patient one -- there it only ever logs in an ALREADY admin-created
+  // doctor/admin account, never creates one. Omit for the default patient
+  // behavior (log in an existing account, or start the new-patient
+  // complete-profile step for a first-time Google identity).
+  context?: "staff";
+  // Sizing/rounding only (height, radius) -- colors intentionally come from
+  // Button's own outline variant (theme tokens), not a hardcoded palette,
+  // since this same component sits on both the teal patient pages and the
+  // neutral shadcn-styled staff page.
+  className?: string;
+}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,10 +60,13 @@ export function GoogleSignInButton({ locale, redirectTo }: { locale: Locale; red
     setError(null);
     try {
       const supabase = createClient();
-      const params = redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : "";
+      const params = new URLSearchParams();
+      if (redirectTo) params.set("redirectTo", redirectTo);
+      if (context) params.set("context", context);
+      const query = params.toString() ? `?${params.toString()}` : "";
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback${params}` },
+        options: { redirectTo: `${window.location.origin}/auth/callback${query}` },
       });
       if (oauthError) {
         setError(oauthError.message);
@@ -59,15 +82,16 @@ export function GoogleSignInButton({ locale, redirectTo }: { locale: Locale; red
 
   return (
     <div>
-      <button
+      <Button
         type="button"
-        onClick={handleClick}
+        variant="outline"
         disabled={pending}
-        className="flex h-13 w-full items-center justify-center gap-2.5 rounded-full border border-[#d8e5e3] bg-white text-base font-semibold text-[#071923] outline-none transition hover:bg-[#f8fbfa] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25 disabled:opacity-60"
+        onClick={handleClick}
+        className={className ?? "h-11 w-full rounded-xl"}
       >
         <GoogleLogo />
         {pending ? t("common_please_wait", locale) : t("account_continue_with_google", locale)}
-      </button>
+      </Button>
       {error && <p className="mt-2 text-center text-xs text-urgent">{error}</p>}
     </div>
   );

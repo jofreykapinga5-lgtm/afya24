@@ -1291,6 +1291,7 @@ const dict = {
   account_dashboard_nav_doctors: { en: "Doctors", sw: "Madaktari" },
   account_dashboard_nav_history: { en: "History", sw: "Historia" },
   account_dashboard_nav_payments: { en: "Payments", sw: "Malipo" },
+  account_dashboard_nav_pharmacy: { en: "Pharmacy", sw: "Duka la dawa" },
   account_dashboard_nav_files: { en: "Files", sw: "Faili" },
   account_dashboard_need_care_title: { en: "Need care now?", sw: "Unahitaji huduma sasa?" },
   account_dashboard_need_care_body: {
@@ -1356,6 +1357,11 @@ const dict = {
   account_dashboard_browse_doctors: { en: "Browse doctors", sw: "Vinjari madaktari" },
   account_dashboard_no_payments_yet: { en: "No payments yet.", sw: "Hakuna malipo bado." },
   account_dashboard_pharmacy_title: { en: "Pharmacy", sw: "Duka la dawa" },
+  account_dashboard_pharmacy_body: {
+    en: "Order medication once a doctor approves your prescription.",
+    sw: "Agiza dawa mara daktari atakapoidhinisha dawa yako.",
+  },
+  account_dashboard_browse_pharmacy: { en: "Browse pharmacy", sw: "Vinjari duka la dawa" },
   account_dashboard_no_pharmacy_orders: {
     en: "No pharmacy orders yet.",
     sw: "Hakuna agizo la duka la dawa bado.",

@@ -13,6 +13,7 @@ const navItems = [
   { labelKey: "account_dashboard_nav_doctors", icon: "doctors", href: "/account/dashboard/doctors" },
   { labelKey: "account_dashboard_nav_history", icon: "history", href: "/account/dashboard/history" },
   { labelKey: "account_dashboard_nav_payments", icon: "payments", href: "/account/dashboard/payments" },
+  { labelKey: "account_dashboard_nav_pharmacy", icon: "pharmacy", href: "/account/dashboard/pharmacy" },
   { labelKey: "account_dashboard_nav_files", icon: "files", href: "/account/dashboard/files" },
 ] as const;
 

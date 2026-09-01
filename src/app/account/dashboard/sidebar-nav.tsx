@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, FileText, History, LayoutDashboard, Stethoscope, Video, type LucideIcon } from "lucide-react";
+import { CreditCard, FileText, History, LayoutDashboard, Pill, Stethoscope, Video, type LucideIcon } from "lucide-react";
 
 export type SidebarNavItem = {
   label: string;
   href: string;
-  icon: "overview" | "book" | "doctors" | "history" | "payments" | "files";
+  icon: "overview" | "book" | "doctors" | "history" | "payments" | "pharmacy" | "files";
 };
 
 const icons: Record<SidebarNavItem["icon"], LucideIcon> = {
@@ -16,6 +16,7 @@ const icons: Record<SidebarNavItem["icon"], LucideIcon> = {
   doctors: Stethoscope,
   history: History,
   payments: CreditCard,
+  pharmacy: Pill,
   files: FileText,
 };
 

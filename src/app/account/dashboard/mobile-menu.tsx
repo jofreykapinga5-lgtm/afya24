@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Pill,
   Stethoscope,
   Video,
   X,
@@ -26,7 +27,7 @@ import { signOut } from "../actions";
 export type PatientMobileMenuItem = {
   label: string;
   href: string;
-  icon: "overview" | "book" | "doctors" | "history" | "payments" | "files";
+  icon: "overview" | "book" | "doctors" | "history" | "payments" | "pharmacy" | "files";
 };
 
 const menuIcons = {
@@ -35,6 +36,7 @@ const menuIcons = {
   doctors: Stethoscope,
   history: History,
   payments: CreditCard,
+  pharmacy: Pill,
   files: FileText,
 };
 

@@ -87,10 +87,12 @@ export async function clearPatientSession() {
 }
 
 // Both a real account (phone + password, patients.user_id set) and a
-// still-lightweight AI-intake record use this same session cookie -- most
-// callers only need "is someone recognized at all," but seeing matched
-// doctors and booking now require the stronger check: a real account, not
-// just a name/DOB collected mid-chat. Server-only (imports service.ts).
+// still-lightweight AI-intake/"continue without an account" record use this
+// same session cookie -- booking itself only ever needs getPatientSession()
+// above (either kind is fine), so this stronger check is for the few spots
+// that specifically care whether it's a real account, e.g. deciding whether
+// to redirect an already-logged-in visitor away from /account. Server-only
+// (imports service.ts).
 export async function getFullAccountPatientSession(): Promise<{ patientId: string } | null> {
   const session = await getPatientSession();
   if (!session) return null;

@@ -24,10 +24,15 @@ export async function signUp(formData: FormData) {
 
   const phone = String(formData.get("phone") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const fullName = String(formData.get("fullName") ?? "").trim();
+  // Collected as two separate fields (classic form convention -- see
+  // sign-up/page.tsx) but stored as one patients.full_name, same as every
+  // other patient record in this app (AI intake, guest booking, admin).
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const fullName = `${firstName} ${lastName}`.trim();
   const agreedToTerms = formData.get("agreedToTerms") === "on";
 
-  if (!phone || !password || !fullName) {
+  if (!phone || !password || !firstName || !lastName) {
     redirect(`${signupErrorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}${redirectToParam}`);
   }
 
@@ -114,10 +119,15 @@ export async function signIn(formData: FormData) {
   const locale = await getServerLocale();
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();
   const redirectToParam = redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : "";
+  // Lets a login form embedded somewhere other than /account (e.g. a doctor's
+  // profile page, so a failed attempt lands the patient right back where
+  // they were instead of on the standalone page) send failures back to
+  // itself. Defaults to /account, same as before this existed.
+  const errorRedirectPath = safeRedirectPath(String(formData.get("errorRedirectPath") ?? ""), "/account");
 
   const { allowed } = await checkRateLimit("auth", await getClientIp());
   if (!allowed) {
-    redirect(`/account?error=${encodeURIComponent(t("error_rate_limited", locale))}${redirectToParam}`);
+    redirect(`${errorRedirectPath}?error=${encodeURIComponent(t("error_rate_limited", locale))}${redirectToParam}`);
   }
 
   const phone = String(formData.get("phone") ?? "").trim();
@@ -130,7 +140,7 @@ export async function signIn(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/account?error=${encodeURIComponent(error.message)}${redirectToParam}`);
+    redirect(`${errorRedirectPath}?error=${encodeURIComponent(error.message)}${redirectToParam}`);
   }
 
   // Everything past this point (booking, payment, joining a call) checks

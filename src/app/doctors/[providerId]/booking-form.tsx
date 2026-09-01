@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoginForm } from "@/app/account/login-form";
+import { GuestDetailsForm } from "@/components/guest-details-form";
+import { createPatientAccountFallback } from "@/app/qualification/actions";
 import { bookConsultation, startOverAsNewPatient } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
@@ -16,12 +20,14 @@ export function BookingForm({
   hasSession,
   existingPatientName,
   redirectTo,
+  loginError,
 }: {
   provider: Provider;
   locale: Locale;
   hasSession: boolean;
   existingPatientName?: string | null;
   redirectTo: string;
+  loginError?: string;
 }) {
   const router = useRouter();
   const qualificationResult = useAppStore((state) => state.qualificationResult);
@@ -50,6 +56,43 @@ export function BookingForm({
   function handleStartOver() {
     startTransition(async () => {
       await startOverAsNewPatient(provider.id);
+    });
+  }
+
+  const [showGuestForm, setShowGuestForm] = useState(false);
+  const [guestPending, startGuestTransition] = useTransition();
+  const [guestError, setGuestError] = useState<string | null>(null);
+
+  // Same lightweight, no-password record the qualification chat's own
+  // recovery form creates -- getPatientSession() doesn't care whether a
+  // patient has a password or not, so a router.refresh() here is enough for
+  // the server page above to pick up the new session and swap straight to
+  // the "Continuing as X" branch, no redirect needed.
+  function handleGuestSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const fullName = String(formData.get("fullName") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
+
+    if (!fullName || !phone || !dateOfBirth) {
+      setGuestError(t("qualification_fallback_error", locale));
+      return;
+    }
+
+    setGuestError(null);
+    startGuestTransition(async () => {
+      const result = await createPatientAccountFallback({
+        fullName,
+        phone,
+        dateOfBirth,
+        preferredLanguage: locale,
+      });
+      if (result.ok) {
+        router.refresh();
+      } else {
+        setGuestError(result.message || t("qualification_fallback_error", locale));
+      }
     });
   }
 
@@ -108,36 +151,56 @@ export function BookingForm({
 
   // No real account (patients.user_id) tied to this session -- booking now
   // requires one everywhere, whether via the AI intake chat or landing
-  // directly on a doctor's profile. This replaces the old "type your name/
-  // phone/DOB right here" fallback form and the reference-number "returning
-  // patient" lookup with a straightforward login/sign-up prompt that sends
-  // the patient right back to this exact doctor afterward.
+  // directly on a doctor's profile. Rather than a card that just points at
+  // the standalone /account page, the actual login form is embedded right
+  // here (below the doctor's own card above) so logging in and continuing
+  // the booking is one screen, not a detour -- a wrong password re-renders
+  // this same page with the error shown, and a successful one sends the
+  // patient right back to it (see redirectTo/errorRedirectPath below).
   return (
-    <div className="rounded-[1.75rem] bg-white p-6 text-center shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
-      <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#e8f7f4] text-[#01b7bb]">
-        <UserRound className="size-5" />
-      </span>
-      <p className="mt-3 font-bold text-[#071923]">{t("doctor_booking_login_required_title", locale)}</p>
-      <p className="mt-1 text-sm text-[#60717a]">{t("doctor_booking_login_required_body", locale)}</p>
+    <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
+      <div className="text-center">
+        <h2 className="text-xl font-bold tracking-tight text-[#071923]">
+          {t("account_welcome_back", locale)}
+        </h2>
+        <p className="mt-1 text-sm text-[#60717a]">{t("account_login_title", locale)}</p>
+      </div>
 
-      <div className="mt-5 grid gap-3">
-        <Button
-          nativeButton={false}
-          render={<Link href={`/account?redirectTo=${encodeURIComponent(redirectTo)}`} />}
-          className="h-12 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
-        >
-          {t("header_log_in", locale)}
-          <ArrowRight className="size-4" />
-        </Button>
-        <Button
-          variant="outline"
-          nativeButton={false}
-          render={<Link href={`/account/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`} />}
-          className="h-11 w-full rounded-full font-semibold"
+      <LoginForm
+        locale={locale}
+        error={loginError}
+        redirectTo={redirectTo}
+        errorRedirectPath={redirectTo}
+      />
+
+      <div className="mt-5 rounded-2xl bg-[#f8fbfa] p-4 text-center text-sm text-[#5d6970]">
+        <span>{t("account_new_to_afya24", locale)}</span>{" "}
+        <Link
+          href={`/account/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`}
+          className="font-bold text-[#083273] hover:underline"
         >
           {t("account_create_account_link", locale)}
-        </Button>
+        </Link>
       </div>
+
+      {showGuestForm ? (
+        <div className="mt-4">
+          <GuestDetailsForm
+            locale={locale}
+            fallbackError={guestError}
+            fallbackPending={guestPending}
+            onSubmit={handleGuestSubmit}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowGuestForm(true)}
+          className="mt-4 w-full text-center text-sm font-medium text-[#60717a] underline-offset-4 hover:text-[#083273] hover:underline"
+        >
+          {t("account_continue_without_account", locale)}
+        </button>
+      )}
 
       <p className="mt-4 flex items-start gap-2 text-left text-xs leading-5 text-[#60717a]">
         <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#01b7bb]" />

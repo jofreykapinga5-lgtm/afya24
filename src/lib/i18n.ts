@@ -385,6 +385,10 @@ const dict = {
   account_new_to_afya24: { en: "New to Afya24?", sw: "Mgeni Afya24?" },
   account_create_account_link: { en: "Create an account", sw: "Fungua akaunti" },
   account_divider_or: { en: "OR", sw: "AU" },
+  account_continue_without_account: {
+    en: "Continue without an account",
+    sw: "Endelea bila akaunti",
+  },
   account_continue_with_google: { en: "Continue with Google", sw: "Endelea na Google" },
   error_google_signin_failed: {
     en: "Could not sign in with Google. Please try again.",
@@ -404,6 +408,13 @@ const dict = {
     en: "Create your account",
     sw: "Fungua akaunti yako",
   },
+  account_signup_subtitle: {
+    en: "It only takes a minute",
+    sw: "Inachukua dakika moja tu",
+  },
+  account_first_name_label: { en: "First name", sw: "Jina la kwanza" },
+  account_last_name_label: { en: "Last name", sw: "Jina la mwisho" },
+  account_phone_format_example: { en: "+255712345678", sw: "+255712345678" },
   account_fullname_placeholder: { en: "Full name", sw: "Jina kamili" },
   account_phone_hint_placeholder: {
     en: "Phone number (e.g. +255712345678)",
@@ -530,14 +541,6 @@ const dict = {
   },
   doctor_booking_continuing_as: { en: "Continue as", sw: "Endelea kama" },
   doctor_booking_not_you: { en: "Not you? Start over", sw: "Sio wewe? Anza upya" },
-  doctor_booking_login_required_title: {
-    en: "Log in to book this doctor",
-    sw: "Ingia ili kuweka miadi na daktari huyu",
-  },
-  doctor_booking_login_required_body: {
-    en: "An Afya24 account keeps your visits, prescriptions, and lab results in one place. It only takes a minute.",
-    sw: "Akaunti ya Afya24 inaweka ziara zako, dawa zilizoandikwa, na majibu ya maabara mahali pamoja. Inachukua dakika moja tu.",
-  },
   doctor_booking_summary_note: {
     en: "Your Afya24 intake summary will be shared with the doctor.",
     sw: "Muhtasari wako wa Afya24 utashirikiwa na daktari.",

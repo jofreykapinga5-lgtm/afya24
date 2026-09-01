@@ -4,7 +4,7 @@ import { ShieldCheck, Star } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getDefaultService } from "@/lib/default-service";
 import { getCachedActiveProviderById } from "@/lib/cache/public-catalog";
-import { getFullAccountPatientSession } from "@/lib/patient-session";
+import { getPatientSession } from "@/lib/patient-session";
 import { mapProviderRow, type ProviderRow } from "@/lib/providers-mapping";
 import { toTitleCase } from "@/lib/format-name";
 import { Reveal } from "@/components/motion/reveal";
@@ -53,21 +53,25 @@ export async function generateMetadata({
 
 export default async function DoctorBookingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ providerId: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { providerId } = await params;
+  const { error: loginError } = await searchParams;
   const locale = await getServerLocale();
   const service = createServiceClient();
 
   const [row, defaultService, patientSession] = await Promise.all([
     getCachedActiveProviderById(providerId),
     getDefaultService(service),
-    // A real account, not just a name/DOB collected mid-chat -- booking now
-    // requires one everywhere (see BookingForm), so this is also the gate
-    // that decides whether to show "Continue as X" or a login/sign-up
-    // prompt instead of the old name/phone/DOB manual-details form.
-    getFullAccountPatientSession(),
+    // Any recognized patient -- a real account or just the lightweight
+    // name/phone/DOB record from "Continue without an account" -- is enough
+    // to book; bookConsultation itself only ever checks getPatientSession().
+    // A full account is still the encouraged, default path (see BookingForm's
+    // login/sign-up prompt), just no longer the only way through.
+    getPatientSession(),
   ]);
 
   if (!row) {
@@ -196,6 +200,7 @@ export default async function DoctorBookingPage({
               hasSession={Boolean(patientSession)}
               existingPatientName={existingPatientName}
               redirectTo={`/doctors/${providerId}`}
+              loginError={loginError}
             />
           </div>
         </Reveal>

@@ -16,10 +16,16 @@ export function LoginForm({
   locale,
   error,
   redirectTo,
+  errorRedirectPath,
 }: {
   locale: Locale;
   error?: string;
   redirectTo?: string;
+  // Where a failed attempt should redirect back to (with ?error= set) --
+  // omit to keep the default of /account. Used when this same form is
+  // embedded somewhere else, e.g. a doctor's profile page, so a wrong
+  // password doesn't bounce the patient off to the standalone login page.
+  errorRedirectPath?: string;
 }) {
   return (
     <div className="mt-7">
@@ -32,6 +38,9 @@ export function LoginForm({
 
       <form action={signIn} className="mt-4 space-y-3">
         {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
+        {errorRedirectPath && (
+          <input type="hidden" name="errorRedirectPath" value={errorRedirectPath} />
+        )}
         <label htmlFor="phone" className="sr-only">
           {t("account_phone_placeholder", locale)}
         </label>

@@ -12,7 +12,6 @@ import {
   ClipboardList,
   FileAudio,
   FileText,
-  HeartPulse,
   ImageIcon,
   MessageCircle,
   Mic,
@@ -25,8 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DobSelect } from "@/components/dob-select";
+import { GuestDetailsForm } from "@/components/guest-details-form";
 import { createPatientAccountFallback } from "./actions";
 import { upgradeToFullAccount } from "@/app/consultation/actions";
 import { useAppStore } from "@/lib/store";
@@ -225,6 +223,15 @@ export default function QualificationPage() {
         setAccountError(result.message);
       }
     });
+  }
+
+  // The lightweight patient record + session already exist by the time this
+  // gate shows (the AI tool call or the fallback form above already created
+  // both) -- bookConsultation only ever checks getPatientSession(), not
+  // whether it's a full account, so there's nothing left to do here besides
+  // letting the patient through. No server round trip needed.
+  function handleContinueAsGuest() {
+    setAccountReady(true);
   }
 
   useEffect(() => {
@@ -559,7 +566,7 @@ export default function QualificationPage() {
                   )}
 
                   {!accountResult && showFallbackForm && (
-                    <FallbackDetailsForm
+                    <GuestDetailsForm
                       locale={locale}
                       fallbackError={fallbackError}
                       fallbackPending={fallbackPending}
@@ -599,6 +606,13 @@ export default function QualificationPage() {
                           : t("qualification_account_gate_cta", locale)}
                         <ArrowRight className="size-4" />
                       </Button>
+                      <button
+                        type="button"
+                        onClick={handleContinueAsGuest}
+                        className="mt-3 w-full text-center text-sm font-medium text-[#60717a] underline-offset-4 hover:text-[#083273] hover:underline"
+                      >
+                        {t("account_continue_without_account", locale)}
+                      </button>
                     </div>
                   )}
 
@@ -1057,50 +1071,3 @@ function AttachmentsSummary({ attachments }: { attachments: IntakeAttachment[] }
   );
 }
 
-function FallbackDetailsForm({
-  locale,
-  fallbackError,
-  fallbackPending,
-  onSubmit,
-}: {
-  locale: "en" | "sw";
-  fallbackError: string | null;
-  fallbackPending: boolean;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}) {
-  return (
-    <div className="rounded-2xl bg-[#f8fbfd] p-4 ring-1 ring-[#dfe8eb]">
-      <div className="flex items-center gap-2">
-        <HeartPulse className="size-4 text-[#087a7b]" />
-        <p className="text-sm font-bold text-[#071923]">
-          {t("qualification_fallback_title", locale)}
-        </p>
-      </div>
-      <p className="mt-1 text-sm text-[#60717a]">
-        {t("qualification_fallback_body", locale)}
-      </p>
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="fallbackFullName" className="text-sm font-medium">
-            {t("qualification_fallback_name_label", locale)}
-          </label>
-          <Input id="fallbackFullName" name="fullName" required />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="fallbackPhone" className="text-sm font-medium">
-            {t("qualification_fallback_phone_label", locale)}
-          </label>
-          <Input id="fallbackPhone" name="phone" type="tel" required />
-        </div>
-        <div className="space-y-1.5 sm:col-span-2">
-          <span className="text-sm font-medium">{t("lookup_dob_label", locale)}</span>
-          <DobSelect locale={locale} />
-        </div>
-        {fallbackError && <p className="text-sm text-urgent sm:col-span-2">{fallbackError}</p>}
-        <Button type="submit" disabled={fallbackPending} className="h-11 rounded-full sm:col-span-2">
-          {t("qualification_fallback_submit", locale)}
-        </Button>
-      </form>
-    </div>
-  );
-}

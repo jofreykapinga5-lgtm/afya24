@@ -51,6 +51,7 @@ export default async function AccountSignUpPage({
           <h1 className="text-[28px] font-bold tracking-tight text-[#071923] sm:text-3xl">
             {t("account_signup_title", locale)}
           </h1>
+          <p className="mt-1.5 text-sm text-[#60717a]">{t("account_signup_subtitle", locale)}</p>
         </div>
 
         {error && (
@@ -60,46 +61,66 @@ export default async function AccountSignUpPage({
           </div>
         )}
 
-        <form action={signUp} className="mt-5 space-y-2.5">
+        <form action={signUp} className="mt-5 space-y-3.5">
           {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
-          <label htmlFor="signup-fullName" className="sr-only">
-            {t("account_fullname_placeholder", locale)}
-          </label>
-          <input
-            id="signup-fullName"
-            name="fullName"
-            autoComplete="name"
-            placeholder={t("account_fullname_placeholder", locale)}
-            required
-            className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-          />
-          <label htmlFor="signup-phone" className="sr-only">
-            {t("account_phone_hint_placeholder", locale)}
-          </label>
-          <input
-            id="signup-phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder={t("account_phone_hint_placeholder", locale)}
-            pattern="\+[0-9]{9,15}"
-            title={t("account_phone_hint_title", locale)}
-            required
-            className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-          />
-          <label htmlFor="signup-password" className="sr-only">
-            {t("account_password_placeholder", locale)}
-          </label>
-          <input
-            id="signup-password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            placeholder={t("account_password_placeholder", locale)}
-            minLength={8}
-            required
-            className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="signup-firstName" className="text-sm font-medium text-[#071923]">
+                {t("account_first_name_label", locale)}
+              </label>
+              <input
+                id="signup-firstName"
+                name="firstName"
+                autoComplete="given-name"
+                required
+                className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="signup-lastName" className="text-sm font-medium text-[#071923]">
+                {t("account_last_name_label", locale)}
+              </label>
+              <input
+                id="signup-lastName"
+                name="lastName"
+                autoComplete="family-name"
+                required
+                className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="signup-phone" className="text-sm font-medium text-[#071923]">
+              {t("account_phone_placeholder", locale)}
+            </label>
+            <input
+              id="signup-phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder={t("account_phone_format_example", locale)}
+              pattern="\+[0-9]{9,15}"
+              title={t("account_phone_hint_title", locale)}
+              required
+              className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#a8b4b8] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="signup-password" className="text-sm font-medium text-[#071923]">
+              {t("account_password_placeholder", locale)}
+            </label>
+            <input
+              id="signup-password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
+            />
+          </div>
 
           <label className="flex items-start gap-2.5 pt-0.5 text-xs leading-5 text-[#24343b]">
             <input

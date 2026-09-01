@@ -2,9 +2,12 @@
 
 import { redirect, unstable_rethrow } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
-import { clearPatientSession, getPatientSession } from "@/lib/patient-session";
+import { clearPatientSession, createPatientSession, getPatientSession } from "@/lib/patient-session";
+import { createPatientAccountRecord } from "@/lib/patient-account";
+import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
+import { t } from "@/lib/i18n";
 import type { Locale, QualificationResult } from "@/lib/types";
 
 const REJOIN_WINDOW_HOURS = 24;
@@ -90,6 +93,67 @@ export async function bookConsultation(input: {
 
     const appointmentId = await bookConsultationForPatient({
       patientId: session.patientId,
+      providerId: input.providerId,
+      locale: input.locale,
+      qualification: input.qualification,
+    });
+    return { ok: true, appointmentId };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, message: error instanceof Error ? error.message : "Could not book this consultation." };
+  }
+}
+
+// The dedicated "continue without an account" page's own booking action --
+// name + phone only, no password. Creates the lightweight patient record,
+// signs it in the same way createPatientAccountFallback does, then goes
+// straight through to booking THIS specific provider instead of stopping at
+// a "continue as X" confirmation, since the patient just typed their name a
+// moment ago on the previous screen.
+export async function bookAsGuest(input: {
+  fullName: string;
+  phone: string;
+  providerId: string;
+  locale: Locale;
+  qualification: QualificationResult | null;
+}): Promise<BookConsultationResult> {
+  try {
+    const fullName = input.fullName.trim();
+    const phone = input.phone.trim();
+    if (!fullName || !phone) {
+      return { ok: false, message: t("error_fill_all_fields", input.locale) };
+    }
+
+    const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
+    const service = createServiceClient();
+
+    // A phone can already belong to a patient record from an earlier visit,
+    // and it can be shared within a family -- same guard as
+    // createPatientAccountFallback, so this never silently reuses or
+    // overwrites a record that might belong to someone else.
+    const { data: phoneMatch } = await service
+      .from("patients")
+      .select("id")
+      .eq("phone", normalizedPhone)
+      .maybeSingle();
+    if (phoneMatch) {
+      return { ok: false, message: t("doctor_direct_booking_phone_exists", input.locale) };
+    }
+
+    const record = await createPatientAccountRecord({
+      fullName,
+      phone: normalizedPhone,
+      preferredLanguage: input.locale,
+    });
+    await createPatientSession(record.patientId);
+
+    const existingAppointmentId = await findResumableAppointment(service, record.patientId, input.providerId);
+    if (existingAppointmentId) {
+      return { ok: true, appointmentId: existingAppointmentId };
+    }
+
+    const appointmentId = await bookConsultationForPatient({
+      patientId: record.patientId,
       providerId: input.providerId,
       locale: input.locale,
       qualification: input.qualification,

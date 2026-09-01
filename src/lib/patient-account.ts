@@ -11,7 +11,11 @@ import type { Locale } from "@/lib/types";
 export async function createPatientAccountRecord(input: {
   fullName: string;
   phone: string;
-  dateOfBirth: string;
+  // Optional -- the doctor page's "continue without an account" guest form
+  // only collects name + phone (see bookAsGuest in doctors/actions.ts), same
+  // as a Google sign-in's complete-profile step already leaves this unset.
+  // patients.date_of_birth is nullable for exactly that reason.
+  dateOfBirth?: string;
   gender?: "female" | "male" | "other";
   preferredLanguage?: Locale;
 }) {
@@ -21,7 +25,7 @@ export async function createPatientAccountRecord(input: {
     .insert({
       full_name: input.fullName,
       phone: input.phone,
-      date_of_birth: input.dateOfBirth,
+      date_of_birth: input.dateOfBirth ?? null,
       gender: input.gender ?? null,
       preferred_language: input.preferredLanguage ?? "sw",
     })

@@ -1,14 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoginForm } from "@/app/account/login-form";
-import { GuestDetailsForm } from "@/components/guest-details-form";
-import { createPatientAccountFallback } from "@/app/qualification/actions";
 import { bookConsultation, startOverAsNewPatient } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
@@ -56,43 +53,6 @@ export function BookingForm({
   function handleStartOver() {
     startTransition(async () => {
       await startOverAsNewPatient(provider.id);
-    });
-  }
-
-  const [showGuestForm, setShowGuestForm] = useState(false);
-  const [guestPending, startGuestTransition] = useTransition();
-  const [guestError, setGuestError] = useState<string | null>(null);
-
-  // Same lightweight, no-password record the qualification chat's own
-  // recovery form creates -- getPatientSession() doesn't care whether a
-  // patient has a password or not, so a router.refresh() here is enough for
-  // the server page above to pick up the new session and swap straight to
-  // the "Continuing as X" branch, no redirect needed.
-  function handleGuestSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const fullName = String(formData.get("fullName") ?? "").trim();
-    const phone = String(formData.get("phone") ?? "").trim();
-    const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
-
-    if (!fullName || !phone || !dateOfBirth) {
-      setGuestError(t("qualification_fallback_error", locale));
-      return;
-    }
-
-    setGuestError(null);
-    startGuestTransition(async () => {
-      const result = await createPatientAccountFallback({
-        fullName,
-        phone,
-        dateOfBirth,
-        preferredLanguage: locale,
-      });
-      if (result.ok) {
-        router.refresh();
-      } else {
-        setGuestError(result.message || t("qualification_fallback_error", locale));
-      }
     });
   }
 
@@ -183,24 +143,12 @@ export function BookingForm({
         </Link>
       </div>
 
-      {showGuestForm ? (
-        <div className="mt-4">
-          <GuestDetailsForm
-            locale={locale}
-            fallbackError={guestError}
-            fallbackPending={guestPending}
-            onSubmit={handleGuestSubmit}
-          />
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowGuestForm(true)}
-          className="mt-4 w-full text-center text-sm font-medium text-[#60717a] underline-offset-4 hover:text-[#083273] hover:underline"
-        >
-          {t("account_continue_without_account", locale)}
-        </button>
-      )}
+      <Link
+        href={`/doctors/${provider.id}/guest`}
+        className="mt-4 block w-full text-center text-sm font-medium text-[#60717a] underline-offset-4 hover:text-[#083273] hover:underline"
+      >
+        {t("account_continue_without_account", locale)}
+      </Link>
 
       <p className="mt-4 flex items-start gap-2 text-left text-xs leading-5 text-[#60717a]">
         <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#01b7bb]" />

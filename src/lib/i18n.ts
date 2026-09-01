@@ -540,6 +540,14 @@ const dict = {
     sw: "Maelezo yako yanaunda faili salama la mgonjwa, linalotumika kwa ushauri huu tu.",
   },
   doctor_booking_continuing_as: { en: "Continue as", sw: "Endelea kama" },
+  guest_booking_title: { en: "Just a few details", sw: "Maelezo machache tu" },
+  guest_booking_subtitle: {
+    en: "Booking {name} — no account needed",
+    sw: "Unaweka miadi na {name} — hakuna akaunti inayohitajika",
+  },
+  guest_booking_full_name_label: { en: "Full name", sw: "Jina kamili" },
+  guest_booking_phone_label: { en: "Phone number", sw: "Nambari ya simu" },
+  guest_booking_submit: { en: "Continue to payment", sw: "Endelea kulipa" },
   doctor_booking_not_you: { en: "Not you? Start over", sw: "Sio wewe? Anza upya" },
   doctor_booking_summary_note: {
     en: "Your Afya24 intake summary will be shared with the doctor.",

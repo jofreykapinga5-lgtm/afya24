@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CreditCard,
@@ -11,6 +11,7 @@ import {
   Menu,
   Stethoscope,
   Video,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
@@ -20,24 +21,56 @@ import { signOut } from "../actions";
 
 // Defined here rather than passed in as a prop: a Server Component can't
 // hand a Client Component raw icon component references (React can't
-// serialize functions across that boundary -- it throws "Functions cannot
-// be passed directly to Client Components"), so this list has to be local
-// to the client tree instead of built in dashboard/page.tsx.
-const items = [
-  { labelKey: "account_dashboard_nav_overview", href: "#overview", icon: LayoutDashboard },
-  { labelKey: "account_dashboard_nav_book", href: "#book-a-call", icon: Video },
-  { labelKey: "account_dashboard_nav_doctors", href: "#doctors", icon: Stethoscope },
-  { labelKey: "account_dashboard_nav_history", href: "#history", icon: History },
-  { labelKey: "account_dashboard_nav_payments", href: "#payments", icon: CreditCard },
-  { labelKey: "account_dashboard_nav_files", href: "#files", icon: FileText },
-] as const;
+// serialize functions across that boundary), so this list has to be local
+// to the client tree instead of built in layout.tsx.
+export type PatientMobileMenuItem = {
+  label: string;
+  href: string;
+  icon: "overview" | "book" | "doctors" | "history" | "payments" | "files";
+};
 
-export function PatientDashboardMobileMenu() {
+const menuIcons = {
+  overview: LayoutDashboard,
+  book: Video,
+  doctors: Stethoscope,
+  history: History,
+  payments: CreditCard,
+  files: FileText,
+};
+
+export function PatientDashboardMobileMenu({ items }: { items: PatientMobileMenuItem[] }) {
   const locale = useAppStore((state) => state.locale);
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Tapping the hamburger again is one way to close this, but a menu that
+  // opens over the page and only closes by finding the exact same toggle
+  // (or navigating away, which loses the "just checking" case) is a real
+  // dead end -- this adds an explicit close button plus tapping outside or
+  // Escape, matching the pattern site-header.tsx already uses for its own
+  // account menu.
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         type="button"
         aria-expanded={open}
@@ -50,8 +83,21 @@ export function PatientDashboardMobileMenu() {
 
       {open ? (
         <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl bg-white p-2 text-[#071923] shadow-[0_24px_60px_-28px_rgba(8,50,115,0.75)] ring-1 ring-[#dfe8eb]">
+          <div className="flex items-center justify-between px-2 py-1">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#8a969c]">
+              {t("account_dashboard_menu_title", locale)}
+            </span>
+            <button
+              type="button"
+              aria-label={t("account_dashboard_close_menu", locale)}
+              onClick={() => setOpen(false)}
+              className="flex size-7 items-center justify-center rounded-full text-[#64747c] transition hover:bg-[#f4f8f9] hover:text-[#071923]"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
           {items.map((item) => {
-            const Icon = item.icon;
+            const Icon = menuIcons[item.icon];
             return (
               <Link
                 key={item.href}
@@ -60,7 +106,7 @@ export function PatientDashboardMobileMenu() {
                 className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition hover:bg-[#f4f8f9]"
               >
                 <Icon className="size-4 text-[#01b7bb]" />
-                {t(item.labelKey, locale)}
+                {item.label}
               </Link>
             );
           })}

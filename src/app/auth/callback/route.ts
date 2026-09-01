@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { createPatientSession } from "@/lib/patient-session";
+import { createPatientSession, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
@@ -81,7 +81,8 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (patient) {
-    await createPatientSession(patient.id);
+    // A real account -- long TTL, same as signIn/signUp/completeGoogleProfile.
+    await createPatientSession(patient.id, LONG_TTL_SECONDS);
     return NextResponse.redirect(`${origin}${redirectTo}`);
   }
 

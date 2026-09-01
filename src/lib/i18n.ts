@@ -1284,6 +1284,8 @@ const dict = {
   },
 
   account_dashboard_open_menu: { en: "Open dashboard menu", sw: "Fungua menyu ya dashibodi" },
+  account_dashboard_close_menu: { en: "Close menu", sw: "Funga menyu" },
+  account_dashboard_menu_title: { en: "Menu", sw: "Menyu" },
   account_dashboard_nav_overview: { en: "Overview", sw: "Muhtasari" },
   account_dashboard_nav_book: { en: "Book a call", sw: "Panga simu" },
   account_dashboard_nav_doctors: { en: "Doctors", sw: "Madaktari" },

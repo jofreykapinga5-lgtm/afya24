@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { createPatientSession } from "@/lib/patient-session";
+import { createPatientSession, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
@@ -73,6 +73,7 @@ export async function completeGoogleProfile(formData: FormData) {
     );
   }
 
-  await createPatientSession(inserted.id);
+  // Google sign-in is a real account -- long TTL, same as signIn/signUp.
+  await createPatientSession(inserted.id, LONG_TTL_SECONDS);
   redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
 }

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { createPatientSession, clearPatientSession } from "@/lib/patient-session";
+import { createPatientSession, clearPatientSession, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
@@ -110,7 +110,9 @@ export async function signUp(formData: FormData) {
   // getPatientSession()'s JWT cookie, not the Supabase Auth session --
   // without this, a patient who just created a full account would still
   // hit "session expired" the moment they tried to actually book anything.
-  await createPatientSession(insertedPatient.id);
+  // Long TTL: a real account should stay signed in until they explicitly
+  // log out, not get silently kicked back to a login screen a day later.
+  await createPatientSession(insertedPatient.id, LONG_TTL_SECONDS);
 
   redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
 }
@@ -147,7 +149,7 @@ export async function signIn(formData: FormData) {
   // getPatientSession()'s JWT cookie, not the Supabase Auth session -- this
   // was the actual reason a fully logged-in patient could still hit
   // "session expired" trying to book: signIn only ever established the
-  // Supabase side.
+  // Supabase side. Long TTL, same reasoning as signUp above.
   const service = createServiceClient();
   const { data: patient } = await service
     .from("patients")
@@ -156,7 +158,7 @@ export async function signIn(formData: FormData) {
     .maybeSingle();
 
   if (patient) {
-    await createPatientSession(patient.id);
+    await createPatientSession(patient.id, LONG_TTL_SECONDS);
   }
 
   redirect(safeRedirectPath(redirectTo, "/account/dashboard"));

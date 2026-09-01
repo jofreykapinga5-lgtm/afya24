@@ -9,12 +9,19 @@ import { createServiceClient } from "@/lib/supabase/service";
 // logged in (see getFullAccountPatientSession below). signIn/signUp in
 // account/actions.ts set this same cookie on top of the Supabase Auth
 // session, since everything else in the app checks this, not Supabase's.
-// One flat 24-hour TTL everywhere: long enough that a booking session
-// realistically never expires mid-flow (payment, video call, coming back
-// later the same day), short enough that a shared/public device doesn't
-// stay signed in indefinitely.
+//
+// Two TTLs, not one flat one:
+// - LONG_TTL_SECONDS (~1 year, "stay logged in until you log out") for a
+//   real account -- password or Google -- passed explicitly by signIn/
+//   signUp/completeGoogleProfile/auth/callback. Safe to leave this long:
+//   the cookie is httpOnly+secure+sameSite=lax, and logging out clears it.
+// - TTL_SECONDS (24h, the default when no ttlSeconds is passed) for a
+//   password-less guest/AI-intake record, which might be a shared or
+//   borrowed phone with nothing to explicitly "log out" of -- this one
+//   still expires on its own.
 const COOKIE_NAME = "afya24_patient_session";
 const TTL_SECONDS = 24 * 60 * 60;
+export const LONG_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 function secretKey() {
   const secret = process.env.PATIENT_SESSION_SECRET;

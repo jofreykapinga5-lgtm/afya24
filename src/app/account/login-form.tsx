@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { SubmitButton } from "@/components/submit-button";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
@@ -65,6 +66,12 @@ export function LoginForm({
           required
           className="h-13 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
         />
+        <Link
+          href="/account/forgot-password"
+          className="-mt-1 block text-right text-xs font-semibold text-[#083273] hover:underline"
+        >
+          {t("account_forgot_password_link", locale)}
+        </Link>
         <SubmitButton
           pendingText={t("common_please_wait", locale)}
           className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25"

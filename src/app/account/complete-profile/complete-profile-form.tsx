@@ -51,7 +51,7 @@ export function CompleteProfileForm({
           type="tel"
           autoComplete="tel"
           placeholder={t("account_phone_hint_placeholder", locale)}
-          pattern="\+[0-9]{9,15}"
+          pattern="(0|\+?255)?[0-9]{9}"
           title={t("account_phone_hint_title", locale)}
           required
           className="h-13 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#77858b] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"

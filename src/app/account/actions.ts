@@ -7,6 +7,8 @@ import { createPatientSession, clearPatientSession, LONG_TTL_SECONDS } from "@/l
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
+import { generateResetCode, hashResetCode, resetCodeExpiry, verifyResetCode } from "@/lib/patient-password-reset";
+import { sendSms } from "@/lib/sms/africas-talking";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -22,7 +24,7 @@ export async function signUp(formData: FormData) {
     redirect(`${signupErrorPath}${encodeURIComponent(t("error_rate_limited", locale))}${redirectToParam}`);
   }
 
-  const phone = String(formData.get("phone") ?? "").trim();
+  const rawPhone = String(formData.get("phone") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   // Collected as two separate fields (classic form convention -- see
   // sign-up/page.tsx) but stored as one patients.full_name, same as every
@@ -32,7 +34,7 @@ export async function signUp(formData: FormData) {
   const fullName = `${firstName} ${lastName}`.trim();
   const agreedToTerms = formData.get("agreedToTerms") === "on";
 
-  if (!phone || !password || !firstName || !lastName) {
+  if (!rawPhone || !password || !firstName || !lastName) {
     redirect(`${signupErrorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}${redirectToParam}`);
   }
 
@@ -42,6 +44,13 @@ export async function signUp(formData: FormData) {
     );
   }
 
+  // The form now accepts local ("0712345678") as well as E.164 input -- every
+  // downstream use (the Auth user, patients.phone, the synthetic email) needs
+  // the same normalized value, or a patient who types the local format ends
+  // up with a patients.phone that doesn't match later phone-keyed lookups
+  // (password reset, phone-collision checks) that normalize before querying.
+  const phone = normalizeTanzanianPhoneToE164(rawPhone);
+
   const supabase = await createClient();
   const service = createServiceClient();
   const authEmail = patientAuthEmailFromPhone(phone);
@@ -50,11 +59,7 @@ export async function signUp(formData: FormData) {
     email: authEmail,
     password,
     email_confirm: true,
-    // The form's HTML pattern already enforces E.164, but normalize
-    // defensively in case this action is ever hit directly (bypassing
-    // client-side validation) -- matches the same fallback used by
-    // upgradeToFullAccount in src/app/consultation/actions.ts.
-    phone: normalizeTanzanianPhoneToE164(phone),
+    phone,
     phone_confirm: true,
     user_metadata: {
       full_name: fullName,
@@ -174,4 +179,112 @@ export async function signOut() {
   // is signed in.
   await clearPatientSession();
   redirect("/account");
+}
+
+// Patients sign in with a synthetic email (see lib/patient-auth-email.ts),
+// so Supabase's normal emailed-reset-link flow -- used for staff, see
+// doctor/actions.ts's requestStaffPasswordReset -- can't reach them at all.
+// This texts a 6-digit code to their real phone instead.
+export async function requestPatientPasswordReset(formData: FormData) {
+  const locale = await getServerLocale();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const errorPath = "/account/forgot-password?error=";
+
+  const { allowed } = await checkRateLimit("patientPasswordReset", await getClientIp());
+  if (!allowed) {
+    redirect(`${errorPath}${encodeURIComponent(t("error_rate_limited", locale))}`);
+  }
+
+  if (!phone) {
+    redirect(`${errorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}`);
+  }
+
+  const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
+  const service = createServiceClient();
+  const { data: patient } = await service
+    .from("patients")
+    .select("id, user_id")
+    .eq("phone", normalizedPhone)
+    .maybeSingle();
+
+  // Same next screen whether or not this phone belongs to a real account --
+  // confirming/denying here would let someone probe which numbers are
+  // registered patients.
+  if (patient?.user_id) {
+    const code = generateResetCode();
+    await service
+      .from("patients")
+      .update({ password_reset_code_hash: hashResetCode(code), password_reset_code_expires_at: resetCodeExpiry().toISOString() })
+      .eq("id", patient.id);
+
+    try {
+      await sendSms(normalizedPhone, `Your Afya24 password reset code is ${code}. It expires in 10 minutes.`);
+    } catch (err) {
+      // Still redirect to the same "check your phone" screen -- leaking an
+      // SMS-provider failure here would tell an attacker this number is a
+      // real account. A genuine patient who never got the text can just
+      // request a new one.
+      console.error("Failed to send patient password reset SMS", err);
+    }
+  }
+
+  redirect(`/account/reset-password?phone=${encodeURIComponent(normalizedPhone)}`);
+}
+
+export async function resetPatientPassword(formData: FormData) {
+  const locale = await getServerLocale();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const code = String(formData.get("code") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  const errorPath = `/account/reset-password?phone=${encodeURIComponent(phone)}&error=`;
+
+  const { allowed } = await checkRateLimit("auth", await getClientIp());
+  if (!allowed) {
+    redirect(`${errorPath}${encodeURIComponent(t("error_rate_limited", locale))}`);
+  }
+
+  if (!phone || !code || !password) {
+    redirect(`${errorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}`);
+  }
+
+  if (password.length < 8) {
+    redirect(`${errorPath}${encodeURIComponent(t("doctor_msg_password_min_length", locale))}`);
+  }
+
+  if (password !== confirmPassword) {
+    redirect(`${errorPath}${encodeURIComponent(t("error_passwords_dont_match", locale))}`);
+  }
+
+  const normalizedPhone = normalizeTanzanianPhoneToE164(phone);
+  const service = createServiceClient();
+  const { data: patient } = await service
+    .from("patients")
+    .select("id, user_id, password_reset_code_hash, password_reset_code_expires_at")
+    .eq("phone", normalizedPhone)
+    .maybeSingle();
+
+  const isValid =
+    Boolean(patient?.user_id) &&
+    Boolean(patient?.password_reset_code_hash) &&
+    Boolean(patient?.password_reset_code_expires_at) &&
+    new Date(patient!.password_reset_code_expires_at as string) > new Date() &&
+    verifyResetCode(code, patient!.password_reset_code_hash as string);
+
+  if (!isValid) {
+    redirect(`${errorPath}${encodeURIComponent(t("error_invalid_reset_code", locale))}`);
+  }
+
+  const { error: updateError } = await service.auth.admin.updateUserById(patient!.user_id as string, { password });
+  if (updateError) {
+    redirect(`${errorPath}${encodeURIComponent(updateError.message)}`);
+  }
+
+  // One-time use -- the code can't be replayed even if it somehow leaked.
+  await service
+    .from("patients")
+    .update({ password_reset_code_hash: null, password_reset_code_expires_at: null })
+    .eq("id", patient!.id);
+
+  redirect("/account?reset=1");
 }

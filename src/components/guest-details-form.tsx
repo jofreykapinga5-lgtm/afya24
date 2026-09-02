@@ -46,7 +46,15 @@ export function GuestDetailsForm({
           <label htmlFor="fallbackPhone" className="text-sm font-medium">
             {t("qualification_fallback_phone_label", locale)}
           </label>
-          <Input id="fallbackPhone" name="phone" type="tel" required />
+          <Input
+            id="fallbackPhone"
+            name="phone"
+            type="tel"
+            required
+            placeholder={t("account_phone_format_example", locale)}
+            pattern="(0|\+?255)?[0-9]{9}"
+            title={t("account_phone_hint_title", locale)}
+          />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <span className="text-sm font-medium">{t("lookup_dob_label", locale)}</span>

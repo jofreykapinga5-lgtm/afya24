@@ -7,6 +7,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export type AvailabilityActionState = {
   status: "idle" | "success" | "error";
@@ -84,6 +85,65 @@ export async function signIn(formData: FormData) {
   }
 
   redirect("/doctor");
+}
+
+// Staff have real email addresses (unlike patients, who sign in with a
+// synthetic email derived from phone -- see lib/patient-auth-email.ts and
+// note that flow needs its own SMS-based path, not this one), so Supabase's
+// own emailed-reset-link flow works unmodified. The link lands on the
+// existing /auth/confirm route (already handles any Supabase email OTP
+// type, recovery included), which then redirects to /doctor/reset-password
+// with an active recovery session already established.
+export async function requestStaffPasswordReset(formData: FormData) {
+  const locale = await getServerLocale();
+  const email = String(formData.get("email") ?? "").trim();
+  const path = "/doctor/forgot-password?";
+
+  const { allowed } = await checkRateLimit("staffPasswordReset", await getClientIp());
+  if (!allowed) {
+    redirect(`${path}${new URLSearchParams({ error: t("error_rate_limited", locale) }).toString()}`);
+  }
+
+  if (!email) {
+    redirect(`${path}${new URLSearchParams({ error: t("error_fill_all_fields", locale) }).toString()}`);
+  }
+
+  const supabase = await createClient();
+  // Deliberately no branch on whether the email actually matches an
+  // account -- confirming/denying that here would let someone probe for
+  // which emails are registered staff. Same response either way; a real
+  // recipient gets the email, anyone else gets nothing.
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.APP_BASE_URL ?? ""}/doctor/reset-password`,
+  });
+
+  redirect("/doctor/forgot-password?sent=1");
+}
+
+// Only reachable with an active recovery session (the /auth/confirm redirect
+// after clicking the emailed link sets one) -- updateUser() operates on
+// whichever session is currently active, no separate token needed here.
+export async function resetStaffPassword(formData: FormData) {
+  const locale = await getServerLocale();
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  const path = "/doctor/reset-password?";
+
+  if (!password || password.length < 8) {
+    redirect(`${path}${new URLSearchParams({ error: t("doctor_msg_password_min_length", locale) }).toString()}`);
+  }
+
+  if (password !== confirmPassword) {
+    redirect(`${path}${new URLSearchParams({ error: t("error_passwords_dont_match", locale) }).toString()}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    redirect(`${path}${new URLSearchParams({ error: error.message }).toString()}`);
+  }
+
+  redirect("/doctor?reset=1");
 }
 
 async function requireDoctorProvider() {

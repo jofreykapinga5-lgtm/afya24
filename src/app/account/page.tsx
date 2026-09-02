@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { safeRedirectPath } from "@/lib/safe-redirect";
@@ -11,9 +12,9 @@ import { LoginForm } from "./login-form";
 export default async function AccountSignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; redirectTo?: string }>;
+  searchParams: Promise<{ error?: string; redirectTo?: string; reset?: string }>;
 }) {
-  const { error, redirectTo } = await searchParams;
+  const { error, redirectTo, reset } = await searchParams;
   const locale = await getServerLocale();
 
   const supabase = await createClient();
@@ -52,6 +53,13 @@ export default async function AccountSignInPage({
             {t("account_login_title", locale)}
           </p>
         </div>
+
+        {reset && (
+          <div className="mt-5 flex items-start gap-2 rounded-2xl border border-[#c7ece7] bg-[#e8f7f4] px-3.5 py-3 text-sm text-[#087a7b]">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+            <p>{t("account_reset_password_success", locale)}</p>
+          </div>
+        )}
 
         <LoginForm locale={locale} error={error} redirectTo={redirectTo} />
 

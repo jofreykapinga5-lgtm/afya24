@@ -53,7 +53,15 @@ export function GuestBookingForm({ providerId, locale }: { providerId: string; l
       </label>
       <label className="grid gap-1.5 text-sm font-semibold">
         <span>{t("guest_booking_phone_label", locale)}</span>
-        <Input name="phone" type="tel" required autoComplete="tel" placeholder="+255712345678" />
+        <Input
+          name="phone"
+          type="tel"
+          required
+          autoComplete="tel"
+          placeholder={t("account_phone_format_example", locale)}
+          pattern="(0|\+?255)?[0-9]{9}"
+          title={t("account_phone_hint_title", locale)}
+        />
       </label>
 
       {error ? (

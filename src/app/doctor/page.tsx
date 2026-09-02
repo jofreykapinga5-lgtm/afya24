@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, TriangleAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle2, TriangleAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
@@ -13,9 +13,9 @@ import { signIn } from "./actions";
 export default async function DoctorSignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; redirectTo?: string }>;
+  searchParams: Promise<{ error?: string; redirectTo?: string; reset?: string }>;
 }) {
-  const { error, redirectTo = "/doctor/dashboard" } = await searchParams;
+  const { error, redirectTo = "/doctor/dashboard", reset } = await searchParams;
   const locale = await getServerLocale();
 
   const supabase = await createClient();
@@ -75,6 +75,13 @@ export default async function DoctorSignInPage({
           </div>
         )}
 
+        {reset && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3.5 py-3 text-sm">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p>{t("doctor_reset_password_success", locale)}</p>
+          </div>
+        )}
+
         <form action={signIn} className="mt-6 space-y-4">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
@@ -86,9 +93,17 @@ export default async function DoctorSignInPage({
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="password" className="text-sm font-medium">
-              {t("account_password_placeholder", locale)}
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                {t("account_password_placeholder", locale)}
+              </label>
+              <Link
+                href="/doctor/forgot-password"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {t("doctor_forgot_password_link", locale)}
+              </Link>
+            </div>
             <Input
               id="password"
               name="password"

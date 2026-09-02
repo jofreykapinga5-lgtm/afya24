@@ -1,6 +1,6 @@
 import "server-only";
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/service";
 
 // Signed session for patients -- this is the only thing scoping "am I
@@ -31,12 +31,21 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
-export async function createPatientSession(patientId: string, ttlSeconds: number = TTL_SECONDS) {
-  const token = await new SignJWT({ patientId })
+// Mints the same JWT the cookie carries, without touching cookies at all --
+// factored out so the mobile API can return this raw string in a JSON body
+// (there's no cookie jar to write to from a React Native client) while the
+// web app keeps using createPatientSession below, which wraps this and also
+// sets the cookie.
+export async function signPatientSessionToken(patientId: string, ttlSeconds: number = TTL_SECONDS) {
+  return await new SignJWT({ patientId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${ttlSeconds}s`)
     .sign(secretKey());
+}
+
+export async function createPatientSession(patientId: string, ttlSeconds: number = TTL_SECONDS) {
+  const token = await signPatientSessionToken(patientId, ttlSeconds);
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
@@ -74,9 +83,24 @@ export async function verifyAccountClaimToken(token: string): Promise<string | n
   }
 }
 
-export async function getPatientSession(): Promise<{ patientId: string } | null> {
+// Bearer header first, cookie as the fallback -- additive for the mobile app
+// (which has no cookie jar and carries this same JWT in an Authorization
+// header instead, stored in expo-secure-store on the client). Every existing
+// web caller is unaffected: a browser request never sends this header, so it
+// falls straight through to the cookie exactly as before.
+async function readSessionToken(): Promise<string | null> {
+  const headerStore = await headers();
+  const authHeader = headerStore.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice("Bearer ".length).trim();
+  }
+
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
+  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+}
+
+export async function getPatientSession(): Promise<{ patientId: string } | null> {
+  const token = await readSessionToken();
   if (!token) return null;
 
   try {

@@ -18,16 +18,23 @@ import { useSearchParams } from "next/navigation";
 // blocked by mobile browsers as a security measure, so the primary path
 // here is a real tappable link (a genuine user gesture), with a same-target
 // auto-redirect attempt as a courtesy that works where the browser allows it.
+//
+// Supabase's PKCE flow lands here with ?code=... in the query string (not a
+// #fragment -- that was the earlier implicit-flow shape) -- that code gets
+// forwarded onto the target as its own query param; the app exchanges it
+// for a session itself using the code_verifier it generated at the start.
 function BridgeContent() {
   const params = useSearchParams();
   const target = params.get("target");
+  const code = params.get("code");
+  const errorDescription = params.get("error_description");
   const [autoTried, setAutoTried] = useState(false);
 
   const destination = (() => {
     if (!target) return null;
-    if (typeof window === "undefined") return target;
-    const hash = window.location.hash; // carries #access_token=...&refresh_token=...
-    return hash ? `${target}${hash}` : target;
+    if (code) return `${target}${target.includes("?") ? "&" : "?"}code=${encodeURIComponent(code)}`;
+    if (errorDescription) return `${target}${target.includes("?") ? "&" : "?"}error_description=${encodeURIComponent(errorDescription)}`;
+    return null;
   })();
 
   useEffect(() => {

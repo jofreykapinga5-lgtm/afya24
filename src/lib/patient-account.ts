@@ -84,6 +84,25 @@ function randomAuthPassword(): string {
   return randomBytes(24).toString("base64url");
 }
 
+// Supabase's admin API has no getUserByEmail -- only listUsers (paged) or
+// getUserById. Only ever called from resolvePatientForVerifiedPhone's
+// createUser-conflict fallback (rare: a real race or a stray leftover
+// user), never on a normal request, so paging through is an acceptable
+// cost for a lookup that isn't on the common path.
+async function findAuthUserByEmail(
+  service: ReturnType<typeof createServiceClient>,
+  email: string
+): Promise<{ id: string } | null> {
+  for (let page = 1; page <= 20; page += 1) {
+    const { data, error } = await service.auth.admin.listUsers({ page, perPage: 200 });
+    if (error || !data.users.length) return null;
+    const match = data.users.find((u) => u.email === email);
+    if (match) return { id: match.id };
+    if (data.users.length < 200) return null;
+  }
+  return null;
+}
+
 // `password` is the just-(re)generated random Auth password -- returned so
 // the caller can immediately establish a real Supabase session with it
 // (signInWithPassword, server-side only) on top of the app's own
@@ -118,7 +137,7 @@ export async function resolvePatientForVerifiedPhone(
   const authEmail = patientAuthEmailFromPhone(phone);
   const password = randomAuthPassword();
 
-  const { data: existing } = await service.from("patients").select("id, user_id").eq("phone", phone).maybeSingle();
+  let existing = (await service.from("patients").select("id, user_id").eq("phone", phone).maybeSingle()).data;
 
   if (existing?.user_id) {
     const { error } = await service.auth.admin.updateUserById(existing.user_id as string, { password });
@@ -126,7 +145,7 @@ export async function resolvePatientForVerifiedPhone(
     return { patientId: existing.id as string, userId: existing.user_id as string, isNewAccount: false, password };
   }
 
-  const { data: authData, error: authError } = await service.auth.admin.createUser({
+  const created = await service.auth.admin.createUser({
     email: authEmail,
     password,
     email_confirm: true,
@@ -134,13 +153,39 @@ export async function resolvePatientForVerifiedPhone(
     phone_confirm: true,
     user_metadata: { phone, role: "patient" },
   });
-  if (authError || !authData.user) {
-    throw new Error(authError?.message ?? "Could not create your account. Please try again.");
+
+  let userId: string;
+  if (created.error || !created.data.user) {
+    // A concurrent verify for the same phone (SMS autofill triggering a
+    // second submit alongside a manual tap is the realistic trigger) can
+    // race here: both requests see no existing row, both call createUser,
+    // and the loser gets Supabase's "already registered" error instead of
+    // a clean result. Rather than fail a real patient over that, re-check
+    // for the row the winner just created/claimed -- and if there's still
+    // no row at all (a genuinely stray Auth user with no patients row, e.g.
+    // from an earlier attempt that failed after createUser but before the
+    // insert below), adopt that dangling Auth user instead of leaving the
+    // phone permanently stuck.
+    existing = (await service.from("patients").select("id, user_id").eq("phone", phone).maybeSingle()).data;
+    if (existing?.user_id) {
+      const { error } = await service.auth.admin.updateUserById(existing.user_id as string, { password });
+      if (error) throw new Error(error.message);
+      return { patientId: existing.id as string, userId: existing.user_id as string, isNewAccount: false, password };
+    }
+
+    const strayUser = await findAuthUserByEmail(service, authEmail);
+    if (!strayUser) {
+      throw new Error(created.error?.message ?? "Could not create your account. Please try again.");
+    }
+    const { error: updateError } = await service.auth.admin.updateUserById(strayUser.id, { password });
+    if (updateError) throw new Error(updateError.message);
+    userId = strayUser.id;
+  } else {
+    userId = created.data.user.id;
   }
-  const userId = authData.user.id;
 
   if (existing) {
-    // Orphan claim -- attach the new Auth user to the existing record rather
+    // Orphan claim -- attach the Auth user to the existing record rather
     // than inserting a duplicate.
     const { error } = await service.from("patients").update({ user_id: userId }).eq("id", existing.id);
     if (error) {

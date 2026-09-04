@@ -21,17 +21,19 @@ type LimiterName =
   | "claimToken"
   | "lookup"
   | "staffPasswordReset"
-  | "patientPasswordReset";
+  | "patientOtp";
 
 // Limits chosen per endpoint's actual abuse cost: password/AI attempts are
 // cheap to retry so get a short tight window, account/application creation
 // is spammier to clean up afterward so gets a longer window with fewer tries.
 // "payment" is deliberately the tightest -- each attempt can push a real
 // M-Pesa/Airtel prompt to the patient's phone, so repeat calls are a
-// harassment/cost vector, not just a DB-spam one. "patientPasswordReset" is
-// just as tight for the same reason -- each attempt sends a real SMS, a cost
-// per call, not just a DB write; "staffPasswordReset" is email-based (free)
-// so gets a looser window, matching "auth".
+// harassment/cost vector, not just a DB-spam one. "patientOtp" is just as
+// tight for the same reason -- each request sends (or will, once a real SMS
+// provider is wired) a real SMS, a cost per call, not just a DB write --
+// this is now the primary sign-in/sign-up path, not just password reset, so
+// it's named generically; "staffPasswordReset" is email-based (free, doctor
+// portal only) so gets a looser window, matching "auth".
 const LIMITER_CONFIG: Record<LimiterName, { max: number; window: `${number} ${"s" | "m" | "h"}` }> = {
   auth: { max: 10, window: "5 m" },
   signup: { max: 5, window: "1 h" },
@@ -42,7 +44,7 @@ const LIMITER_CONFIG: Record<LimiterName, { max: number; window: `${number} ${"s
   claimToken: { max: 20, window: "10 m" },
   lookup: { max: 10, window: "10 m" },
   staffPasswordReset: { max: 5, window: "10 m" },
-  patientPasswordReset: { max: 5, window: "10 m" },
+  patientOtp: { max: 5, window: "10 m" },
 };
 
 const limiters = new Map<LimiterName, Ratelimit>();

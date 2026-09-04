@@ -1,20 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
-import { LoginForm } from "./login-form";
+import { PhoneOtpForm } from "./phone-otp-form";
 
 export default async function AccountSignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; redirectTo?: string; reset?: string }>;
+  searchParams: Promise<{ error?: string; redirectTo?: string }>;
 }) {
-  const { error, redirectTo, reset } = await searchParams;
+  const { error, redirectTo } = await searchParams;
   const locale = await getServerLocale();
 
   const supabase = await createClient();
@@ -54,24 +53,7 @@ export default async function AccountSignInPage({
           </p>
         </div>
 
-        {reset && (
-          <div className="mt-5 flex items-start gap-2 rounded-2xl border border-[#c7ece7] bg-[#e8f7f4] px-3.5 py-3 text-sm text-[#087a7b]">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-            <p>{t("account_reset_password_success", locale)}</p>
-          </div>
-        )}
-
-        <LoginForm locale={locale} error={error} redirectTo={redirectTo} />
-
-        <div className="mt-5 rounded-2xl bg-[#f8fbfa] p-4 text-center text-sm text-[#5d6970]">
-          <span>{t("account_new_to_afya24", locale)}</span>{" "}
-          <Link
-            href={redirectTo ? `/account/sign-up?redirectTo=${encodeURIComponent(redirectTo)}` : "/account/sign-up"}
-            className="font-bold text-[#083273] hover:underline"
-          >
-            {t("account_create_account_link", locale)}
-          </Link>
-        </div>
+        <PhoneOtpForm locale={locale} error={error} redirectTo={redirectTo} ctaLabel={t("account_continue_cta", locale)} />
       </div>
     </main>
   );

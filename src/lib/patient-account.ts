@@ -1,6 +1,8 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/service";
 import { generateReferenceNumber } from "@/lib/reference-number";
+import { patientAuthEmailFromPhone } from "@/lib/patient-auth-email";
 import type { Locale } from "@/lib/types";
 
 // Lightweight, no-password patient record created directly by the AI intake
@@ -37,6 +39,128 @@ export async function createPatientAccountRecord(input: {
   }
 
   return { patientId: data.id as string };
+}
+
+// Shared by every path that creates a real, sign-in-able account (web/mobile
+// signUp, web/mobile Google complete-profile) -- NOT by guest-booking or AI-
+// intake paths, which create a lightweight record on purpose and have no
+// account to collide with in the same sense.
+//
+// A phone number already on file can mean two different things, and they
+// need different handling:
+//   - "account": patients.user_id is set -- a real account (password or
+//     Google) already owns this phone. Blocking is right here (a phone can
+//     be shared within a family -- see completeGoogleProfile's own
+//     reasoning -- so this never silently attaches a new identity to
+//     someone else's record), and the person CAN actually sign in to it, so
+//     the caller should offer a real "Log in" link.
+//   - "orphan": patients.user_id is null -- a guest/AI-intake record with no
+//     password and no Google link. Nobody can ever "sign in" to it (there is
+//     no credential for it at all), so blocking with "sign in instead" is a
+//     dead end, not just unfriendly -- see the account-deletion investigation
+//     that found this. Still blocks (same family-sharing reasoning), but the
+//     caller must NOT claim it can be signed into.
+export type PhoneCollision =
+  | { status: "none" }
+  | { status: "account"; patientId: string }
+  | { status: "orphan"; patientId: string };
+
+export async function checkPatientPhoneCollision(
+  service: ReturnType<typeof createServiceClient>,
+  phone: string
+): Promise<PhoneCollision> {
+  const { data } = await service.from("patients").select("id, user_id").eq("phone", phone).maybeSingle();
+  if (!data) return { status: "none" };
+  return data.user_id ? { status: "account", patientId: data.id as string } : { status: "orphan", patientId: data.id as string };
+}
+
+// Never stored or shown to the patient -- phone+OTP is the only credential
+// they ever use. This exists purely so a real Supabase Auth user (and
+// therefore patients.user_id) can still be created/refreshed, which the rest
+// of the app (RLS's own_patient_id(), the web dashboard's supabase.auth
+// session, checkPatientPhoneCollision's "account" vs "orphan" distinction)
+// already depends on -- see resolvePatientForVerifiedPhone below.
+function randomAuthPassword(): string {
+  return randomBytes(24).toString("base64url");
+}
+
+// `password` is the just-(re)generated random Auth password -- returned so
+// the caller can immediately establish a real Supabase session with it
+// (signInWithPassword, server-side only) on top of the app's own
+// patient-session JWT. Never shown to the patient; a plain sign-in later
+// always goes through OTP again, which regenerates a new one.
+export type ResolvedPatient = { patientId: string; userId: string; isNewAccount: boolean; password: string };
+
+// The one place a verified phone (see lib/patient-otp.ts's verifyPatientOtp)
+// turns into a real, sign-in-able account -- used by both the web and mobile
+// verify-otp handlers, so sign-up, sign-in, and claiming an orphaned
+// guest/AI-intake record are all just this one function, not three separate
+// code paths:
+//   - no patients row for this phone -> create one (full_name left null;
+//     nothing collected at sign-up beyond the phone itself -- see the
+//     account/sign-up screens) plus a fresh Supabase Auth user.
+//   - an orphan row (patients.user_id null, e.g. from AI intake or a guest
+//     booking) -> attach a new Supabase Auth user to that SAME row instead
+//     of creating a second one. This is only safe because OTP verification
+//     just proved the caller actually owns this phone -- checkPatientPhoneCollision's
+//     old "orphan" block (a dead-end "sign in" message, see that type's own
+//     comment) no longer applies once proving phone ownership is exactly
+//     what OTP does.
+//   - an existing account row -> nothing to create; this is just a sign-in.
+// Every branch (re-)issues a random Auth password and returns the userId so
+// the caller can immediately establish a real Supabase session (signInWithPassword
+// with that same random password, server-side only, never exposed) on top of
+// the app's own patient-session JWT.
+export async function resolvePatientForVerifiedPhone(
+  service: ReturnType<typeof createServiceClient>,
+  phone: string
+): Promise<ResolvedPatient> {
+  const authEmail = patientAuthEmailFromPhone(phone);
+  const password = randomAuthPassword();
+
+  const { data: existing } = await service.from("patients").select("id, user_id").eq("phone", phone).maybeSingle();
+
+  if (existing?.user_id) {
+    const { error } = await service.auth.admin.updateUserById(existing.user_id as string, { password });
+    if (error) throw new Error(error.message);
+    return { patientId: existing.id as string, userId: existing.user_id as string, isNewAccount: false, password };
+  }
+
+  const { data: authData, error: authError } = await service.auth.admin.createUser({
+    email: authEmail,
+    password,
+    email_confirm: true,
+    phone,
+    phone_confirm: true,
+    user_metadata: { phone, role: "patient" },
+  });
+  if (authError || !authData.user) {
+    throw new Error(authError?.message ?? "Could not create your account. Please try again.");
+  }
+  const userId = authData.user.id;
+
+  if (existing) {
+    // Orphan claim -- attach the new Auth user to the existing record rather
+    // than inserting a duplicate.
+    const { error } = await service.from("patients").update({ user_id: userId }).eq("id", existing.id);
+    if (error) {
+      await service.auth.admin.deleteUser(userId);
+      throw new Error(error.message);
+    }
+    return { patientId: existing.id as string, userId, isNewAccount: false, password };
+  }
+
+  const { data: inserted, error: insertError } = await service
+    .from("patients")
+    .insert({ user_id: userId, phone })
+    .select("id")
+    .single();
+  if (insertError || !inserted) {
+    await service.auth.admin.deleteUser(userId);
+    throw new Error(insertError?.message ?? "Could not create your account. Please try again.");
+  }
+
+  return { patientId: inserted.id as string, userId, isNewAccount: true, password };
 }
 
 // Assigns a patient's permanent reference number the first time it's
@@ -92,4 +216,71 @@ export async function ensurePatientReferenceNumber(
   }
 
   throw new Error("Could not assign a reference number.");
+}
+
+// App Store Guideline 5.1.1(v): real in-app self-service account deletion,
+// not "contact support to have your account removed" (which is what the
+// Privacy Policy said before this existed).
+//
+// This is NOT a hard delete of the patients row. appointments, payments,
+// prescriptions, lab_orders, referrals, consultation_orders,
+// consultation_feedback, visit_documents, and files all reference
+// patients.id and are real clinical/financial records someone else (a
+// doctor's own patient history, admin payment reconciliation, a signed
+// prescription) legitimately needs to keep -- deleting the row outright
+// would cascade-destroy or orphan all of that with no way back. So this:
+//   1. Hard-deletes the patient's own private self-tracking data (nothing
+//      else references patient_self_medications/_doses, patient_care_plans,
+//      or patient_readings -- there's no reason to keep it and every reason
+//      not to).
+//   2. Anonymizes the identifying fields on the patients row itself and
+//      sets deleted_at, rather than removing the row.
+//   3. Deletes the Supabase Auth user (if there is one -- a lightweight
+//      guest-booking record never has one) so this person genuinely cannot
+//      sign back in.
+// hospital_reference_number is deliberately left alone -- it's an internal
+// reference number staff use to look up records, not personal data on its
+// own, and clearing it would break that lookup for the records being kept.
+export async function deletePatientAccount(patientId: string): Promise<void> {
+  const service = createServiceClient();
+
+  const { data: meds } = await service
+    .from("patient_self_medications")
+    .select("id")
+    .eq("patient_id", patientId);
+  const medicationIds = (meds ?? []).map((m) => m.id as string);
+  if (medicationIds.length) {
+    await service.from("patient_self_medication_doses").delete().in("medication_id", medicationIds);
+  }
+  await service.from("patient_self_medications").delete().eq("patient_id", patientId);
+  await service.from("patient_care_plans").delete().eq("patient_id", patientId);
+  await service.from("patient_readings").delete().eq("patient_id", patientId);
+  await service.from("patient_notifications").delete().eq("patient_id", patientId);
+
+  const { data: patient } = await service.from("patients").select("user_id").eq("id", patientId).maybeSingle();
+
+  const { error } = await service
+    .from("patients")
+    .update({
+      full_name: "Deleted patient",
+      date_of_birth: null,
+      gender: null,
+      phone: null,
+      emergency_contact: null,
+      address: null,
+      blood_group: null,
+      insurance_number: null,
+      national_id_reference: null,
+      pin_hash: null,
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("id", patientId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (patient?.user_id) {
+    await service.auth.admin.deleteUser(patient.user_id as string).catch(() => undefined);
+  }
 }

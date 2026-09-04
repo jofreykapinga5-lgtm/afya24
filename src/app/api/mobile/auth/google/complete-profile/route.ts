@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createStatelessAuthClient } from "@/lib/supabase/anon";
 import { createServiceClient } from "@/lib/supabase/service";
+import { checkPatientPhoneCollision } from "@/lib/patient-account";
 import { signPatientSessionToken, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { toTitleCase } from "@/lib/format-name";
@@ -25,6 +26,11 @@ export async function POST(request: NextRequest) {
   const accessToken = typeof body?.accessToken === "string" ? body.accessToken : "";
   const fullName = typeof body?.fullName === "string" ? body.fullName.trim() : "";
   const rawPhone = typeof body?.phone === "string" ? body.phone.trim() : "";
+  // Optional -- Google never provides this (gender sits behind Google's
+  // restricted "sensitive scopes," effectively unreachable for an app like
+  // this), so this is the only place it can come from.
+  const rawGender = typeof body?.gender === "string" ? body.gender : "";
+  const gender = rawGender === "female" || rawGender === "male" || rawGender === "other" ? rawGender : null;
 
   if (!accessToken || !fullName || !rawPhone) {
     return NextResponse.json(
@@ -44,18 +50,32 @@ export async function POST(request: NextRequest) {
 
   // A phone can already belong to a patient record from an earlier visit,
   // and it can be shared within a family -- same guard as every other
-  // account-creation path in this app.
-  const { data: phoneMatch } = await service.from("patients").select("id").eq("phone", phone).maybeSingle();
-  if (phoneMatch) {
+  // account-creation path in this app. Which error code depends on whether
+  // that record actually has a real account behind it -- "sign in instead"
+  // is a dead end for a guest/AI-intake record with no password or Google
+  // link at all (see checkPatientPhoneCollision's own comment).
+  const collision = await checkPatientPhoneCollision(service, phone);
+  if (collision.status === "account") {
     return NextResponse.json(
-      { ok: false, error_code: "phone_exists", error: "We already have a patient record under this phone number. If this is you, sign in instead." },
+      { ok: false, error_code: "phone_exists", error: "We already have an account under this phone number." },
+      { status: 409 }
+    );
+  }
+  if (collision.status === "orphan") {
+    return NextResponse.json(
+      {
+        ok: false,
+        error_code: "phone_orphaned",
+        error:
+          "This phone number already has a patient file with us, but it isn't linked to a sign-in account yet. Please use a different number, or contact support@afya24.com to link it.",
+      },
       { status: 409 }
     );
   }
 
   const { data: inserted, error: insertError } = await service
     .from("patients")
-    .insert({ user_id: data.user.id, full_name: fullName, phone })
+    .insert({ user_id: data.user.id, full_name: fullName, phone, gender })
     .select("id")
     .single();
 

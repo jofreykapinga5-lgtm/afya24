@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { checkPatientPhoneCollision } from "@/lib/patient-account";
 import { createPatientSession, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
@@ -35,6 +36,13 @@ export async function completeGoogleProfile(formData: FormData) {
 
   const fullName = String(formData.get("fullName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  // Optional -- Google never provides this (gender is locked behind
+  // Google's restricted "sensitive scopes," effectively unreachable for an
+  // app like this), so this is the only place it can come from. Left
+  // optional rather than required so this step doesn't gain extra signup
+  // friction over what it already asks for.
+  const rawGender = String(formData.get("gender") ?? "").trim();
+  const gender = rawGender === "female" || rawGender === "male" || rawGender === "other" ? rawGender : null;
 
   if (!fullName || !phone) {
     redirect(`${errorPath}${encodeURIComponent(t("error_fill_all_fields", locale))}${redirectToParam}`);
@@ -47,13 +55,19 @@ export async function completeGoogleProfile(formData: FormData) {
   // reasoning as every other account-creation path here: a phone can be
   // shared within a family, so this blocks rather than silently attaching
   // this Google identity to a record that might belong to someone else.
-  const { data: phoneMatch } = await service
-    .from("patients")
-    .select("id")
-    .eq("phone", normalizedPhone)
-    .maybeSingle();
-  if (phoneMatch) {
-    redirect(`${errorPath}${encodeURIComponent(t("doctor_direct_booking_phone_exists", locale))}${redirectToParam}`);
+  // Which error (and whether "log in instead" is even true) depends on
+  // whether that record has a real account behind it -- see
+  // checkPatientPhoneCollision's own comment.
+  const collision = await checkPatientPhoneCollision(service, normalizedPhone);
+  if (collision.status === "account") {
+    redirect(
+      `${errorPath}${encodeURIComponent(t("account_phone_taken_body", locale))}${redirectToParam}&errorCode=phone_exists`
+    );
+  }
+  if (collision.status === "orphan") {
+    redirect(
+      `${errorPath}${encodeURIComponent(t("account_phone_orphaned_body", locale))}${redirectToParam}&errorCode=phone_orphaned`
+    );
   }
 
   const { data: inserted, error: insertError } = await service
@@ -62,6 +76,7 @@ export async function completeGoogleProfile(formData: FormData) {
       user_id: user.id,
       full_name: fullName,
       phone: normalizedPhone,
+      gender,
       preferred_language: locale,
     })
     .select("id")

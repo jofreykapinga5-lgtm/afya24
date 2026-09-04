@@ -1,15 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStaffUser } from "@/lib/staff-redirect-guard";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
-import { SubmitButton } from "@/components/submit-button";
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
-import { signUp } from "../actions";
+import { PhoneOtpForm } from "../phone-otp-form";
 
 export default async function AccountSignUpPage({
   searchParams,
@@ -54,109 +51,7 @@ export default async function AccountSignUpPage({
           <p className="mt-1.5 text-sm text-[#60717a]">{t("account_signup_subtitle", locale)}</p>
         </div>
 
-        {error && (
-          <div className="mt-5 flex items-start gap-2 rounded-2xl border border-urgent/30 bg-urgent-soft px-3.5 py-3 text-sm text-urgent">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}
-
-        <form action={signUp} className="mt-5 space-y-3.5">
-          {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label htmlFor="signup-firstName" className="text-sm font-medium text-[#071923]">
-                {t("account_first_name_label", locale)}
-              </label>
-              <input
-                id="signup-firstName"
-                name="firstName"
-                autoComplete="given-name"
-                required
-                className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="signup-lastName" className="text-sm font-medium text-[#071923]">
-                {t("account_last_name_label", locale)}
-              </label>
-              <input
-                id="signup-lastName"
-                name="lastName"
-                autoComplete="family-name"
-                required
-                className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="signup-phone" className="text-sm font-medium text-[#071923]">
-              {t("account_phone_placeholder", locale)}
-            </label>
-            <input
-              id="signup-phone"
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              placeholder={t("account_phone_format_example", locale)}
-              pattern="(0|\+?255)?[0-9]{9}"
-              title={t("account_phone_hint_title", locale)}
-              required
-              className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none placeholder:text-[#a8b4b8] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="signup-password" className="text-sm font-medium text-[#071923]">
-              {t("account_password_placeholder", locale)}
-            </label>
-            <input
-              id="signup-password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              className="h-12 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-base text-[#071923] outline-none focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-            />
-          </div>
-
-          <label className="flex items-start gap-2.5 pt-0.5 text-xs leading-5 text-[#24343b]">
-            <input
-              type="checkbox"
-              name="agreedToTerms"
-              required
-              className="mt-0.5 size-4 shrink-0 rounded border-[#b9cbc8] text-[#01b7bb] outline-none focus-visible:ring-3 focus-visible:ring-[#01b7bb]/30"
-            />
-            <span>
-              {t("account_agree_prefix", locale)}{" "}
-              <Link href="/terms" className="font-semibold text-[#083273] hover:underline">
-                {t("account_terms_of_service_link", locale)}
-              </Link>{" "}
-              {t("account_and", locale)}{" "}
-              <Link href="/privacy" className="font-semibold text-[#083273] hover:underline">
-                {t("account_privacy_policy_link", locale)}
-              </Link>
-              .
-            </span>
-          </label>
-
-          <SubmitButton
-            pendingText={t("common_please_wait", locale)}
-            className="h-12 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25"
-          >
-            {t("account_create_cta", locale)}
-          </SubmitButton>
-        </form>
-
-        <div className="my-4 flex items-center gap-3 text-xs font-semibold text-[#8a969c]">
-          <span className="h-px flex-1 bg-[#e5ecea]" />
-          {t("account_divider_or", locale)}
-          <span className="h-px flex-1 bg-[#e5ecea]" />
-        </div>
-
-        <GoogleSignInButton locale={locale} redirectTo={redirectTo} className="h-13 w-full rounded-full" />
+        <PhoneOtpForm locale={locale} error={error} redirectTo={redirectTo} ctaLabel={t("account_create_cta", locale)} />
 
         <div className="mt-4 rounded-2xl bg-[#f8fbfa] p-3 text-center text-sm text-[#5d6970]">
           <span>{t("account_already_customer", locale)}</span>{" "}

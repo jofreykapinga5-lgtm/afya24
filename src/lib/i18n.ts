@@ -384,30 +384,36 @@ const dict = {
   account_password_placeholder: { en: "Password", sw: "Nenosiri" },
   account_new_to_afya24: { en: "New to Afya24?", sw: "Mgeni Afya24?" },
   account_create_account_link: { en: "Create an account", sw: "Fungua akaunti" },
-  account_forgot_password_link: { en: "Forgot password?", sw: "Umesahau nenosiri?" },
-  account_forgot_password_title: { en: "Reset your password", sw: "Weka upya nenosiri lako" },
-  account_forgot_password_body: {
-    en: "Enter your phone number and we'll text you a code to reset your password.",
-    sw: "Weka nambari yako ya simu na tutakutumia kodi ya kuweka upya nenosiri lako.",
+  account_continue_cta: { en: "Continue", sw: "Endelea" },
+  account_otp_terms_disclosure: {
+    en: "By continuing, you agree to our Terms of Service and Privacy Policy.",
+    sw: "Kwa kuendelea, unakubali Vigezo vya Huduma na Sera yetu ya Faragha.",
   },
-  account_forgot_password_cta: { en: "Send code", sw: "Tuma kodi" },
-  account_reset_password_title: { en: "Enter your code", sw: "Weka kodi yako" },
-  account_reset_password_body: {
-    en: "We texted a 6-digit code to your phone. It expires in 10 minutes.",
-    sw: "Tumekutumia kodi ya tarakimu 6 kwa simu yako. Inaisha muda baada ya dakika 10.",
+  account_verify_title: { en: "Enter your code", sw: "Weka kodi yako" },
+  account_verify_body: {
+    en: "We sent a 6-digit code to",
+    sw: "Tumetuma kodi ya tarakimu 6 kwa",
   },
-  account_reset_password_code_label: { en: "Code", sw: "Kodi" },
-  account_reset_password_new_label: { en: "New password", sw: "Nenosiri jipya" },
-  account_reset_password_confirm_label: { en: "Confirm new password", sw: "Thibitisha nenosiri jipya" },
-  account_reset_password_cta: { en: "Set new password", sw: "Weka nenosiri jipya" },
-  account_reset_password_resend: { en: "Didn't get a code? Send again", sw: "Hukupata kodi? Tuma tena" },
-  account_reset_password_success: {
-    en: "Password updated. Sign in with your new password.",
-    sw: "Nenosiri limesasishwa. Ingia kwa nenosiri jipya.",
+  account_verify_code_label: { en: "Code", sw: "Kodi" },
+  account_verify_code_placeholder: { en: "6-digit code", sw: "Kodi ya tarakimu 6" },
+  account_verify_cta: { en: "Verify and continue", sw: "Thibitisha na uendelee" },
+  account_verify_resend: { en: "Didn't get a code? Send again", sw: "Hukupata kodi? Tuma tena" },
+  account_verify_change_number: { en: "Change phone number", sw: "Badilisha nambari ya simu" },
+  account_dev_otp_banner: {
+    en: "SMS delivery isn't live yet -- your code is",
+    sw: "Utumaji wa SMS bado haujaanza -- kodi yako ni",
   },
-  error_invalid_reset_code: {
-    en: "That code is incorrect or has expired. Request a new one.",
-    sw: "Kodi hiyo si sahihi au imeisha muda. Omba nyingine.",
+  error_otp_invalid: {
+    en: "That code is incorrect. Please try again.",
+    sw: "Kodi hiyo si sahihi. Tafadhali jaribu tena.",
+  },
+  error_otp_expired: {
+    en: "That code has expired. Request a new one.",
+    sw: "Kodi hiyo imeisha muda. Omba nyingine.",
+  },
+  error_otp_too_many_attempts: {
+    en: "Too many incorrect attempts. Request a new code.",
+    sw: "Umejaribu vibaya mara nyingi. Omba kodi mpya.",
   },
   account_divider_or: { en: "OR", sw: "AU" },
   account_continue_without_account: {
@@ -429,6 +435,12 @@ const dict = {
     sw: "Google haikutupatia namba ya simu, na tunahitaji moja ili kuwasiliana nawe kuhusu ziara zako. Iongeze ili kumaliza kuweka akaunti yako.",
   },
   complete_profile_cta: { en: "Finish setting up my account", sw: "Maliza kuweka akaunti yangu" },
+  account_dob_label: { en: "Date of birth (optional)", sw: "Tarehe ya kuzaliwa (si lazima)" },
+  account_gender_label: { en: "Gender (optional)", sw: "Jinsia (si lazima)" },
+  account_gender_placeholder: { en: "Prefer not to say", sw: "Napendelea kutosema" },
+  account_gender_female: { en: "Female", sw: "Mwanamke" },
+  account_gender_male: { en: "Male", sw: "Mwanaume" },
+  account_gender_other: { en: "Other", sw: "Nyingine" },
   account_signup_title: {
     en: "Create your account",
     sw: "Fungua akaunti yako",
@@ -610,6 +622,20 @@ const dict = {
   doctor_direct_booking_phone_exists: {
     en: "We already have a patient record under this phone number. If this is you, log in instead. If not, contact support@afya24.com for help.",
     sw: "Tayari tuna rekodi ya mgonjwa kwa namba hii ya simu. Kama ni wewe, ingia badala yake. Kama sio wewe, wasiliana na support@afya24.com kwa msaada.",
+  },
+  // Used specifically by signUp/completeGoogleProfile -- real account
+  // creation, where the colliding record's user_id tells us whether "log in
+  // instead" is actually possible (see checkPatientPhoneCollision's own
+  // comment). doctor_direct_booking_phone_exists above stays as the generic
+  // guest-booking/AI-intake message, unchanged.
+  account_phone_taken_body: {
+    en: "We already have an account under this phone number.",
+    sw: "Tayari tuna akaunti chini ya namba hii ya simu.",
+  },
+  account_phone_taken_login: { en: "Log in instead", sw: "Ingia badala yake" },
+  account_phone_orphaned_body: {
+    en: "This phone number already has a patient file with us, but it isn't linked to a sign-in account yet. Please use a different number, or contact support@afya24.com to link it.",
+    sw: "Namba hii ya simu tayari ina faili la mgonjwa kwetu, lakini halijaunganishwa na akaunti ya kuingia. Tafadhali tumia namba nyingine, au wasiliana na support@afya24.com ili kuliunganisha.",
   },
   pharmacy_checkout_no_session_body: {
     en: "Checkout needs a patient file. Describe what's going on to Afya24, or log in if you're a returning patient, then come back to check out.",
@@ -1339,6 +1365,7 @@ const dict = {
   account_dashboard_nav_payments: { en: "Payments", sw: "Malipo" },
   account_dashboard_nav_pharmacy: { en: "Pharmacy", sw: "Duka la dawa" },
   account_dashboard_nav_files: { en: "Files", sw: "Faili" },
+  account_dashboard_nav_settings: { en: "Settings", sw: "Mipangilio" },
   account_dashboard_need_care_title: { en: "Need care now?", sw: "Unahitaji huduma sasa?" },
   account_dashboard_need_care_body: {
     en: "Start with Afya24 intake, then choose an available doctor.",
@@ -1429,6 +1456,38 @@ const dict = {
   account_dashboard_file_kind_image: { en: "image", sw: "picha" },
   account_dashboard_file_kind_audio: { en: "audio", sw: "sauti" },
   account_dashboard_file_kind_document: { en: "document", sw: "hati" },
+
+  account_dashboard_settings_title: { en: "Account settings", sw: "Mipangilio ya akaunti" },
+  account_dashboard_settings_body: {
+    en: "Manage your Afya24 account.",
+    sw: "Simamia akaunti yako ya Afya24.",
+  },
+  account_dashboard_danger_zone_title: { en: "Delete account", sw: "Futa akaunti" },
+  account_dashboard_danger_zone_body: {
+    en: "This permanently deletes your medication log, home readings, and cycle history, removes your sign-in, and clears your personal details from your Afya24 record. Your appointment, payment, and prescription history stays on file, as required for medical and financial records, but is no longer linked to your name.",
+    sw: "Hatua hii itafuta kabisa rekodi yako ya dawa, vipimo vya nyumbani, na historia ya mzunguko wa hedhi, itaondoa uwezo wako wa kuingia, na kufuta taarifa zako binafsi kwenye rekodi yako ya Afya24. Historia ya miadi, malipo, na dawa zilizoandikiwa itabaki kwenye rekodi kama inavyotakiwa kisheria, lakini haitahusishwa tena na jina lako.",
+  },
+  account_dashboard_delete_warning: {
+    en: "This cannot be undone.",
+    sw: "Hatua hii haiwezi kutenguliwa.",
+  },
+  account_dashboard_delete_confirm_label: {
+    en: 'Type DELETE to confirm',
+    sw: 'Andika DELETE kuthibitisha',
+  },
+  account_dashboard_delete_confirm_placeholder: { en: "DELETE", sw: "DELETE" },
+  account_dashboard_delete_button: { en: "Delete my account", sw: "Futa akaunti yangu" },
+  account_dashboard_deleting_button: { en: "Deleting…", sw: "Inafuta…" },
+  account_dashboard_delete_error: {
+    en: "Could not delete your account. Please try again.",
+    sw: "Imeshindikana kufuta akaunti yako. Tafadhali jaribu tena.",
+  },
+  account_deleted_title: { en: "Your account has been deleted", sw: "Akaunti yako imefutwa" },
+  account_deleted_body: {
+    en: "Your personal details and sign-in have been removed from Afya24. Thank you for using our platform.",
+    sw: "Taarifa zako binafsi na uwezo wako wa kuingia umeondolewa kwenye Afya24. Asante kwa kutumia jukwaa letu.",
+  },
+  account_deleted_back_home: { en: "Back to Afya24", sw: "Rudi Afya24" },
 
   doctor_queue_title: { en: "Patient queue", sw: "Foleni ya wagonjwa" },
   doctor_queue_body: {

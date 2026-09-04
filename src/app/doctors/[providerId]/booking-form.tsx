@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoginForm } from "@/app/account/login-form";
+import { PhoneOtpForm } from "@/app/account/phone-otp-form";
 import { bookConsultation, startOverAsNewPatient } from "../actions";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
@@ -111,12 +111,10 @@ export function BookingForm({
 
   // No real account (patients.user_id) tied to this session -- booking now
   // requires one everywhere, whether via the AI intake chat or landing
-  // directly on a doctor's profile. Rather than a card that just points at
-  // the standalone /account page, the actual login form is embedded right
-  // here (below the doctor's own card above) so logging in and continuing
-  // the booking is one screen, not a detour -- a wrong password re-renders
-  // this same page with the error shown, and a successful one sends the
-  // patient right back to it (see redirectTo/errorRedirectPath below).
+  // directly on a doctor's profile. The phone entry starts right here
+  // (below the doctor's own card above); entering the code it texts is a
+  // brief detour to /account/verify, which sends the patient right back
+  // here afterward via redirectTo -- same as every other entry point.
   return (
     <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
       <div className="text-center">
@@ -126,11 +124,11 @@ export function BookingForm({
         <p className="mt-1 text-sm text-[#60717a]">{t("account_login_title", locale)}</p>
       </div>
 
-      <LoginForm
+      <PhoneOtpForm
         locale={locale}
         error={loginError}
         redirectTo={redirectTo}
-        errorRedirectPath={redirectTo}
+        ctaLabel={t("account_continue_cta", locale)}
       />
 
       <div className="mt-5 rounded-2xl bg-[#f8fbfa] p-4 text-center text-sm text-[#5d6970]">

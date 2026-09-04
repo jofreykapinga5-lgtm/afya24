@@ -4,6 +4,7 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { clearPatientSession, createPatientSession, getPatientSession } from "@/lib/patient-session";
 import { createPatientAccountRecord } from "@/lib/patient-account";
+import { createPatientNotification } from "@/lib/patient-notifications";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getDefaultService } from "@/lib/default-service";
 import { QUALIFICATION_MODEL_NAME } from "@/lib/ai/model";
@@ -19,7 +20,7 @@ const REJOIN_WINDOW_HOURS = 24;
 // over). /consultation/[id]/pay already redirects straight through to the
 // call room when payment_status is "paid", so returning either kind here is
 // safe even though every caller always routes through /pay next.
-async function findResumableAppointment(
+export async function findResumableAppointment(
   service: ReturnType<typeof createServiceClient>,
   patientId: string,
   providerId: string
@@ -177,7 +178,13 @@ export async function startOverAsNewPatient(providerId: string) {
   redirect(`/doctors/${providerId}`);
 }
 
-async function bookConsultationForPatient(input: {
+// Exported so the mobile API layer (api/mobile/consultation/**) can reuse
+// this exact multi-table booking sequence instead of a risky reimplementation
+// -- unlike the simpler auth-check logic other mobile routes duplicate, this
+// one is genuinely non-trivial (appointment + consultation_orders +
+// attachment-claiming + optional intake/summary inserts) and already shared
+// internally by both bookConsultation and bookAsGuest above.
+export async function bookConsultationForPatient(input: {
   patientId: string;
   providerId: string;
   locale: Locale;
@@ -285,6 +292,17 @@ async function bookConsultationForPatient(input: {
       reviewed_by_doctor: false,
     });
   }
+
+  const { data: provider } = await service
+    .from("providers")
+    .select("full_name, specialty")
+    .eq("id", input.providerId)
+    .maybeSingle();
+  await createPatientNotification(service, input.patientId, "appointment_booked", {
+    appointmentId,
+    doctorName: provider?.full_name ?? null,
+    specialty: provider?.specialty ?? null,
+  });
 
   return appointmentId;
 }

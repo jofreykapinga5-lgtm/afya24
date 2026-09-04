@@ -1,6 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ensurePatientReferenceNumber } from "@/lib/patient-account";
+import { createPatientNotification } from "@/lib/patient-notifications";
 import type { SnippePaymentStatus } from "./snippe";
 
 // Shared by the webhook handler and the client-poll fallback so neither can
@@ -36,7 +37,7 @@ export async function applySnippePaymentResult(input: {
     .update({ status: localStatus, gateway_status: input.snippeStatus })
     .eq("reference", input.reference)
     .eq("status", "pending")
-    .select("id, appointment_id, patient_id")
+    .select("id, appointment_id, patient_id, amount, currency")
     .maybeSingle();
 
   if (paymentError) {
@@ -86,6 +87,13 @@ export async function applySnippePaymentResult(input: {
       source: input.source,
     },
   });
+
+  await createPatientNotification(
+    service,
+    payment.patient_id as string,
+    localStatus === "paid" ? "payment_confirmed" : "payment_failed",
+    { appointmentId, amount: payment.amount, currency: payment.currency }
+  );
 
   return { applied: true, appointmentId, hospitalReferenceNumber };
 }

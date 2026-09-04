@@ -11,9 +11,9 @@ import { CompleteProfileForm } from "./complete-profile-form";
 export default async function CompleteProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirectTo?: string; error?: string }>;
+  searchParams: Promise<{ redirectTo?: string; error?: string; errorCode?: string }>;
 }) {
-  const { redirectTo, error } = await searchParams;
+  const { redirectTo, error, errorCode } = await searchParams;
   const locale = await getServerLocale();
 
   const supabase = await createClient();
@@ -58,7 +58,13 @@ export default async function CompleteProfilePage({
       </h1>
       <p className="mt-2 text-sm leading-5 text-[#5d6970]">{t("complete_profile_body", locale)}</p>
 
-      <CompleteProfileForm locale={locale} suggestedName={suggestedName} redirectTo={redirectTo} error={error} />
+      <CompleteProfileForm
+        locale={locale}
+        suggestedName={suggestedName}
+        redirectTo={redirectTo}
+        error={error}
+        errorCode={errorCode}
+      />
     </main>
   );
 }

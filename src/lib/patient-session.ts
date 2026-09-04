@@ -20,7 +20,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 //   borrowed phone with nothing to explicitly "log out" of -- this one
 //   still expires on its own.
 const COOKIE_NAME = "afya24_patient_session";
-const TTL_SECONDS = 24 * 60 * 60;
+export const TTL_SECONDS = 24 * 60 * 60;
 export const LONG_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 function secretKey() {

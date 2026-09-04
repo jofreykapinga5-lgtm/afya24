@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Pill,
+  Settings,
   Stethoscope,
   Video,
   X,
@@ -27,7 +28,7 @@ import { signOut } from "../actions";
 export type PatientMobileMenuItem = {
   label: string;
   href: string;
-  icon: "overview" | "book" | "doctors" | "history" | "payments" | "pharmacy" | "files";
+  icon: "overview" | "book" | "doctors" | "history" | "payments" | "pharmacy" | "files" | "settings";
 };
 
 const menuIcons = {
@@ -38,6 +39,7 @@ const menuIcons = {
   payments: CreditCard,
   pharmacy: Pill,
   files: FileText,
+  settings: Settings,
 };
 
 export function PatientDashboardMobileMenu({ items }: { items: PatientMobileMenuItem[] }) {

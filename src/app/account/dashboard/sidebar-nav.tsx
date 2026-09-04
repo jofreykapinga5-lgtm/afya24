@@ -2,12 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, FileText, History, LayoutDashboard, Pill, Stethoscope, Video, type LucideIcon } from "lucide-react";
+import {
+  CreditCard,
+  FileText,
+  History,
+  LayoutDashboard,
+  Pill,
+  Settings,
+  Stethoscope,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
 
 export type SidebarNavItem = {
   label: string;
   href: string;
-  icon: "overview" | "book" | "doctors" | "history" | "payments" | "pharmacy" | "files";
+  icon: "overview" | "book" | "doctors" | "history" | "payments" | "pharmacy" | "files" | "settings";
 };
 
 const icons: Record<SidebarNavItem["icon"], LucideIcon> = {
@@ -18,6 +28,7 @@ const icons: Record<SidebarNavItem["icon"], LucideIcon> = {
   payments: CreditCard,
   pharmacy: Pill,
   files: FileText,
+  settings: Settings,
 };
 
 // Real routes, not #anchor scrolling -- each item is its own page under

@@ -3,6 +3,7 @@
 import { unstable_rethrow } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPatientSession } from "@/lib/patient-session";
+import { createPatientNotification } from "@/lib/patient-notifications";
 import type { FulfillmentMethod } from "@/lib/types";
 
 const DELIVERY_FEE = 150;
@@ -124,6 +125,13 @@ export async function placePharmacyOrder(input: {
       await service.from("pharmacy_orders").delete().eq("id", orderId);
       return { ok: false, message: itemsInsertError.message };
     }
+
+    await createPatientNotification(service, session.patientId, "pharmacy_order_placed", {
+      orderId,
+      total,
+      currency: "TZS",
+      itemCount: orderItemRows.length,
+    });
 
     return { ok: true, orderId };
   } catch (error) {

@@ -170,6 +170,52 @@ export async function updateProviderStatus(formData: FormData) {
   revalidatePath("/doctors");
 }
 
+// A patient's testimonial_consent is only ever their own opt-in -- an admin
+// still has to explicitly approve it here before it can appear on the
+// doctor's public profile (mobile app reviews). See migration 0029.
+export async function setFeedbackPublished(formData: FormData) {
+  const { adminUserId, service } = await requireAdmin();
+  const feedbackId = formString(formData, "feedbackId");
+  const isPublished = formString(formData, "isPublished") === "true";
+
+  if (!feedbackId) {
+    throw new Error("Missing feedback id.");
+  }
+
+  const { data: feedback, error: feedbackError } = await service
+    .from("consultation_feedback")
+    .select("id, provider_id, testimonial_consent")
+    .eq("id", feedbackId)
+    .single();
+
+  if (feedbackError || !feedback) {
+    throw new Error(feedbackError?.message ?? "Feedback entry not found.");
+  }
+
+  if (isPublished && !feedback.testimonial_consent) {
+    throw new Error("This patient did not consent to a public testimonial.");
+  }
+
+  const { error } = await service
+    .from("consultation_feedback")
+    .update({ is_published: isPublished })
+    .eq("id", feedbackId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await service.from("audit_logs").insert({
+    actor_user_id: adminUserId,
+    action: "consultation_feedback_publish_changed",
+    entity_type: "consultation_feedback",
+    entity_id: feedbackId,
+    metadata_json: { providerId: feedback.provider_id, isPublished },
+  });
+
+  revalidatePath("/admin/dashboard");
+}
+
 // Ratings are admin-curated (there's no patient review pipeline feeding
 // providers.rating_summary yet), so this is the only place that number can
 // change -- it drives the star shown on DoctorCard everywhere a patient

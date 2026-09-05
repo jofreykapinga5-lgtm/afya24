@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
   // admin-created doctor/admin account, or reject" (see below). Never set
   // from the patient-facing pages.
   const isStaffAttempt = searchParams.get("context") === "staff";
-  const defaultRedirect = isStaffAttempt ? "/doctor/dashboard" : "/account/dashboard";
+  // Patients land on the site's landing page by default (reached via the
+  // header's "My Account" menu from there), same as the phone+OTP flow's
+  // own redirect -- staff (doctor/admin) accounts are unaffected, they're
+  // internal tools, not this same patient-facing decision.
+  const defaultRedirect = isStaffAttempt ? "/doctor/dashboard" : "/";
   const failurePath = isStaffAttempt ? "/doctor" : "/account";
   const redirectTo = safeRedirectPath(searchParams.get("redirectTo"), defaultRedirect);
   const locale = await getServerLocale();

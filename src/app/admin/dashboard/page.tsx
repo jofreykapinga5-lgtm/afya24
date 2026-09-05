@@ -86,6 +86,7 @@ type DbFeedbackRow = {
   feedback_text: string | null;
   testimonial_text: string | null;
   testimonial_consent: boolean;
+  is_published: boolean;
   created_at: string;
   patients: { full_name: string; hospital_reference_number: string | null } | null;
   providers: { full_name: string } | null;
@@ -481,7 +482,7 @@ export default async function AdminDashboardPage() {
       const { data, error } = await service
         .from("consultation_feedback")
         .select(
-          "id, rating, feedback_text, testimonial_text, testimonial_consent, created_at, patients(full_name, hospital_reference_number), providers(full_name)"
+          "id, rating, feedback_text, testimonial_text, testimonial_consent, is_published, created_at, patients(full_name, hospital_reference_number), providers(full_name)"
         )
         .order("created_at", { ascending: false })
         .limit(200);
@@ -727,6 +728,7 @@ export default async function AdminDashboardPage() {
     feedbackText: entry.feedback_text,
     testimonialText: entry.testimonial_text,
     testimonialConsent: entry.testimonial_consent,
+    isPublished: entry.is_published,
     patientName: toTitleCase(
       (entry.patients as unknown as { full_name: string } | null)?.full_name ?? "Patient"
     ),

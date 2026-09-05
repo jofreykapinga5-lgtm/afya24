@@ -22,9 +22,36 @@ export async function GET(request: NextRequest) {
       getDefaultService(service).catch(() => null),
     ]);
 
-    const doctors = (providerRows as ProviderRow[]).map((row) =>
-      mapProviderRow(row, defaultService?.basePrice ?? 0, locale)
-    );
+    const providerIds = (providerRows as ProviderRow[]).map((row) => row.id);
+
+    // "Patients served" -- a mobile-only stat (not part of the shared
+    // Provider type the web /doctors page uses, so it's merged onto the
+    // JSON response here instead of touching mapProviderRow). Distinct
+    // patient count per doctor across all-time completed appointments.
+    const patientsServedByProvider = new Map<string, number>();
+    if (providerIds.length > 0) {
+      const { data: completedRows } = await service
+        .from("appointments")
+        .select("provider_id, patient_id")
+        .eq("status", "completed")
+        .in("provider_id", providerIds);
+
+      const patientsByProvider = new Map<string, Set<string>>();
+      for (const row of completedRows ?? []) {
+        const providerId = row.provider_id as string;
+        const patientId = row.patient_id as string;
+        if (!patientsByProvider.has(providerId)) patientsByProvider.set(providerId, new Set());
+        patientsByProvider.get(providerId)!.add(patientId);
+      }
+      for (const [providerId, patients] of patientsByProvider) {
+        patientsServedByProvider.set(providerId, patients.size);
+      }
+    }
+
+    const doctors = (providerRows as ProviderRow[]).map((row) => ({
+      ...mapProviderRow(row, defaultService?.basePrice ?? 0, locale),
+      patientsServed: patientsServedByProvider.get(row.id) ?? 0,
+    }));
 
     // Doctors online right now first -- same ordering as the web page.
     doctors.sort((a, b) => Number(b.isAvailableNow) - Number(a.isAvailableNow));

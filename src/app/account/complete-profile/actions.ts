@@ -90,5 +90,7 @@ export async function completeGoogleProfile(formData: FormData) {
 
   // Google sign-in is a real account -- long TTL, same as signIn/signUp.
   await createPatientSession(inserted.id, LONG_TTL_SECONDS);
-  redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
+  // Landing page by default, same as every other patient sign-in/sign-up
+  // path -- the dashboard is reached via the header's "My Account" menu.
+  redirect(safeRedirectPath(redirectTo, "/"));
 }

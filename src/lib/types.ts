@@ -303,6 +303,10 @@ export interface ConsultationFeedback {
   feedbackText: string | null;
   testimonialText: string | null;
   testimonialConsent: boolean;
+  // Admin-approved for public display (doctor profile reviews) -- distinct
+  // from testimonialConsent, which is only the patient's own opt-in. See
+  // migration 0029.
+  isPublished: boolean;
   patientName: string;
   patientReference: string;
   providerName: string;

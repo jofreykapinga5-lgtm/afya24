@@ -441,6 +441,17 @@ const dict = {
   account_gender_female: { en: "Female", sw: "Mwanamke" },
   account_gender_male: { en: "Male", sw: "Mwanaume" },
   account_gender_other: { en: "Other", sw: "Nyingine" },
+  account_welcome_title: { en: "Tell us about yourself", sw: "Tuambie kuhusu wewe" },
+  account_welcome_subtitle: {
+    en: "Totally optional -- helps your doctor a little, skip if you'd rather not.",
+    sw: "Si lazima kabisa -- humsaidia daktari wako kidogo, ruka kama hutaki.",
+  },
+  account_welcome_age_label: { en: "Age (optional)", sw: "Umri (si lazima)" },
+  account_welcome_age_placeholder: { en: "e.g. 34", sw: "mfano 34" },
+  account_welcome_location_label: { en: "Location (optional)", sw: "Mahali (si lazima)" },
+  account_welcome_location_placeholder: { en: "e.g. Dar es Salaam", sw: "mfano Dar es Salaam" },
+  account_welcome_continue: { en: "Continue", sw: "Endelea" },
+  account_welcome_skip: { en: "Skip for now", sw: "Ruka kwa sasa" },
   account_signup_title: {
     en: "Create your account",
     sw: "Fungua akaunti yako",

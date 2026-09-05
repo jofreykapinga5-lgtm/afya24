@@ -310,6 +310,7 @@ export async function deletePatientAccount(patientId: string): Promise<void> {
       full_name: "Deleted patient",
       date_of_birth: null,
       gender: null,
+      age: null,
       phone: null,
       emergency_contact: null,
       address: null,
@@ -328,4 +329,27 @@ export async function deletePatientAccount(patientId: string): Promise<void> {
   if (patient?.user_id) {
     await service.auth.admin.deleteUser(patient.user_id as string).catch(() => undefined);
   }
+}
+
+// The optional post-signup step (account/welcome, api/mobile/account/
+// complete-profile) -- a first-time phone+OTP sign-up collects nothing at
+// all (see resolvePatientForVerifiedPhone), so this is the one place a new
+// patient can fill in name/gender/age/location afterward, and every field
+// is independently optional: only the ones actually provided get written,
+// so partially filling this in (or skipping it entirely) never overwrites
+// something with an empty value.
+export async function updatePatientOptionalProfile(
+  patientId: string,
+  input: { fullName?: string; gender?: "female" | "male" | "other"; age?: number; location?: string }
+): Promise<void> {
+  const patch: Record<string, string | number> = {};
+  if (input.fullName) patch.full_name = input.fullName;
+  if (input.gender) patch.gender = input.gender;
+  if (input.age != null) patch.age = input.age;
+  if (input.location) patch.address = input.location;
+  if (Object.keys(patch).length === 0) return;
+
+  const service = createServiceClient();
+  const { error } = await service.from("patients").update(patch).eq("id", patientId);
+  if (error) throw new Error(error.message);
 }

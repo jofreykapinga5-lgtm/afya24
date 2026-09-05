@@ -3,9 +3,23 @@
 import { useMemo, useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { StatusPill } from "@/components/admin/status-pill";
+import { setFeedbackPublished } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
 import type { ConsultationFeedback, Locale } from "@/lib/types";
+
+function PublishToggle({ feedbackId, isPublished }: { feedbackId: string; isPublished: boolean }) {
+  return (
+    <form action={setFeedbackPublished}>
+      <input type="hidden" name="feedbackId" value={feedbackId} />
+      <input type="hidden" name="isPublished" value={String(!isPublished)} />
+      <SubmitButton size="sm" variant={isPublished ? "outline" : "default"}>
+        {isPublished ? "Unpublish" : "Publish"}
+      </SubmitButton>
+    </form>
+  );
+}
 
 // Same load-more pattern as payments-panel.tsx -- keeps the page short
 // instead of dumping every submission (an unbounded, ever-growing list) on
@@ -93,8 +107,16 @@ export function FeedbackPanel({ locale, entries }: { locale: Locale; entries: Co
                         ? t("admin_feedback_consent_public", locale)
                         : t("admin_feedback_consent_private", locale)}
                     </StatusPill>
+                    {entry.isPublished ? (
+                      <StatusPill tone="positive">Published on profile</StatusPill>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-sm italic text-[#3f4c52]">&ldquo;{entry.testimonialText}&rdquo;</p>
+                  {entry.testimonialConsent ? (
+                    <div className="mt-2">
+                      <PublishToggle feedbackId={entry.id} isPublished={entry.isPublished} />
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
 

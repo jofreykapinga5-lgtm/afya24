@@ -111,7 +111,20 @@ export async function verifyPatientOtp(formData: FormData) {
   // out, not get silently kicked back to a login screen a day later.
   await createPatientSession(resolved.patientId, LONG_TTL_SECONDS);
 
-  redirect(safeRedirectPath(redirectTo, "/account/dashboard"));
+  // A brand-new account skipped straight past sign-up collecting nothing at
+  // all -- offer the optional name/gender/age/location step once, here,
+  // rather than never asking at all. redirectTo carries through so
+  // finishing (or skipping) it still lands wherever the patient was
+  // actually headed (e.g. back to a doctor's booking page).
+  if (resolved.isNewAccount) {
+    redirect(`/account/welcome${redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ""}`);
+  }
+
+  // Landing page by default, not straight into the dashboard -- the
+  // dashboard is now reached via the header's "My Account" menu instead.
+  // redirectTo still wins when the patient was actually mid-booking (e.g.
+  // signing in from a doctor's page) before this OTP step interrupted them.
+  redirect(safeRedirectPath(redirectTo, "/"));
 }
 
 export async function signOut() {

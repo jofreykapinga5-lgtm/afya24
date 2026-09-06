@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
+import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
 const BUCKET = "provider-applications";
 const MAX_BYTES = 12 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+
+// The server is the real security boundary -- both the web form and the
+// mobile app's own request can be bypassed by a direct API call (already
+// proven true against this exact route during testing), so these are
+// enforced here regardless of what either client already filters. Letters
+// only for name/region (never digits), digits only for phone/experience,
+// a real email shape, and a conservative charset for a license number
+// (letters/digits/hyphens -- real license numbers mix both, so this can't
+// be numbers-only or letters-only the way name/phone can).
+const NAME_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
+const REGION_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
+const LICENSE_PATTERN = /^[A-Za-z0-9-]{3,40}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^\+\d{9,15}$/;
+const EXPERIENCE_PATTERN = /^\d{1,2}$/;
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -50,6 +66,24 @@ export async function POST(request: Request) {
 
   if (!fullName || !email || !phone || !specialty || !licenseNumber) {
     return NextResponse.json({ error: t("error_apply_required_fields", locale) }, { status: 400 });
+  }
+  if (!NAME_PATTERN.test(fullName)) {
+    return NextResponse.json({ error: t("error_apply_invalid_name", locale) }, { status: 400 });
+  }
+  if (!EMAIL_PATTERN.test(email)) {
+    return NextResponse.json({ error: t("error_apply_invalid_email", locale) }, { status: 400 });
+  }
+  if (!PHONE_PATTERN.test(normalizeTanzanianPhoneToE164(phone))) {
+    return NextResponse.json({ error: t("error_apply_invalid_phone", locale) }, { status: 400 });
+  }
+  if (!LICENSE_PATTERN.test(licenseNumber)) {
+    return NextResponse.json({ error: t("error_apply_invalid_license", locale) }, { status: 400 });
+  }
+  if (region && !REGION_PATTERN.test(region)) {
+    return NextResponse.json({ error: t("error_apply_invalid_region", locale) }, { status: 400 });
+  }
+  if (experienceYearsRaw && (!EXPERIENCE_PATTERN.test(experienceYearsRaw) || Number(experienceYearsRaw) > 70)) {
+    return NextResponse.json({ error: t("error_apply_invalid_experience", locale) }, { status: 400 });
   }
 
   const service = createServiceClient();

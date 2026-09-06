@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
   const { data: patient } = await service
     .from("patients")
-    .select("full_name, phone")
+    .select("full_name, phone, gender, age, address, created_at")
     .eq("id", resolved.patientId)
     .maybeSingle();
 
@@ -77,6 +77,10 @@ export async function POST(request: NextRequest) {
       id: resolved.patientId,
       fullName: patient?.full_name ? toTitleCase(patient.full_name as string) : null,
       phone: patient?.phone ?? phone,
+      gender: patient?.gender ?? null,
+      age: patient?.age ?? null,
+      location: patient?.address ?? null,
+      createdAt: patient?.created_at ?? null,
     },
   });
 }

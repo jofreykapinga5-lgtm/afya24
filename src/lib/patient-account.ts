@@ -31,14 +31,14 @@ export async function createPatientAccountRecord(input: {
       gender: input.gender ?? null,
       preferred_language: input.preferredLanguage ?? "sw",
     })
-    .select("id")
+    .select("id, created_at")
     .single();
 
   if (error || !data) {
     throw new Error(error?.message ?? "Could not create patient account.");
   }
 
-  return { patientId: data.id as string };
+  return { patientId: data.id as string, createdAt: data.created_at as string };
 }
 
 // Shared by every path that creates a real, sign-in-able account (web/mobile

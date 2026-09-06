@@ -1365,6 +1365,30 @@ const dict = {
     en: "Upload a JPG, PNG, WebP, or PDF file.",
     sw: "Pakia faili la JPG, PNG, WebP, au PDF.",
   },
+  error_apply_invalid_name: {
+    en: "Full name should only contain letters.",
+    sw: "Jina kamili linapaswa kuwa na herufi tu.",
+  },
+  error_apply_invalid_email: {
+    en: "Enter a valid email address.",
+    sw: "Weka barua pepe sahihi.",
+  },
+  error_apply_invalid_phone: {
+    en: "Enter a valid phone number (numbers only).",
+    sw: "Weka namba sahihi ya simu (namba tu).",
+  },
+  error_apply_invalid_license: {
+    en: "License number should only contain letters, numbers, and hyphens.",
+    sw: "Namba ya leseni inapaswa kuwa na herufi, namba, na alama ya kuunganisha (-) tu.",
+  },
+  error_apply_invalid_region: {
+    en: "Region should only contain letters.",
+    sw: "Mkoa unapaswa kuwa na herufi tu.",
+  },
+  error_apply_invalid_experience: {
+    en: "Years of experience should be a number between 0 and 70.",
+    sw: "Miaka ya uzoefu inapaswa kuwa namba kati ya 0 na 70.",
+  },
 
   account_dashboard_open_menu: { en: "Open dashboard menu", sw: "Fungua menyu ya dashibodi" },
   account_dashboard_close_menu: { en: "Close menu", sw: "Funga menyu" },

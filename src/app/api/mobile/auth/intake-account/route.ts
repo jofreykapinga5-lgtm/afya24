@@ -61,6 +61,14 @@ export async function POST(request: NextRequest) {
     ok: true,
     token,
     expiresIn: TTL_SECONDS,
-    patient: { id: record.patientId, fullName, phone: normalizedPhone },
+    patient: {
+      id: record.patientId,
+      fullName,
+      phone: normalizedPhone,
+      gender: null,
+      age: null,
+      location: null,
+      createdAt: record.createdAt,
+    },
   });
 }

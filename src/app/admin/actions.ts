@@ -5,6 +5,7 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { actionErrorMessage, formString, requireAdmin } from "@/lib/admin/auth";
 import { ensurePatientReferenceNumber } from "@/lib/patient-account";
+import { notifyPatientsDoctorIsAvailable } from "@/lib/doctor-availability-subscriptions";
 import type { ProviderStatus } from "@/lib/types";
 
 export type AdminActionState = {
@@ -378,13 +379,14 @@ export async function updateProviderAvailabilityByAdmin(formData: FormData) {
 
   const { data: provider, error: providerError } = await service
     .from("providers")
-    .select("id, full_name")
+    .select("id, full_name, available_now")
     .eq("id", providerId)
     .single();
 
   if (providerError || !provider) {
     throw new Error(providerError?.message ?? "Provider not found.");
   }
+  const wasAvailable = Boolean(provider.available_now);
 
   const { error } = await service
     .from("providers")
@@ -397,6 +399,20 @@ export async function updateProviderAvailabilityByAdmin(formData: FormData) {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  // A patient who asked to hear about this doctor being back only cares
+  // about the false -> true edge, not every save while already online.
+  // Own try/catch: the availability update above already succeeded, so a
+  // failure here (a transient Supabase/network blip) must never surface as
+  // this action's own error -- same reasoning as updateProviderAvailability's
+  // identical guard in doctor/actions.ts.
+  if (availableNow && !wasAvailable) {
+    try {
+      await notifyPatientsDoctorIsAvailable(service, providerId);
+    } catch (notifyError) {
+      console.error("notifyPatientsDoctorIsAvailable failed", notifyError);
+    }
   }
 
   await service.from("audit_logs").insert({

@@ -17,7 +17,7 @@ export async function GET() {
   const service = createServiceClient();
   const { data: patient, error } = await service
     .from("patients")
-    .select("id, full_name, phone")
+    .select("id, full_name, phone, gender, age, address, created_at")
     .eq("id", session.patientId)
     .maybeSingle();
 
@@ -27,6 +27,14 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
-    patient: { id: patient.id, fullName: patient.full_name, phone: patient.phone },
+    patient: {
+      id: patient.id,
+      fullName: patient.full_name,
+      phone: patient.phone,
+      gender: patient.gender,
+      age: patient.age,
+      location: patient.address,
+      createdAt: patient.created_at,
+    },
   });
 }

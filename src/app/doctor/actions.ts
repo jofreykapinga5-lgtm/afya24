@@ -8,6 +8,7 @@ import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { notifyPatientsDoctorIsAvailable } from "@/lib/doctor-availability-subscriptions";
 
 export type AvailabilityActionState = {
   status: "idle" | "success" | "error";
@@ -266,6 +267,13 @@ export async function updateProviderAvailability(
     const availableNow = formData.get("availableNow") === "on";
     const availabilityNote = String(formData.get("availabilityNote") ?? "").trim();
 
+    const { data: beforeUpdate } = await service
+      .from("providers")
+      .select("available_now")
+      .eq("id", providerId)
+      .maybeSingle();
+    const wasAvailable = Boolean(beforeUpdate?.available_now);
+
     const { error } = await service
       .from("providers")
       .update({
@@ -277,6 +285,20 @@ export async function updateProviderAvailability(
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    // A patient who asked to hear about this doctor being back only cares
+    // about the false -> true edge, not every save while already online.
+    // Own try/catch: the availability update above already succeeded, so a
+    // failure here (a transient Supabase/network blip) must never surface
+    // as this action's own error -- the doctor did go online, that's what
+    // matters, not whether the "notify waiting patients" side-effect ran.
+    if (availableNow && !wasAvailable) {
+      try {
+        await notifyPatientsDoctorIsAvailable(service, providerId);
+      } catch (notifyError) {
+        console.error("notifyPatientsDoctorIsAvailable failed", notifyError);
+      }
     }
 
     // Also revalidate "/" (missed previously): the home page's doctor

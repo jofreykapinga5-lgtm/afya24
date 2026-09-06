@@ -32,17 +32,28 @@ export async function POST(request: NextRequest) {
   try {
     const service = createServiceClient();
     const existingAppointmentId = await findResumableAppointment(service, session.patientId, providerId);
-    if (existingAppointmentId) {
-      return NextResponse.json({ ok: true, appointmentId: existingAppointmentId });
-    }
+    const appointmentId =
+      existingAppointmentId ??
+      (await bookConsultationForPatient({
+        patientId: session.patientId,
+        providerId,
+        locale,
+        qualification: null,
+      }));
 
-    const appointmentId = await bookConsultationForPatient({
-      patientId: session.patientId,
-      providerId,
-      locale,
-      qualification: null,
-    });
-    return NextResponse.json({ ok: true, appointmentId });
+    // Same check the web app's own /consultation/[id]/pay page does before
+    // ever rendering the payment form -- a resumed appointment (rejoin, or
+    // the 24h free-follow-up window) can already be "paid" here, and the
+    // mobile app needs to know that up front to skip the Payment screen
+    // entirely instead of making the patient tap through a form that would
+    // just no-op the charge.
+    const { data: appointment } = await service
+      .from("appointments")
+      .select("payment_status")
+      .eq("id", appointmentId)
+      .maybeSingle();
+
+    return NextResponse.json({ ok: true, appointmentId, alreadyPaid: appointment?.payment_status === "paid" });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Could not book this consultation." },

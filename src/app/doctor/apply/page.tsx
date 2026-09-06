@@ -22,6 +22,17 @@ import { t } from "@/lib/i18n";
 
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
 
+// Mirrors api/provider-applications/route.ts's own patterns exactly -- the
+// server is the real security boundary (it re-checks these regardless of
+// what a client sends), this is purely so a mistake is caught immediately
+// instead of after a network round trip.
+const NAME_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
+const REGION_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
+const LICENSE_PATTERN = /^[A-Za-z0-9-]{3,40}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_DIGITS_PATTERN = /^\+?\d{9,15}$/;
+const EXPERIENCE_PATTERN = /^\d{1,2}$/;
+
 export default function DoctorApplicationPage() {
   const locale = useAppStore((state) => state.locale);
   const [error, setError] = useState<string | null>(null);
@@ -32,10 +43,42 @@ export default function DoctorApplicationPage() {
 
   function submitApplication(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     const formData = new FormData(event.currentTarget);
     formData.set("locale", locale);
 
+    const fullName = String(formData.get("fullName") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const licenseNumber = String(formData.get("licenseNumber") ?? "").trim();
+    const region = String(formData.get("region") ?? "").trim();
+    const experienceYears = String(formData.get("experienceYears") ?? "").trim();
+
+    if (!NAME_PATTERN.test(fullName)) {
+      setError(t("error_apply_invalid_name", locale));
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      setError(t("error_apply_invalid_email", locale));
+      return;
+    }
+    if (!PHONE_DIGITS_PATTERN.test(phone.replace(/[\s()-]/g, ""))) {
+      setError(t("error_apply_invalid_phone", locale));
+      return;
+    }
+    if (!LICENSE_PATTERN.test(licenseNumber)) {
+      setError(t("error_apply_invalid_license", locale));
+      return;
+    }
+    if (region && !REGION_PATTERN.test(region)) {
+      setError(t("error_apply_invalid_region", locale));
+      return;
+    }
+    if (experienceYears && (!EXPERIENCE_PATTERN.test(experienceYears) || Number(experienceYears) > 70)) {
+      setError(t("error_apply_invalid_experience", locale));
+      return;
+    }
+
+    setError(null);
     startTransition(async () => {
       const response = await fetch("/api/provider-applications", {
         method: "POST",
@@ -111,7 +154,7 @@ export default function DoctorApplicationPage() {
                         <Input name="email" type="email" required placeholder="doctor@email.com" />
                       </Field>
                       <Field label={t("doctor_apply_phone", locale)} required>
-                        <Input name="phone" required placeholder="+255..." />
+                        <Input name="phone" required inputMode="tel" placeholder="+255..." />
                       </Field>
                       <Field label={t("doctor_apply_region", locale)}>
                         <Input name="region" placeholder="Dar es Salaam" />

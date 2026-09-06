@@ -10,7 +10,8 @@ export type NotificationKind =
   | "payment_confirmed"
   | "payment_failed"
   | "pharmacy_order_placed"
-  | "medication_taken";
+  | "medication_taken"
+  | "doctor_available";
 
 // Called from the few real places these events happen: bookConsultationForPatient
 // (doctors/actions.ts), applySnippePaymentResult (lib/payments/reconcile.ts),

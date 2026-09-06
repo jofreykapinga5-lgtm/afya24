@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   const { data: inserted, error: insertError } = await service
     .from("patients")
     .insert({ user_id: data.user.id, full_name: fullName, phone, gender })
-    .select("id")
+    .select("id, created_at")
     .single();
 
   if (insertError || !inserted) {
@@ -91,6 +91,14 @@ export async function POST(request: NextRequest) {
     ok: true,
     token,
     expiresIn: LONG_TTL_SECONDS,
-    patient: { id: inserted.id, fullName: toTitleCase(fullName), phone },
+    patient: {
+      id: inserted.id,
+      fullName: toTitleCase(fullName),
+      phone,
+      gender,
+      age: null,
+      location: null,
+      createdAt: inserted.created_at,
+    },
   });
 }

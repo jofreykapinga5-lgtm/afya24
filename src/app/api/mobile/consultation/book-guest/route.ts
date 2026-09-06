@@ -73,13 +73,28 @@ export async function POST(request: NextRequest) {
         qualification: null,
       }));
 
+    const { data: appointment } = await service
+      .from("appointments")
+      .select("payment_status")
+      .eq("id", appointmentId)
+      .maybeSingle();
+
     const token = await signPatientSessionToken(record.patientId, LONG_TTL_SECONDS);
     return NextResponse.json({
       ok: true,
       token,
       expiresIn: LONG_TTL_SECONDS,
-      patient: { id: record.patientId, fullName, phone: normalizedPhone },
+      patient: {
+        id: record.patientId,
+        fullName,
+        phone: normalizedPhone,
+        gender: null,
+        age: null,
+        location: null,
+        createdAt: record.createdAt,
+      },
       appointmentId,
+      alreadyPaid: appointment?.payment_status === "paid",
     });
   } catch (error) {
     return NextResponse.json(

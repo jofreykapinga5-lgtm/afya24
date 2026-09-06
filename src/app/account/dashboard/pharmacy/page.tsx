@@ -35,7 +35,7 @@ export default async function AccountDashboardPharmacyPage() {
           <p className="text-sm font-bold text-[#071923]">{t("account_dashboard_pharmacy_title", locale)}</p>
           <p className="mt-1 text-sm text-[#64747c]">{t("account_dashboard_pharmacy_body", locale)}</p>
         </div>
-        <Button className="h-10 rounded-full bg-[#01b7bb] px-4 font-bold text-white hover:bg-[#019ea2]" nativeButton={false} render={<Link href="/pharmacy" />}>
+        <Button className="h-10 rounded-full bg-primary px-4 font-bold text-white hover:bg-primary/80" nativeButton={false} render={<Link href="/pharmacy" />}>
           <Pill className="size-4" />
           {t("account_dashboard_browse_pharmacy", locale)}
           <ArrowRight className="size-4" />

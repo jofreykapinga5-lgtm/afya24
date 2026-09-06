@@ -116,7 +116,7 @@ export default async function AccountDashboardOverviewPage() {
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button
-                  className="h-10 rounded-full bg-[#01b7bb] px-4 font-bold text-white hover:bg-[#019ea2]"
+                  className="h-10 rounded-full bg-primary px-4 font-bold text-white hover:bg-primary/80"
                   nativeButton={false}
                   render={
                     <Link

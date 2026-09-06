@@ -116,7 +116,7 @@ export function PatientDashboardMobileMenu({ items }: { items: PatientMobileMenu
           })}
           <div className="mt-1 border-t border-[#e1e9ec] p-2">
             <Button
-              className="h-10 w-full rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+              className="h-10 w-full rounded-full bg-primary font-bold text-white hover:bg-primary/80"
               nativeButton={false}
               render={<Link href="/qualification" onClick={() => setOpen(false)} />}
             >

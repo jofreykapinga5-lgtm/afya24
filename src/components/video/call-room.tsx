@@ -231,7 +231,7 @@ function CallStage({ onHangup }: { onHangup?: () => void }) {
           that actually need it. */}
       <StartAudio
         label={t("video_tap_to_enable_audio", locale)}
-        className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#01b7bb] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_40px_-16px_rgba(1,183,187,0.75)] outline-none transition-transform hover:scale-105 focus-visible:ring-3 focus-visible:ring-white/50"
+        className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-[0_16px_40px_-16px_rgba(8,50,115,0.75)] outline-none transition-transform hover:scale-105 focus-visible:ring-3 focus-visible:ring-white/50"
       />
 
       {remoteTrack && localTrack ? (
@@ -311,7 +311,7 @@ function ConsultationFeedbackForm({
         <p className="font-bold text-[#071923]">{t("video_feedback_thanks_title", locale)}</p>
         <Button
           onClick={onDone}
-          className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          className="mt-2 h-11 rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
         >
           {t("video_feedback_continue", locale)}
         </Button>
@@ -394,7 +394,7 @@ function ConsultationFeedbackForm({
           type="button"
           disabled={pending}
           onClick={handleSubmit}
-          className="h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          className="h-11 w-full rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
         >
           {t("video_feedback_submit", locale)}
         </Button>
@@ -447,7 +447,7 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
         </span>
         <p className="font-bold text-[#071923]">{t("consultation_upgrade_success", locale)}</p>
         <Button
-          className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          className="mt-2 h-11 rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
           nativeButton={false}
           render={<Link href="/account/dashboard" />}
         >
@@ -476,7 +476,7 @@ function AccountUpgradeForm({ locale }: { locale: "en" | "sw" }) {
           type="button"
           disabled={pending}
           onClick={handleCreateAccount}
-          className="h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          className="h-11 w-full rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
         >
           {t("consultation_upgrade_cta", locale)}
         </Button>
@@ -589,7 +589,7 @@ export function CallRoom({
             <Button
               onClick={handleReconnect}
               disabled={reconnectPending}
-              className="h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+              className="h-11 rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
             >
               {reconnectPending ? t("video_reconnecting_action", locale) : t("video_reconnect_action", locale)}
             </Button>

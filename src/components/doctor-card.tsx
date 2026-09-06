@@ -104,7 +104,7 @@ export function DoctorCard({
         </div>
         <Button
           size="sm"
-          className="h-9 shrink-0 rounded-full bg-[#01b7bb] px-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          className="h-9 shrink-0 rounded-full bg-primary px-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
           nativeButton={false}
           render={<Link href={`/doctors/${provider.id}`} />}
         >

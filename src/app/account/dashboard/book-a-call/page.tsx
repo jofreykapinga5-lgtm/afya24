@@ -18,7 +18,7 @@ export default async function AccountDashboardBookACallPage() {
       </div>
       <div className="mt-4 grid gap-2">
         <Button
-          className="h-11 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+          className="h-11 rounded-full bg-primary font-bold text-white hover:bg-primary/80"
           nativeButton={false}
           render={<Link href="/qualification" />}
         >

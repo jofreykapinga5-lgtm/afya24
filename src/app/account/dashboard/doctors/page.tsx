@@ -89,7 +89,7 @@ function DoctorMiniCard({
         </div>
         <Button
           size="sm"
-          className="h-8 rounded-full bg-[#01b7bb] px-3 font-bold text-white hover:bg-[#019ea2]"
+          className="h-8 rounded-full bg-primary px-3 font-bold text-white hover:bg-primary/80"
           nativeButton={false}
           render={<Link href={`/doctors/${provider.id}`} />}
         >

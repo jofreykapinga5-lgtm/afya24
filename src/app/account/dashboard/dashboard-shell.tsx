@@ -75,7 +75,7 @@ export function PatientDashboardShell({
               <p className="text-sm font-bold text-[#083273]">{routingTitle}</p>
               <p className="mt-2 text-xs leading-5 text-[#60717a]">{routingBody}</p>
               <Button
-                className="mt-4 h-10 w-full rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+                className="mt-4 h-10 w-full rounded-full bg-primary font-bold text-white hover:bg-primary/80"
                 nativeButton={false}
                 render={<Link href="/qualification" />}
               >

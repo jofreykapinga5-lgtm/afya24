@@ -204,7 +204,7 @@ function ConsultationPageInner({
         </div>
         {error.code === "PAYMENT_REQUIRED" && (
           <Button
-            className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+            className="mt-2 h-11 rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
             nativeButton={false}
             render={<Link href={`/consultation/${appointmentId}/pay`} />}
           >
@@ -254,7 +254,7 @@ function ConsultationPageInner({
         <Button
           type="button"
           onClick={handleManualJoin}
-          className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+          className="mt-2 h-11 rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
         >
           {t("consultation_join_now_cta", locale)}
         </Button>
@@ -278,7 +278,7 @@ function ConsultationPageInner({
             setTurnExpired(false);
             setQueueAttemptVersion((value) => value + 1);
           }}
-          className="mt-2 h-11 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+          className="mt-2 h-11 rounded-full bg-primary font-bold text-white hover:bg-primary/80"
         >
           {t("consultation_waiting_turn_rejoin", locale)}
         </Button>

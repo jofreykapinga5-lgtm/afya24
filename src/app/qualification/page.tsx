@@ -599,7 +599,7 @@ export default function QualificationPage() {
                         size="lg"
                         disabled={accountPending}
                         onClick={handleCreateAccount}
-                        className="mt-4 h-12 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+                        className="mt-4 h-12 w-full gap-2 rounded-full bg-primary font-bold text-white hover:bg-primary/80"
                       >
                         {accountPending
                           ? t("common_please_wait", locale)
@@ -619,7 +619,7 @@ export default function QualificationPage() {
                   {accountReady && (
                     <Button
                       size="lg"
-                      className="h-12 w-full gap-2 rounded-full bg-[#01b7bb] font-bold text-white hover:bg-[#019ea2]"
+                      className="h-12 w-full gap-2 rounded-full bg-primary font-bold text-white hover:bg-primary/80"
                       onClick={() =>
                         router.push(
                           `/doctors?specialty=${encodeURIComponent(result.recommendedSpecialties[0])}`
@@ -758,7 +758,7 @@ export default function QualificationPage() {
                 type="submit"
                 size="icon"
                 disabled={!input.trim() || status === "streaming" || status === "submitted"}
-                className="size-12 shrink-0 rounded-full bg-[#01b7bb] text-white hover:bg-[#019ea2]"
+                className="size-12 shrink-0 rounded-full bg-primary text-white hover:bg-primary/80"
               >
                 <Send className="size-4" />
               </Button>

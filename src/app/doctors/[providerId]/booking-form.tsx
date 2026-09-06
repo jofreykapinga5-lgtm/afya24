@@ -82,7 +82,7 @@ export function BookingForm({
             type="button"
             disabled={pending}
             onClick={bookWithSession}
-            className="h-12 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+            className="h-12 w-full rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
           >
             <UserRound className="size-4" />
             {pending

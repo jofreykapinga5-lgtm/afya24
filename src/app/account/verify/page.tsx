@@ -87,7 +87,7 @@ export default async function VerifyOtpPage({
           />
           <SubmitButton
             pendingText={t("common_please_wait", locale)}
-            className="h-13 w-full rounded-full bg-[#01b7bb] text-base font-bold text-white hover:bg-[#019ea2] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/25"
+            className="h-13 w-full rounded-full bg-primary text-base font-bold text-white hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/25"
           >
             {t("account_verify_cta", locale)}
           </SubmitButton>

@@ -275,7 +275,7 @@ export default function DoctorApplicationPage() {
                   <Button
                     type="submit"
                     disabled={pending}
-                    className="h-12 rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+                    className="h-12 rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
                   >
                     {pending ? t("doctor_apply_submitting", locale) : t("doctor_apply_submit", locale)}
                     <ArrowRight className="size-4" />

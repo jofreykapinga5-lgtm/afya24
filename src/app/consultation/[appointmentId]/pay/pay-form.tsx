@@ -185,8 +185,8 @@ export function PayForm({
                     onClick={() => setChannelProvider(option.value)}
                     className={
                       active
-                        ? "h-auto justify-start gap-2 rounded-xl border-transparent bg-[#01b7bb] px-3 py-2.5 text-left text-white hover:bg-[#019ea2]"
-                        : "h-auto justify-start gap-2 rounded-xl bg-[#f8fbfd] px-3 py-2.5 text-left text-[#071923] hover:border-[#01b7bb]/40 hover:bg-[#f1fbfa]"
+                        ? "h-auto justify-start gap-2 rounded-xl border-transparent bg-primary px-3 py-2.5 text-left text-white hover:bg-primary/80"
+                        : "h-auto justify-start gap-2 rounded-xl bg-[#f8fbfd] px-3 py-2.5 text-left text-[#071923] hover:border-primary/40 hover:bg-primary-soft"
                     }
                   >
                     <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-white px-1.5 shadow-sm ring-1 ring-black/5">
@@ -229,7 +229,7 @@ export function PayForm({
               size="lg"
               disabled={pending}
               onClick={handlePay}
-              className="mt-4 h-12 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+              className="mt-4 h-12 w-full rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
             >
               {pending ? t("payment_pay_pending", locale) : t("payment_pay_button", locale)}
             </Button>
@@ -291,7 +291,7 @@ export function PayForm({
             )}
             <Button
               onClick={() => router.push(`/consultation/${appointmentId}/connect`)}
-              className="mt-1 h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+              className="mt-1 h-11 w-full rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
             >
               {t("payment_success_continue", locale)}
             </Button>
@@ -307,7 +307,7 @@ export function PayForm({
             </div>
             <Button
               onClick={handleRetry}
-              className="mt-1 h-11 w-full rounded-full bg-[#01b7bb] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#019ea2] active:translate-y-0 active:scale-[0.98]"
+              className="mt-1 h-11 w-full rounded-full bg-primary font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/80 active:translate-y-0 active:scale-[0.98]"
             >
               {t("payment_retry_button", locale)}
             </Button>

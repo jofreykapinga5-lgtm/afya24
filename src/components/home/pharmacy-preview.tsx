@@ -37,7 +37,7 @@ export function PharmacyPreview() {
 
           <div className="mt-6 flex justify-center">
             <Button
-              className="h-11 w-fit gap-2 rounded-full bg-[#01b7bb] px-5 text-white hover:bg-[#019ea2]"
+              className="h-11 w-fit gap-2 rounded-full bg-primary px-5 text-white hover:bg-primary/80"
               nativeButton={false}
               render={<Link href="/pharmacy" />}
             >

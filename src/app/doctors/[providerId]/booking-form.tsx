@@ -131,16 +131,6 @@ export function BookingForm({
         ctaLabel={t("account_continue_cta", locale)}
       />
 
-      <div className="mt-5 rounded-2xl bg-[#f8fbfa] p-4 text-center text-sm text-[#5d6970]">
-        <span>{t("account_new_to_afya24", locale)}</span>{" "}
-        <Link
-          href={`/account/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`}
-          className="font-bold text-[#083273] hover:underline"
-        >
-          {t("account_create_account_link", locale)}
-        </Link>
-      </div>
-
       <Link
         href={`/doctors/${provider.id}/guest`}
         className="mt-4 block w-full text-center text-sm font-medium text-[#60717a] underline-offset-4 hover:text-[#083273] hover:underline"

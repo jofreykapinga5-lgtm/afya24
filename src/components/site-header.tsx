@@ -250,30 +250,20 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
                     </form>
                   </>
                 ) : (
-                  <>
-                    <SheetClose
-                      nativeButton={false}
-                      render={
-                        <Link
-                          href="/account"
-                          className="flex h-11 items-center justify-center rounded-full border border-border text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                        />
-                      }
-                    >
-                      {t("header_log_in", locale)}
-                    </SheetClose>
-                    <SheetClose
-                      nativeButton={false}
-                      render={
-                        <Link
-                          href="/account/sign-up"
-                          className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                        />
-                      }
-                    >
-                      {t("header_sign_up", locale)}
-                    </SheetClose>
-                  </>
+                  // One entry point, not a separate log-in/sign-up choice --
+                  // the phone+OTP form behind /account already handles a
+                  // first-time number transparently (see phone-otp-form.tsx).
+                  <SheetClose
+                    nativeButton={false}
+                    render={
+                      <Link
+                        href="/account"
+                        className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      />
+                    }
+                  >
+                    {t("header_log_in", locale)}
+                  </SheetClose>
                 )}
               </div>
               <SheetHeader>
@@ -326,67 +316,61 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
           </button>
 
           <div ref={loginMenuRef} className="relative hidden sm:block">
-            <button
-              type="button"
-              aria-expanded={loginMenuOpen}
-              aria-haspopup="menu"
-              onClick={() => setLoginMenuOpen((open) => !open)}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <User className="size-4" />
-              {patientName ? firstName(patientName) : t("header_log_in", locale)}
-              <ChevronDown
-                className={`size-4 transition-transform ${loginMenuOpen ? "rotate-180" : ""}`}
-              />
-            </button>
+            {!patientName ? (
+              // Signed out: one entry point, not a dropdown choosing between
+              // log-in and sign-up -- the phone+OTP form behind /account
+              // already handles a first-time number transparently (see
+              // phone-otp-form.tsx), same as the mobile app's single sign-in
+              // screen.
+              <Link
+                href="/account"
+                className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <User className="size-4" />
+                {t("header_log_in", locale)}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                aria-expanded={loginMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setLoginMenuOpen((open) => !open)}
+                className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <User className="size-4" />
+                {firstName(patientName)}
+                <ChevronDown
+                  className={`size-4 transition-transform ${loginMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            )}
 
             {loginMenuOpen ? (
               <div
                 role="menu"
                 className="absolute right-0 top-[calc(100%+0.35rem)] z-50 w-44 overflow-hidden rounded-lg border border-border bg-popover py-1 text-sm text-popover-foreground shadow-lg"
               >
-                {patientName ? (
-                  <>
-                    <Link
-                      href="/account/dashboard"
-                      role="menuitem"
-                      onClick={() => setLoginMenuOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
-                    >
-                      <LayoutDashboard className="size-3.5" />
-                      {t("header_my_account", locale)}
-                    </Link>
-                    <form action={signOut}>
-                      <SubmitButton
-                        variant="ghost"
-                        role="menuitem"
-                        className="w-full justify-start gap-2 rounded-none px-3 py-2 text-left text-destructive hover:bg-secondary focus:bg-secondary"
-                      >
-                        <LogOut className="size-3.5" />
-                        {t("header_log_out", locale)}
-                      </SubmitButton>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/account"
-                      role="menuitem"
-                      onClick={() => setLoginMenuOpen(false)}
-                      className="block px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
-                    >
-                      {t("header_log_in", locale)}
-                    </Link>
-                    <Link
-                      href="/account/sign-up"
-                      role="menuitem"
-                      onClick={() => setLoginMenuOpen(false)}
-                      className="block px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
-                    >
-                      {t("header_sign_up", locale)}
-                    </Link>
-                  </>
-                )}
+                {/* This dropdown only ever opens from the signed-in button
+                    above now -- signed-out is a plain Link, no menu. */}
+                <Link
+                  href="/account/dashboard"
+                  role="menuitem"
+                  onClick={() => setLoginMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
+                >
+                  <LayoutDashboard className="size-3.5" />
+                  {t("header_my_account", locale)}
+                </Link>
+                <form action={signOut}>
+                  <SubmitButton
+                    variant="ghost"
+                    role="menuitem"
+                    className="w-full justify-start gap-2 rounded-none px-3 py-2 text-left text-destructive hover:bg-secondary focus:bg-secondary"
+                  >
+                    <LogOut className="size-3.5" />
+                    {t("header_log_out", locale)}
+                  </SubmitButton>
+                </form>
               </div>
             ) : null}
           </div>

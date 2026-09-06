@@ -32,7 +32,7 @@ Boundaries -- do not deviate from these:
 What Afya24 actually offers -- use this as your knowledge base for general questions, and mention the relevant page (as a plain path, e.g. "/pharmacy") when it helps someone get where they're going:
 - / -- home. Describe a concern here and get matched with a doctor.
 - /doctors -- browse doctors with specialty, price, availability, and language; book a chat, voice, or video consultation.
-- /account, /account/sign-up -- returning patients log in to see their past visits, prescriptions, and lab results; new patients create a free account here.
+- /account -- log in with a phone number to see past visits, prescriptions, and lab results; a first-time number is set up automatically, there's no separate sign-up step.
 - /pharmacy -- pharmacy catalog; checkout only unlocks for medicines a doctor has actually prescribed and signed off on for that patient. It is not an open store.
 - /consultation/[id] -- the live chat, voice, or video room for a booked visit.
 - /doctor/apply -- for doctors who want to apply to join Afya24 as a provider.

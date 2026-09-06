@@ -342,7 +342,6 @@ const dict = {
   nav_labs: { en: "Labs", sw: "Maabara" },
   nav_health_tips: { en: "Health tips", sw: "Vidokezo vya afya" },
   header_doctor_admin_login: { en: "Staff login", sw: "Kuingia kwa wafanyakazi" },
-  header_sign_up: { en: "Sign up", sw: "Jisajili" },
   header_log_in: { en: "Log in", sw: "Ingia" },
   header_my_account: { en: "My account", sw: "Akaunti yangu" },
   header_log_out: { en: "Log out", sw: "Toka" },
@@ -382,8 +381,6 @@ const dict = {
   account_login_title: { en: "Log in to your account", sw: "Ingia kwenye akaunti yako" },
   account_phone_placeholder: { en: "Phone number", sw: "Nambari ya simu" },
   account_password_placeholder: { en: "Password", sw: "Nenosiri" },
-  account_new_to_afya24: { en: "New to Afya24?", sw: "Mgeni Afya24?" },
-  account_create_account_link: { en: "Create an account", sw: "Fungua akaunti" },
   account_continue_cta: { en: "Continue", sw: "Endelea" },
   account_otp_terms_disclosure: {
     en: "By continuing, you agree to our Terms of Service and Privacy Policy.",
@@ -452,14 +449,6 @@ const dict = {
   account_welcome_location_placeholder: { en: "e.g. Dar es Salaam", sw: "mfano Dar es Salaam" },
   account_welcome_continue: { en: "Continue", sw: "Endelea" },
   account_welcome_skip: { en: "Skip for now", sw: "Ruka kwa sasa" },
-  account_signup_title: {
-    en: "Create your account",
-    sw: "Fungua akaunti yako",
-  },
-  account_signup_subtitle: {
-    en: "It only takes a minute",
-    sw: "Inachukua dakika moja tu",
-  },
   account_first_name_label: { en: "First name", sw: "Jina la kwanza" },
   account_last_name_label: { en: "Last name", sw: "Jina la mwisho" },
   account_phone_format_example: { en: "0712345678", sw: "0712345678" },
@@ -476,8 +465,6 @@ const dict = {
   account_terms_of_service_link: { en: "Terms of Service", sw: "Vigezo vya Huduma" },
   account_and: { en: "and", sw: "na" },
   account_privacy_policy_link: { en: "Privacy Policy", sw: "Sera ya Faragha" },
-  account_create_cta: { en: "Create account", sw: "Fungua akaunti" },
-  account_already_customer: { en: "Already a customer?", sw: "Tayari ni mteja?" },
   account_benefit1: { en: "Upfront pricing before you book", sw: "Bei wazi kabla ya kuweka miadi" },
   account_benefit2: {
     en: "Chat, voice, or video with a licensed doctor",

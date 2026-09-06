@@ -30,3 +30,19 @@ export async function createPatientNotification(
     console.error(`createPatientNotification(${kind}) failed`, error);
   }
 }
+
+// Same "doctor_available" event, but for every subscriber at once (see
+// notifyPatientsDoctorIsAvailable) -- one insert of N rows instead of N
+// separate round trips. Never throws, same reasoning as the single version.
+export async function createPatientNotifications(
+  service: ReturnType<typeof createServiceClient>,
+  rows: { patientId: string; data: Record<string, unknown> }[]
+): Promise<void> {
+  if (rows.length === 0) return;
+  const { error } = await service
+    .from("patient_notifications")
+    .insert(rows.map((row) => ({ patient_id: row.patientId, kind: "doctor_available", data: row.data })));
+  if (error) {
+    console.error("createPatientNotifications(doctor_available) failed", error);
+  }
+}

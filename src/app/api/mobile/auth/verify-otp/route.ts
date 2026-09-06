@@ -5,7 +5,7 @@ import { verifyPatientOtp } from "@/lib/patient-otp";
 import { resolvePatientForVerifiedPhone } from "@/lib/patient-account";
 import { signPatientSessionToken, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
-import { toTitleCase } from "@/lib/format-name";
+import { toApiPatient } from "@/lib/mobile-patient";
 import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
 
 // Mobile equivalent of account/actions.ts's verifyPatientOtp -- one endpoint
@@ -67,20 +67,15 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   const token = await signPatientSessionToken(resolved.patientId, LONG_TTL_SECONDS);
+  const apiPatient = toApiPatient({ id: resolved.patientId, ...(patient ?? {}) });
 
   return NextResponse.json({
     ok: true,
     token,
     expiresIn: LONG_TTL_SECONDS,
     isNewAccount: resolved.isNewAccount,
-    patient: {
-      id: resolved.patientId,
-      fullName: patient?.full_name ? toTitleCase(patient.full_name as string) : null,
-      phone: patient?.phone ?? phone,
-      gender: patient?.gender ?? null,
-      age: patient?.age ?? null,
-      location: patient?.address ?? null,
-      createdAt: patient?.created_at ?? null,
-    },
+    // Falls back to the phone number just verified above if the row's own
+    // phone somehow came back empty -- the same fallback this had before.
+    patient: { ...apiPatient, phone: apiPatient.phone ?? phone },
   });
 }

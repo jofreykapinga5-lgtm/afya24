@@ -2,27 +2,19 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
+import {
+  EMAIL_PATTERN,
+  EXPERIENCE_PATTERN,
+  LICENSE_PATTERN,
+  NAME_PATTERN,
+  isValidApplicationPhone,
+} from "@/lib/provider-application-validation";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
 const BUCKET = "provider-applications";
 const MAX_BYTES = 12 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-
-// The server is the real security boundary -- both the web form and the
-// mobile app's own request can be bypassed by a direct API call (already
-// proven true against this exact route during testing), so these are
-// enforced here regardless of what either client already filters. Letters
-// only for name/region (never digits), digits only for phone/experience,
-// a real email shape, and a conservative charset for a license number
-// (letters/digits/hyphens -- real license numbers mix both, so this can't
-// be numbers-only or letters-only the way name/phone can).
-const NAME_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
-const REGION_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
-const LICENSE_PATTERN = /^[A-Za-z0-9-]{3,40}$/;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^\+\d{9,15}$/;
-const EXPERIENCE_PATTERN = /^\d{1,2}$/;
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -73,13 +65,13 @@ export async function POST(request: Request) {
   if (!EMAIL_PATTERN.test(email)) {
     return NextResponse.json({ error: t("error_apply_invalid_email", locale) }, { status: 400 });
   }
-  if (!PHONE_PATTERN.test(normalizeTanzanianPhoneToE164(phone))) {
+  if (!isValidApplicationPhone(phone)) {
     return NextResponse.json({ error: t("error_apply_invalid_phone", locale) }, { status: 400 });
   }
   if (!LICENSE_PATTERN.test(licenseNumber)) {
     return NextResponse.json({ error: t("error_apply_invalid_license", locale) }, { status: 400 });
   }
-  if (region && !REGION_PATTERN.test(region)) {
+  if (region && !NAME_PATTERN.test(region)) {
     return NextResponse.json({ error: t("error_apply_invalid_region", locale) }, { status: 400 });
   }
   if (experienceYearsRaw && (!EXPERIENCE_PATTERN.test(experienceYearsRaw) || Number(experienceYearsRaw) > 70)) {
@@ -126,7 +118,13 @@ export async function POST(request: Request) {
     .insert({
       full_name: fullName,
       email,
-      phone: phone || null,
+      // Normalized, not the raw typed value -- isValidApplicationPhone above
+      // validates the normalized form, so that's the shape actually
+      // guaranteed to be a real, well-formed phone number; storing the raw
+      // string instead (a prior bug) meant what got saved didn't match what
+      // got checked, e.g. "0754 123 456" stored verbatim instead of
+      // "+255754123456".
+      phone: phone ? normalizeTanzanianPhoneToE164(phone) : null,
       license_number: licenseNumber,
       specialty,
       region: region || null,

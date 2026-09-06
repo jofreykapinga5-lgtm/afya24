@@ -85,12 +85,13 @@ const createPatientAccount = tool({
     if (existing) {
       const { data } = await service
         .from("patients")
-        .select("id")
+        .select("id, created_at")
         .eq("id", existing.patientId)
         .maybeSingle();
       if (data) {
         return {
           patientId: data.id as string,
+          createdAt: data.created_at as string,
           claimToken: await createAccountClaimToken(data.id as string),
         };
       }

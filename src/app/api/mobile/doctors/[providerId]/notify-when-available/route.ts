@@ -42,7 +42,11 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     .maybeSingle();
 
   if (existing) {
-    const { error } = await service.from("doctor_availability_subscriptions").delete().eq("id", existing.id);
+    const { error } = await service
+      .from("doctor_availability_subscriptions")
+      .delete()
+      .eq("patient_id", session.patientId)
+      .eq("provider_id", providerId);
     if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true, subscribed: false });
   }
@@ -50,6 +54,15 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   const { error } = await service
     .from("doctor_availability_subscriptions")
     .insert({ patient_id: session.patientId, provider_id: providerId });
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  // A double-tap (or a client retry on a slow response) can race two POSTs
+  // here: both see `existing` as null before either insert commits, so the
+  // second hits the table's unique(patient_id, provider_id) constraint
+  // (23505). That isn't a real failure -- the patient ends up correctly
+  // subscribed either way -- so treat it the same as a fresh success instead
+  // of surfacing a 500 for what looks, to the patient, like a harmless
+  // double-tap on "Notify me".
+  if (error && error.code !== "23505") {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, subscribed: true });
 }

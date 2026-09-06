@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPatientSession } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
+import { toApiPatient } from "@/lib/mobile-patient";
 
 // The stored session JWT only encodes { patientId } (see
 // signPatientSessionToken in lib/patient-session.ts) -- it doesn't carry a
@@ -25,16 +26,5 @@ export async function GET() {
     return NextResponse.json({ ok: false, error_code: "not_found", error: "Could not find your patient record." }, { status: 404 });
   }
 
-  return NextResponse.json({
-    ok: true,
-    patient: {
-      id: patient.id,
-      fullName: patient.full_name,
-      phone: patient.phone,
-      gender: patient.gender,
-      age: patient.age,
-      location: patient.address,
-      createdAt: patient.created_at,
-    },
-  });
+  return NextResponse.json({ ok: true, patient: toApiPatient(patient) });
 }

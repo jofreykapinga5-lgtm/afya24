@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { signPatientSessionToken, verifyAccountClaimToken, TTL_SECONDS } from "@/lib/patient-session";
 import { createServiceClient } from "@/lib/supabase/service";
-import { toTitleCase } from "@/lib/format-name";
+import { toApiPatient } from "@/lib/mobile-patient";
 import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
 
 // Mobile equivalent of /api/patient-session/route.ts. That route exists
@@ -58,18 +58,5 @@ export async function POST(request: NextRequest) {
   // with no explicit ttlSeconds, not a full password/Google account.
   const token = await signPatientSessionToken(patientId);
 
-  return NextResponse.json({
-    ok: true,
-    token,
-    expiresIn: TTL_SECONDS,
-    patient: {
-      id: patient.id,
-      fullName: patient.full_name ? toTitleCase(patient.full_name) : null,
-      phone: patient.phone,
-      gender: patient.gender,
-      age: patient.age,
-      location: patient.address,
-      createdAt: patient.created_at,
-    },
-  });
+  return NextResponse.json({ ok: true, token, expiresIn: TTL_SECONDS, patient: toApiPatient(patient) });
 }

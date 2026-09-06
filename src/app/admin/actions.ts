@@ -5,7 +5,7 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { actionErrorMessage, formString, requireAdmin } from "@/lib/admin/auth";
 import { ensurePatientReferenceNumber } from "@/lib/patient-account";
-import { notifyPatientsDoctorIsAvailable } from "@/lib/doctor-availability-subscriptions";
+import { applyProviderAvailabilityUpdate } from "@/lib/doctor-availability-subscriptions";
 import type { ProviderStatus } from "@/lib/types";
 
 export type AdminActionState = {
@@ -379,41 +379,25 @@ export async function updateProviderAvailabilityByAdmin(formData: FormData) {
 
   const { data: provider, error: providerError } = await service
     .from("providers")
-    .select("id, full_name, available_now")
+    .select("id, full_name")
     .eq("id", providerId)
     .single();
 
   if (providerError || !provider) {
     throw new Error(providerError?.message ?? "Provider not found.");
   }
-  const wasAvailable = Boolean(provider.available_now);
 
-  const { error } = await service
-    .from("providers")
-    .update({
-      available_now: availableNow,
-      availability_note: availabilityNote || null,
-      consultation_modes: consultationModes,
-    })
-    .eq("id", providerId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  // A patient who asked to hear about this doctor being back only cares
-  // about the false -> true edge, not every save while already online.
-  // Own try/catch: the availability update above already succeeded, so a
-  // failure here (a transient Supabase/network blip) must never surface as
-  // this action's own error -- same reasoning as updateProviderAvailability's
-  // identical guard in doctor/actions.ts.
-  if (availableNow && !wasAvailable) {
-    try {
-      await notifyPatientsDoctorIsAvailable(service, providerId);
-    } catch (notifyError) {
-      console.error("notifyPatientsDoctorIsAvailable failed", notifyError);
-    }
-  }
+  // Atomic false->true edge detection + the "notify waiting patients" side
+  // effect both live in this shared helper -- see its own comment for why a
+  // separate pre-update SELECT here would race against the doctor's own
+  // dashboard toggling the same provider. doctorName is passed through since
+  // this query already has it in hand for the audit log below regardless.
+  await applyProviderAvailabilityUpdate(
+    service,
+    providerId,
+    { availableNow, availabilityNote: availabilityNote || null, consultationModes },
+    provider.full_name
+  );
 
   await service.from("audit_logs").insert({
     actor_user_id: adminUserId,

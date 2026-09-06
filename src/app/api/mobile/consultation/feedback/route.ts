@@ -25,7 +25,17 @@ export async function POST(request: NextRequest) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ ok: false, error: result.message }, { status: 400 });
+    // submitConsultationFeedback returns a plain message string, no error
+    // code (it's shared with the web form, which doesn't need one -- a
+    // browser session redirect handles "signed out" there). Every sibling
+    // mobile route in this same diff (book, notify-when-available,
+    // push-token) answers 401 specifically for "no/expired session", which
+    // the mobile app's shared fetch layer needs to keep behaving consistently
+    // (clearing the stored token and returning to sign-in) -- matching on
+    // this exact known message is the smallest way to keep this route in
+    // that same convention without changing the shared web/mobile result type.
+    const status = result.message === "Your session expired." ? 401 : 400;
+    return NextResponse.json({ ok: false, error: result.message }, { status });
   }
   return NextResponse.json({ ok: true });
 }

@@ -5,7 +5,7 @@ import { createPatientAccountRecord } from "@/lib/patient-account";
 import { signPatientSessionToken, LONG_TTL_SECONDS } from "@/lib/patient-session";
 import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { checkRateLimit, getClientIpFromRequest } from "@/lib/rate-limit";
-import { findResumableAppointment, bookConsultationForPatient } from "@/app/doctors/actions";
+import { bookConsultationForPatient } from "@/app/doctors/actions";
 import type { Locale } from "@/lib/types";
 
 // Mobile-native equivalent of doctors/actions.ts's bookAsGuest -- the
@@ -63,21 +63,16 @@ export async function POST(request: NextRequest) {
       preferredLanguage: locale,
     });
 
-    const existingAppointmentId = await findResumableAppointment(service, record.patientId, providerId);
-    const appointmentId =
-      existingAppointmentId ??
-      (await bookConsultationForPatient({
-        patientId: record.patientId,
-        providerId,
-        locale,
-        qualification: null,
-      }));
-
-    const { data: appointment } = await service
-      .from("appointments")
-      .select("payment_status")
-      .eq("id", appointmentId)
-      .maybeSingle();
+    // No findResumableAppointment/alreadyPaid lookup here -- record.patientId
+    // is a brand-new row created moments ago in this same request, so it is
+    // not possible for it to already have any prior appointment (resumable
+    // or paid-within-24h); this guest booking is always a fresh, pending one.
+    const appointmentId = await bookConsultationForPatient({
+      patientId: record.patientId,
+      providerId,
+      locale,
+      qualification: null,
+    });
 
     const token = await signPatientSessionToken(record.patientId, LONG_TTL_SECONDS);
     return NextResponse.json({
@@ -94,7 +89,7 @@ export async function POST(request: NextRequest) {
         createdAt: record.createdAt,
       },
       appointmentId,
-      alreadyPaid: appointment?.payment_status === "paid",
+      alreadyPaid: false,
     });
   } catch (error) {
     return NextResponse.json(

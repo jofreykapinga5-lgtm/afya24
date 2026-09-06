@@ -47,11 +47,18 @@ export async function POST(request: NextRequest) {
     // mobile app needs to know that up front to skip the Payment screen
     // entirely instead of making the patient tap through a form that would
     // just no-op the charge.
-    const { data: appointment } = await service
+    const { data: appointment, error: statusError } = await service
       .from("appointments")
       .select("payment_status")
       .eq("id", appointmentId)
       .maybeSingle();
+    if (statusError) {
+      // Logged, not thrown -- the booking itself already succeeded above;
+      // worst case here is alreadyPaid defaulting to false below and the
+      // patient seeing the Payment screen for a visit that's actually
+      // already settled, not a lost booking.
+      console.error("mobile book: could not read payment_status", statusError);
+    }
 
     return NextResponse.json({ ok: true, appointmentId, alreadyPaid: appointment?.payment_status === "paid" });
   } catch (error) {

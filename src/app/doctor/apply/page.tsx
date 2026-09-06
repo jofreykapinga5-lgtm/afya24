@@ -19,19 +19,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { MEDICAL_SPECIALTIES } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
+import {
+  EMAIL_PATTERN,
+  EXPERIENCE_PATTERN,
+  LICENSE_PATTERN,
+  NAME_PATTERN,
+  isValidApplicationPhone,
+} from "@/lib/provider-application-validation";
 
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
-
-// Mirrors api/provider-applications/route.ts's own patterns exactly -- the
-// server is the real security boundary (it re-checks these regardless of
-// what a client sends), this is purely so a mistake is caught immediately
-// instead of after a network round trip.
-const NAME_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
-const REGION_PATTERN = /^\p{L}[\p{L}\s'.-]{1,79}$/u;
-const LICENSE_PATTERN = /^[A-Za-z0-9-]{3,40}$/;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_DIGITS_PATTERN = /^\+?\d{9,15}$/;
-const EXPERIENCE_PATTERN = /^\d{1,2}$/;
 
 export default function DoctorApplicationPage() {
   const locale = useAppStore((state) => state.locale);
@@ -61,7 +57,7 @@ export default function DoctorApplicationPage() {
       setError(t("error_apply_invalid_email", locale));
       return;
     }
-    if (!PHONE_DIGITS_PATTERN.test(phone.replace(/[\s()-]/g, ""))) {
+    if (!isValidApplicationPhone(phone)) {
       setError(t("error_apply_invalid_phone", locale));
       return;
     }
@@ -69,7 +65,7 @@ export default function DoctorApplicationPage() {
       setError(t("error_apply_invalid_license", locale));
       return;
     }
-    if (region && !REGION_PATTERN.test(region)) {
+    if (region && !NAME_PATTERN.test(region)) {
       setError(t("error_apply_invalid_region", locale));
       return;
     }

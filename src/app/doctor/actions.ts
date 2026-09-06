@@ -8,7 +8,7 @@ import { normalizeTanzanianPhoneToE164 } from "@/lib/phone";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { notifyPatientsDoctorIsAvailable } from "@/lib/doctor-availability-subscriptions";
+import { applyProviderAvailabilityUpdate } from "@/lib/doctor-availability-subscriptions";
 
 export type AvailabilityActionState = {
   status: "idle" | "success" | "error";
@@ -267,39 +267,15 @@ export async function updateProviderAvailability(
     const availableNow = formData.get("availableNow") === "on";
     const availabilityNote = String(formData.get("availabilityNote") ?? "").trim();
 
-    const { data: beforeUpdate } = await service
-      .from("providers")
-      .select("available_now")
-      .eq("id", providerId)
-      .maybeSingle();
-    const wasAvailable = Boolean(beforeUpdate?.available_now);
-
-    const { error } = await service
-      .from("providers")
-      .update({
-        available_now: availableNow,
-        availability_note: availabilityNote || null,
-        consultation_modes: selectedModes(formData),
-      })
-      .eq("id", providerId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // A patient who asked to hear about this doctor being back only cares
-    // about the false -> true edge, not every save while already online.
-    // Own try/catch: the availability update above already succeeded, so a
-    // failure here (a transient Supabase/network blip) must never surface
-    // as this action's own error -- the doctor did go online, that's what
-    // matters, not whether the "notify waiting patients" side-effect ran.
-    if (availableNow && !wasAvailable) {
-      try {
-        await notifyPatientsDoctorIsAvailable(service, providerId);
-      } catch (notifyError) {
-        console.error("notifyPatientsDoctorIsAvailable failed", notifyError);
-      }
-    }
+    // Atomic false->true edge detection + the "notify waiting patients" side
+    // effect both live in this shared helper now -- see its own comment for
+    // why a separate pre-update SELECT here would race against the admin
+    // dashboard's identical toggle on the same provider.
+    await applyProviderAvailabilityUpdate(service, providerId, {
+      availableNow,
+      availabilityNote: availabilityNote || null,
+      consultationModes: selectedModes(formData),
+    });
 
     // Also revalidate "/" (missed previously): the home page's doctor
     // preview reads the same providers rows, so it would keep showing a

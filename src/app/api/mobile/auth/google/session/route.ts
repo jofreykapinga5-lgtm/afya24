@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { createStatelessAuthClient } from "@/lib/supabase/anon";
 import { createServiceClient } from "@/lib/supabase/service";
 import { signPatientSessionToken, LONG_TTL_SECONDS } from "@/lib/patient-session";
-import { toTitleCase } from "@/lib/format-name";
+import { toApiPatient } from "@/lib/mobile-patient";
 
 // Mobile-native equivalent of auth/callback/route.ts's patient branch --
 // same "does a patients row already exist for this Google identity" check,
@@ -56,15 +56,7 @@ export async function POST(request: NextRequest) {
       needsProfile: false,
       token,
       expiresIn: LONG_TTL_SECONDS,
-      patient: {
-        id: patient.id,
-        fullName: patient.full_name ? toTitleCase(patient.full_name) : null,
-        phone: patient.phone,
-        gender: patient.gender,
-        age: patient.age,
-        location: patient.address,
-        createdAt: patient.created_at,
-      },
+      patient: toApiPatient(patient),
     });
   }
 

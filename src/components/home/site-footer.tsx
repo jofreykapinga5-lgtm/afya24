@@ -11,7 +11,6 @@ const quickLinks: { href: string; labelKey: TranslationKey }[] = [
   { href: "#doctors", labelKey: "nav_doctors" },
   { href: "#services", labelKey: "services_title" },
   { href: "/pharmacy", labelKey: "nav_pharmacy" },
-  { href: "#labs", labelKey: "nav_labs" },
   { href: "#health-tips", labelKey: "nav_health_tips" },
 ];
 

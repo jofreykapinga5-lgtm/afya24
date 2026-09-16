@@ -5,10 +5,8 @@ import { HealthTips } from "@/components/home/health-tips";
 import { DoctorsPreview } from "@/components/home/doctors-preview";
 import { ServicesGrid } from "@/components/home/services-grid";
 import { PharmacyPreview } from "@/components/home/pharmacy-preview";
-import { LabsPreview, type PublicLabLocation } from "@/components/home/labs-preview";
 import { TrustSection } from "@/components/home/trust-section";
 import { PatientReviews } from "@/components/home/patient-reviews";
-import { EmailCapture } from "@/components/home/email-capture";
 import { SiteFooter } from "@/components/home/site-footer";
 import { Reveal } from "@/components/motion/reveal";
 import { getCachedHomepageData } from "@/lib/cache/public-catalog";
@@ -47,10 +45,9 @@ function formatNextAvailable(iso: string) {
 export default async function Home() {
   const locale = await getServerLocale();
   let doctors: Provider[] = [];
-  let labs: PublicLabLocation[] = [];
 
   try {
-    const { providers, labs: labRows, defaultServicePrice, slotEntries } = await getCachedHomepageData();
+    const { providers, defaultServicePrice, slotEntries } = await getCachedHomepageData();
     const slotsByProvider = new Map(slotEntries);
 
     const rows = providers as ProviderRow[];
@@ -61,21 +58,8 @@ export default async function Home() {
         nextAvailableAt: slotInfo?.earliestIso ? formatNextAvailable(slotInfo.earliestIso) : undefined,
       });
     });
-    labs = (labRows ?? []).map((lab) => ({
-      id: lab.id,
-      name: lab.name,
-      address: lab.address,
-      phone: lab.phone ?? "",
-      region: lab.region ?? "",
-      latitude: Number(lab.latitude),
-      longitude: Number(lab.longitude),
-      openingHours: lab.opening_hours ?? "Hours not listed",
-      mapUrl: lab.map_url ?? "",
-      status: lab.status,
-    })) as PublicLabLocation[];
   } catch {
     doctors = [];
-    labs = [];
   }
 
   return (
@@ -108,17 +92,11 @@ export default async function Home() {
           <Reveal>
             <TrustSection />
           </Reveal>
-          <Reveal delay={60}>
-            <LabsPreview labs={labs} />
-          </Reveal>
           <Reveal>
             <HealthTips />
           </Reveal>
           <Reveal>
             <PatientReviews />
-          </Reveal>
-          <Reveal delay={60}>
-            <EmailCapture />
           </Reveal>
         </div>
       </main>

@@ -339,7 +339,6 @@ const dict = {
   nav_how_it_works: { en: "How it works", sw: "Jinsi inavyofanya kazi" },
   nav_doctors: { en: "Doctors", sw: "Madaktari" },
   nav_pharmacy: { en: "Pharmacy", sw: "Duka la dawa" },
-  nav_labs: { en: "Labs", sw: "Maabara" },
   nav_health_tips: { en: "Health tips", sw: "Vidokezo vya afya" },
   header_doctor_admin_login: { en: "Staff login", sw: "Kuingia kwa wafanyakazi" },
   header_log_in: { en: "Log in", sw: "Ingia" },

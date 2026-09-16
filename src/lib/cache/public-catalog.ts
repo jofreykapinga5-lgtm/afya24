@@ -69,15 +69,15 @@ export const getCachedPublishedPharmacyItems = unstable_cache(
   { revalidate: REVALIDATE_SECONDS, tags: ["pharmacy-items"] }
 );
 
-// Homepage-specific: the featured providers slice, active lab locations,
-// each provider's upcoming slots, and the default service's price, all in
-// one cached fetch since the homepage already treats them as one unit
-// (one Promise.all). Returns plain arrays, not a Map -- unstable_cache's
-// result has to be JSON-serializable, and Map doesn't survive that.
+// Homepage-specific: the featured providers slice, each provider's upcoming
+// slots, and the default service's price, all in one cached fetch since the
+// homepage already treats them as one unit (one Promise.all). Returns plain
+// arrays, not a Map -- unstable_cache's result has to be JSON-serializable,
+// and Map doesn't survive that.
 export const getCachedHomepageData = unstable_cache(
   async () => {
     const service = createServiceClient();
-    const [{ data: providerRows }, { data: labRows }, defaultService] = await Promise.all([
+    const [{ data: providerRows }, defaultService] = await Promise.all([
       service
         .from("providers")
         .select(
@@ -86,12 +86,6 @@ export const getCachedHomepageData = unstable_cache(
         .eq("profile_status", "active")
         .order("available_now", { ascending: false })
         .limit(8),
-      service
-        .from("lab_locations")
-        .select("id, name, address, phone, region, latitude, longitude, map_url, opening_hours, status")
-        .eq("status", "active")
-        .order("region", { ascending: true })
-        .limit(100),
       getDefaultService(service).catch(() => null),
     ]);
 
@@ -121,8 +115,8 @@ export const getCachedHomepageData = unstable_cache(
       slotEntries = [...slotsByProvider.entries()];
     }
 
-    return { providers, labs: labRows ?? [], defaultServicePrice: defaultService?.basePrice ?? 0, slotEntries };
+    return { providers, defaultServicePrice: defaultService?.basePrice ?? 0, slotEntries };
   },
   ["homepage-data"],
-  { revalidate: REVALIDATE_SECONDS, tags: ["providers", "lab-locations"] }
+  { revalidate: REVALIDATE_SECONDS, tags: ["providers"] }
 );

@@ -40,6 +40,10 @@ yarn-error.log*
 # Supabase CLI local cache
 supabase/.temp/
 
+# impeccable design-hook: config.json (ignore rules) is shared, the scan
+# cache is per-session/per-machine and shouldn't be
+.impeccable/hook.cache.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

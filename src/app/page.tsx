@@ -5,7 +5,6 @@ import { HealthTips } from "@/components/home/health-tips";
 import { DoctorsPreview } from "@/components/home/doctors-preview";
 import { ServicesGrid } from "@/components/home/services-grid";
 import { PharmacyPreview } from "@/components/home/pharmacy-preview";
-import { TrustSection } from "@/components/home/trust-section";
 import { PatientReviews } from "@/components/home/patient-reviews";
 import { SiteFooter } from "@/components/home/site-footer";
 import { Reveal } from "@/components/motion/reveal";
@@ -88,9 +87,6 @@ export default async function Home() {
           </Reveal>
           <Reveal delay={60}>
             <PharmacyPreview />
-          </Reveal>
-          <Reveal>
-            <TrustSection />
           </Reveal>
           <Reveal>
             <HealthTips />

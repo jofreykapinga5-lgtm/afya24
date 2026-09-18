@@ -107,36 +107,34 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
       </div>
 
       <div className="-mx-4 mt-7 overflow-hidden bg-[#e8f7f4] sm:mx-0 sm:rounded-[1.75rem] sm:ring-1 sm:ring-[#ccece7]">
-        <div className="grid md:grid-cols-[1fr_310px] md:items-stretch">
-          <div className="p-5 pb-4 sm:p-6 md:pr-3">
+        <div className="flex flex-col sm:flex-row sm:items-stretch">
+          <div className="flex flex-1 flex-col items-start justify-center p-5 sm:p-7">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">
               {t("home_for_professionals_label", locale)}
             </p>
-            <h3 className="mt-3 text-2xl font-bold leading-tight text-[#071923]">
+            <h3 className="mt-2 text-xl font-bold leading-tight text-[#071923] sm:text-2xl">
               {t("home_are_you_doctor_title", locale)}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-[#4d5960]">
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[#4d5960]">
               {t("home_are_you_doctor_body", locale)}
             </p>
+            <Link
+              href="/doctor/apply"
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white outline-none transition hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/35"
+            >
+              {t("home_apply_now", locale)}
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
 
-          <Reveal variant="image" className="relative min-h-64 overflow-hidden md:min-h-80">
+          <Reveal variant="image" className="relative h-44 shrink-0 overflow-hidden sm:h-auto sm:w-[220px] md:w-[260px]">
             <Image
               src="/images/doctors/tanzanian-male-doctor.png"
               alt="Tanzanian male doctor in a white coat"
               fill
-              sizes="(min-width: 768px) 310px, 100vw"
-              className="object-cover object-[50%_28%] md:object-top"
+              sizes="(min-width: 640px) 260px, 100vw"
+              className="object-cover object-[50%_20%] sm:object-top"
             />
-            <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-[#071923]/82 via-[#071923]/18 to-transparent p-5 pt-24 sm:p-6">
-              <Link
-                href="/doctor/apply"
-                className="inline-flex w-auto translate-y-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white outline-none transition hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/35 sm:translate-y-0 sm:px-7"
-              >
-                {t("home_apply_now", locale)}
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
           </Reveal>
         </div>
       </div>

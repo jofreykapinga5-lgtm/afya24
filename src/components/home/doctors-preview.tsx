@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { DoctorCarouselCard } from "@/components/doctor-carousel-card";
 import { SectionHeading } from "@/components/home/section-heading";
 import { Reveal } from "@/components/motion/reveal";
@@ -67,24 +67,14 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label={t("doctors_preview_prev", locale)}
-                onClick={() => scrollByCard(-1)}
-                className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-white text-muted-foreground outline-none transition-colors hover:border-primary/30 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <ArrowLeft className="size-4" />
-              </button>
-              <button
-                type="button"
-                aria-label={t("doctors_preview_next", locale)}
-                onClick={() => scrollByCard(1)}
-                className="inline-flex size-9 items-center justify-center rounded-full border border-primary bg-primary text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <ArrowRight className="size-4" />
-              </button>
-            </div>
+            <button
+              type="button"
+              aria-label={t("doctors_preview_next", locale)}
+              onClick={() => scrollByCard(1)}
+              className="inline-flex size-9 items-center justify-center rounded-full border border-primary bg-primary text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <ArrowRight className="size-4" />
+            </button>
           </div>
         </>
       ) : (

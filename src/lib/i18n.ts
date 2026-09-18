@@ -261,7 +261,6 @@ const dict = {
     sw: "Bei halisi, upatikanaji wazi, na lugha unayopendelea.",
   },
   doctors_preview_see_all: { en: "See all doctors", sw: "Ona madaktari wote" },
-  doctors_preview_prev: { en: "Previous doctor", sw: "Daktari aliyetangulia" },
   doctors_preview_next: { en: "Next doctor", sw: "Daktari anayefuata" },
   labs_title: { en: "Partner labs near you", sw: "Maabara washirika karibu nawe" },
   labs_geo_unavailable: {

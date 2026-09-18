@@ -5,28 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { ChevronDown, CircleHelp, LayoutDashboard, LogOut, Menu, Search, Stethoscope, User, X } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, Search, User, X } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
 import { signOut } from "@/app/account/actions";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 const navLinks: { href: string; labelKey: TranslationKey }[] = [
-  { href: "#how-it-works", labelKey: "nav_how_it_works" },
   { href: "#doctors", labelKey: "nav_doctors" },
-  { href: "#services", labelKey: "services_title" },
   { href: "/pharmacy", labelKey: "nav_pharmacy" },
-  { href: "#health-tips", labelKey: "nav_health_tips" },
 ];
 
 const headerHiddenPrefixes = ["/account", "/admin", "/auth"];
@@ -42,9 +30,9 @@ function isStaffDoctorPath(pathname: string) {
 }
 
 // The doctor-selection-through-video-call flow (/doctors, /consultation) is
-// a focused task, not general browsing -- search, the hamburger's marketing
-// nav, and the account menu don't belong mid-booking or mid-payment. Just
-// enough presence to feel like the same site: logo and language.
+// a focused task, not general browsing -- search and the account menu
+// don't belong mid-booking or mid-payment. Just enough presence to feel
+// like the same site: logo and language.
 function isFlowPage(pathname: string) {
   return pathname.startsWith("/doctors") || pathname.startsWith("/consultation");
 }
@@ -59,9 +47,9 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const loginMenuRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -74,16 +62,16 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
   }, [searchOpen]);
 
   useEffect(() => {
-    if (!loginMenuOpen) return;
+    if (!accountMenuOpen) return;
 
     function handlePointerDown(event: MouseEvent) {
-      if (!loginMenuRef.current?.contains(event.target as Node)) {
-        setLoginMenuOpen(false);
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setLoginMenuOpen(false);
+      if (event.key === "Escape") setAccountMenuOpen(false);
     }
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -92,7 +80,7 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
       document.removeEventListener("mousedown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [loginMenuOpen]);
+  }, [accountMenuOpen]);
 
   function closeSearch() {
     setSearchOpen(false);
@@ -139,7 +127,7 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         {searchOpen ? (
           <form onSubmit={submitSearch} className="flex w-full items-center gap-2">
             <button
@@ -171,209 +159,101 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
           </form>
         ) : (
           <>
-        <div className="flex shrink-0 items-center gap-3">
-          <Sheet>
-            <SheetContent side="left" className="w-72">
-              <SheetHeader>
-                <SheetTitle>Afya24</SheetTitle>
-              </SheetHeader>
-              <nav className="flex flex-col gap-1 px-4">
-                {navLinks.map((link) =>
-                  link.href.startsWith("#") ? (
-                    <SheetClose
-                      key={link.href}
-                      nativeButton={false}
-                      render={
-                        <Link
-                          href={navHref(link.href)}
-                          className="flex min-h-11 items-center rounded-lg px-2 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                        />
-                      }
-                    >
-                      {t(link.labelKey, locale)}
-                    </SheetClose>
-                  ) : (
-                    <SheetClose
-                      key={link.href}
-                      nativeButton={false}
-                      render={
-                        <Link
-                          href={link.href}
-                          className="flex min-h-11 items-center rounded-lg px-2 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                        />
-                      }
-                    >
-                      {t(link.labelKey, locale)}
-                    </SheetClose>
-                  )
-                )}
-              </nav>
-              <div className="mt-2 flex flex-col gap-1 border-t border-border px-4 pt-4">
-                <SheetClose
-                  nativeButton={false}
-                  render={
-                    <Link
-                      href="/doctor"
-                      className="flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                    />
-                  }
-                >
-                  <Stethoscope className="size-3.5" />
-                  {t("header_doctor_admin_login", locale)}
-                </SheetClose>
-              </div>
-
-              <div className="mt-2 flex flex-col gap-2 border-t border-border px-4 pt-4 sm:hidden">
-                {patientName ? (
-                  <>
-                    <SheetClose
-                      nativeButton={false}
-                      render={
-                        <Link
-                          href="/account/dashboard"
-                          className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-border text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
-                        />
-                      }
-                    >
-                      <LayoutDashboard className="size-3.5" />
-                      {t("header_my_account", locale)}
-                    </SheetClose>
-                    <form action={signOut}>
-                      <SubmitButton
-                        variant="ghost"
-                        className="h-11 w-full rounded-full bg-destructive/10 px-4 text-sm font-semibold text-destructive hover:bg-destructive/20 focus-visible:ring-3 focus-visible:ring-ring/50"
-                      >
-                        <LogOut className="size-3.5" />
-                        {t("header_log_out", locale)}
-                      </SubmitButton>
-                    </form>
-                  </>
-                ) : (
-                  // One entry point, not a separate log-in/sign-up choice --
-                  // the phone+OTP form behind /account already handles a
-                  // first-time number transparently (see phone-otp-form.tsx).
-                  <SheetClose
-                    nativeButton={false}
-                    render={
-                      <Link
-                        href="/account"
-                        className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                      />
-                    }
-                  >
-                    {t("header_log_in", locale)}
-                  </SheetClose>
-                )}
-              </div>
-              <SheetHeader>
-                <button
-                  type="button"
-                  aria-label={t("header_help", locale)}
-                  className="mx-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-full border border-border px-3 text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <CircleHelp className="size-4" />
-                  {t("header_help", locale)}
-                </button>
-              </SheetHeader>
-            </SheetContent>
-            <SheetTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("header_open_menu_aria", locale)}
-                  className="size-11 -ml-1"
+            <div className="flex min-w-0 shrink items-center gap-6">
+              <Link href="/" className="flex shrink-0 items-center gap-2">
+                <Image
+                  src="/brand/afya24-logo-header.png"
+                  alt="Afya24"
+                  width={220}
+                  height={70}
+                  priority
+                  style={{ width: "auto" }}
+                  className="h-8"
                 />
-              }
-            >
-              <Menu className="size-6" strokeWidth={2.25} />
-            </SheetTrigger>
-          </Sheet>
-
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/brand/afya24-logo-header.png"
-              alt="Afya24"
-              width={220}
-              height={70}
-              priority
-              style={{ width: "auto" }}
-              className="h-8"
-            />
-          </Link>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <LanguageToggle />
-          <button
-            type="button"
-            aria-label={t("header_search_aria", locale)}
-            onClick={() => setSearchOpen(true)}
-            className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <Search className="size-4.5" />
-          </button>
-
-          <div ref={loginMenuRef} className="relative hidden sm:block">
-            {!patientName ? (
-              // Signed out: one entry point, not a dropdown choosing between
-              // log-in and sign-up -- the phone+OTP form behind /account
-              // already handles a first-time number transparently (see
-              // phone-otp-form.tsx), same as the mobile app's single sign-in
-              // screen.
-              <Link
-                href="/account"
-                className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <User className="size-4" />
-                {t("header_log_in", locale)}
               </Link>
-            ) : (
+
+              <nav className="hidden items-center gap-5 sm:flex">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={navHref(link.href)}
+                    className="rounded-sm text-sm font-semibold text-foreground/80 outline-none transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    {t(link.labelKey, locale)}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <LanguageToggle />
+
               <button
                 type="button"
-                aria-expanded={loginMenuOpen}
-                aria-haspopup="menu"
-                onClick={() => setLoginMenuOpen((open) => !open)}
-                className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
+                aria-label={t("header_search_aria", locale)}
+                onClick={() => setSearchOpen(true)}
+                className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <User className="size-4" />
-                {firstName(patientName)}
-                <ChevronDown
-                  className={`size-4 transition-transform ${loginMenuOpen ? "rotate-180" : ""}`}
-                />
+                <Search className="size-4.5" />
               </button>
-            )}
 
-            {loginMenuOpen ? (
-              <div
-                role="menu"
-                className="absolute right-0 top-[calc(100%+0.35rem)] z-50 w-44 overflow-hidden rounded-lg border border-border bg-popover py-1 text-sm text-popover-foreground shadow-lg"
-              >
-                {/* This dropdown only ever opens from the signed-in button
-                    above now -- signed-out is a plain Link, no menu. */}
+              {!patientName ? (
+                // One entry point, not a separate log-in/sign-up choice --
+                // the phone+OTP form behind /account already handles a
+                // first-time number transparently (see phone-otp-form.tsx).
+                // A filled CTA reads as an invitation to start, not a gate
+                // patients need to already have an account to pass.
                 <Link
-                  href="/account/dashboard"
-                  role="menuitem"
-                  onClick={() => setLoginMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
+                  href="/account"
+                  className="inline-flex h-10 items-center rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground outline-none transition hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/35 sm:px-5"
                 >
-                  <LayoutDashboard className="size-3.5" />
-                  {t("header_my_account", locale)}
+                  {t("header_get_started", locale)}
                 </Link>
-                <form action={signOut}>
-                  <SubmitButton
-                    variant="ghost"
-                    role="menuitem"
-                    className="w-full justify-start gap-2 rounded-none px-3 py-2 text-left text-destructive hover:bg-secondary focus:bg-secondary"
+              ) : (
+                <div ref={accountMenuRef} className="relative">
+                  <button
+                    type="button"
+                    aria-expanded={accountMenuOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setAccountMenuOpen((open) => !open)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
-                    <LogOut className="size-3.5" />
-                    {t("header_log_out", locale)}
-                  </SubmitButton>
-                </form>
-              </div>
-            ) : null}
-          </div>
-        </div>
+                    <User className="size-4" />
+                    <span className="hidden sm:inline">{firstName(patientName)}</span>
+                    <ChevronDown
+                      className={`size-4 transition-transform ${accountMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {accountMenuOpen ? (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-[calc(100%+0.35rem)] z-50 w-44 overflow-hidden rounded-lg border border-border bg-popover py-1 text-sm text-popover-foreground shadow-lg"
+                    >
+                      <Link
+                        href="/account/dashboard"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-primary outline-none hover:bg-secondary focus:bg-secondary"
+                      >
+                        <LayoutDashboard className="size-3.5" />
+                        {t("header_my_account", locale)}
+                      </Link>
+                      <form action={signOut}>
+                        <SubmitButton
+                          variant="ghost"
+                          role="menuitem"
+                          className="w-full justify-start gap-2 rounded-none px-3 py-2 text-left text-destructive hover:bg-secondary focus:bg-secondary"
+                        >
+                          <LogOut className="size-3.5" />
+                          {t("header_log_out", locale)}
+                        </SubmitButton>
+                      </form>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

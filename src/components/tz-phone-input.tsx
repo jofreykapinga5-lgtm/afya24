@@ -7,27 +7,8 @@
 // "phone" value submitted is still just what the patient types (local or
 // E.164), same as before -- lib/phone.ts's normalizeTanzanianPhoneToE164
 // does the real normalization server-side, this is purely a visual anchor.
-//
-// A real inline SVG, not the 🇹🇿 emoji -- Windows' default fonts don't
-// carry regional-indicator flag glyphs, so that emoji renders as the plain
-// letters "TZ" there instead of an actual flag, unlike macOS/iOS/Android.
-// An SVG draws identically on every platform.
-function TanzaniaFlag() {
-  return (
-    <svg
-      viewBox="0 0 30 20"
-      width="20"
-      height="14"
-      aria-hidden="true"
-      className="shrink-0 rounded-[2px]"
-    >
-      <polygon points="0,0 30,0 0,20" fill="#1EB53A" />
-      <polygon points="30,0 30,20 0,20" fill="#00A3DD" />
-      <line x1="0" y1="20" x2="30" y2="0" stroke="#FCD116" strokeWidth="6.5" />
-      <line x1="0" y1="20" x2="30" y2="0" stroke="#000000" strokeWidth="3.5" />
-    </svg>
-  );
-}
+import { TanzaniaFlag } from "@/components/flag-icons";
+
 export function TzPhoneInput({
   id,
   name,

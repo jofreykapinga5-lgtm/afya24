@@ -341,16 +341,15 @@ const dict = {
   nav_health_tips: { en: "Health tips", sw: "Vidokezo vya afya" },
   header_doctor_admin_login: { en: "Staff login", sw: "Kuingia kwa wafanyakazi" },
   header_log_in: { en: "Log in", sw: "Ingia" },
+  header_get_started: { en: "Get started", sw: "Anza sasa" },
   header_my_account: { en: "My account", sw: "Akaunti yangu" },
   header_log_out: { en: "Log out", sw: "Toka" },
-  header_help: { en: "Help", sw: "Msaada" },
   header_search_aria: { en: "Search for care", sw: "Tafuta huduma" },
   header_search_placeholder: {
     en: "Search doctors or specialties",
     sw: "Tafuta madaktari au utaalamu",
   },
   header_search_close_aria: { en: "Close search", sw: "Funga utafutaji" },
-  header_open_menu_aria: { en: "Open menu", sw: "Fungua menyu" },
   footer_tagline: {
     en: "Direct-pay telehealth. Tell Afya24 what's going on first, then see a licensed doctor by chat, voice, or video.",
     sw: "Matibabu ya mtandaoni ya kulipa moja kwa moja. Mwambie Afya24 kinachoendelea kwanza, kisha uonane na daktari mwenye leseni kwa ujumbe, sauti, au video.",

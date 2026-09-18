@@ -100,7 +100,7 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex min-w-0 shrink items-center gap-6">
+        <div className="flex min-w-0 shrink items-center gap-8 lg:gap-10">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image
               src="/brand/afya24-logo-header.png"
@@ -113,7 +113,7 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
             />
           </Link>
 
-          <nav className="hidden items-center gap-5 sm:flex">
+          <nav className="hidden items-center gap-6 sm:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}

@@ -133,7 +133,7 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
               alt="Tanzanian male doctor in a white coat"
               fill
               sizes="(min-width: 640px) 50vw, 100vw"
-              className="object-cover object-[50%_20%] sm:object-top"
+              className="object-cover object-[50%_22%]"
             />
           </Reveal>
         </div>

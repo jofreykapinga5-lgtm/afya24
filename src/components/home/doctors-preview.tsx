@@ -108,31 +108,31 @@ export function DoctorsPreview({ providers }: { providers: Provider[] }) {
 
       <div className="-mx-4 mt-7 overflow-hidden bg-[#e8f7f4] sm:mx-0 sm:rounded-[1.75rem] sm:ring-1 sm:ring-[#ccece7]">
         <div className="flex flex-col sm:flex-row sm:items-stretch">
-          <div className="flex flex-1 flex-col items-start justify-center p-5 sm:p-7">
+          <div className="flex flex-col items-start justify-center p-6 sm:w-1/2 sm:p-10 lg:p-12">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087a7b]">
               {t("home_for_professionals_label", locale)}
             </p>
-            <h3 className="mt-2 text-xl font-bold leading-tight text-[#071923] sm:text-2xl">
+            <h3 className="mt-3 text-2xl font-bold leading-tight text-[#071923] sm:text-3xl">
               {t("home_are_you_doctor_title", locale)}
             </h3>
-            <p className="mt-2 max-w-sm text-sm leading-6 text-[#4d5960]">
+            <p className="mt-3 max-w-md text-sm leading-6 text-[#4d5960] sm:text-base sm:leading-7">
               {t("home_are_you_doctor_body", locale)}
             </p>
             <Link
               href="/doctor/apply"
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white outline-none transition hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/35"
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-bold text-white outline-none transition hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/35 sm:text-base"
             >
               {t("home_apply_now", locale)}
               <ArrowRight className="size-4" />
             </Link>
           </div>
 
-          <Reveal variant="image" className="relative h-44 shrink-0 overflow-hidden sm:h-auto sm:w-[220px] md:w-[260px]">
+          <Reveal variant="image" className="relative h-64 shrink-0 overflow-hidden sm:h-auto sm:w-1/2 sm:min-h-[380px]">
             <Image
               src="/images/doctors/tanzanian-male-doctor.png"
               alt="Tanzanian male doctor in a white coat"
               fill
-              sizes="(min-width: 640px) 260px, 100vw"
+              sizes="(min-width: 640px) 50vw, 100vw"
               className="object-cover object-[50%_20%] sm:object-top"
             />
           </Reveal>

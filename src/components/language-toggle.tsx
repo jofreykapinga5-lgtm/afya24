@@ -60,7 +60,7 @@ export function LanguageToggle() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border px-2.5 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-foreground/80 outline-none transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <FlagFor value={locale} />
         {locale.toUpperCase()}

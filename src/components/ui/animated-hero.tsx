@@ -3,14 +3,31 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 
+// A plain matchMedia check instead of framer-motion's useReducedMotion --
+// this rotating-word effect was the only thing in the whole app pulling in
+// framer-motion, ~48KB of homepage JS for one small headline flourish. The
+// same spring-ish slide+fade reads fine as a CSS transition.
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(query.matches);
+    function handleChange(event: MediaQueryListEvent) {
+      setReduced(event.matches);
+    }
+    query.addEventListener("change", handleChange);
+    return () => query.removeEventListener("change", handleChange);
+  }, []);
+  return reduced;
+}
+
 function Hero() {
   const locale = useAppStore((state) => state.locale);
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = usePrefersReducedMotion();
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
     () => [
@@ -57,19 +74,18 @@ function Hero() {
                       <span key={title}>{title}</span>
                     ) : null
                   ) : (
-                    <motion.span
+                    <span
                       key={title}
-                      className="absolute"
-                      initial={{ opacity: 0, y: "-100%" }}
-                      transition={{ type: "spring", stiffness: 50 }}
-                      animate={
-                        titleNumber === index
-                          ? { y: "0%", opacity: 1 }
-                          : { y: titleNumber > index ? "-150%" : "150%", opacity: 0 }
-                      }
+                      className="absolute transition-[transform,opacity] duration-500 ease-out"
+                      style={{
+                        transform: `translateY(${
+                          titleNumber === index ? "0%" : titleNumber > index ? "-150%" : "150%"
+                        })`,
+                        opacity: titleNumber === index ? 1 : 0,
+                      }}
                     >
                       {title}
-                    </motion.span>
+                    </span>
                   )
                 )}
               </span>

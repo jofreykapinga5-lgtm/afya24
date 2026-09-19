@@ -14,7 +14,15 @@ type ServiceTile = {
   priceKey?: TranslationKey;
   image: string;
   alt: string;
+  bg: string;
 };
+
+// Same soft-tint hexes the mobile app's quick-action tiles use (theme.ts:
+// navySoft/tealSoft/successSoft/pendingSoft/infoSoft/urgentSoft) -- the web
+// version of these tiles was flat grey with zero variation, which is what
+// read as a different, flatter vibe than the app's colorful home screen.
+// Assigned by loose semantic fit (urgent care -> the red-tinted one, mental
+// health -> the calmer lavender one) rather than array order.
 
 const serviceTabKeys: TranslationKey[] = [
   "home_service_tab_popular",
@@ -30,6 +38,7 @@ const stitchServices: ServiceTile[] = [
     labelKey: "home_service_prescription_refills",
     image: "/images/services/prescription-bottle.png",
     alt: "Prescription medication bottle",
+    bg: "#e4f4ea",
   },
   {
     categoryId: "cat-general",
@@ -37,6 +46,7 @@ const stitchServices: ServiceTile[] = [
     priceKey: "home_service_price_from_15000",
     image: "/images/services/fertility-doctor.png",
     alt: "Doctor providing online care",
+    bg: "#e0f5f5",
   },
   {
     categoryId: "cat-urgent",
@@ -44,6 +54,7 @@ const stitchServices: ServiceTile[] = [
     priceKey: "home_service_price_from_20000",
     image: "/images/services/urgent-care-doctor.png",
     alt: "Doctor ready for urgent care",
+    bg: "#fef2f2",
   },
   {
     categoryId: "cat-mental-health",
@@ -51,6 +62,7 @@ const stitchServices: ServiceTile[] = [
     priceKey: "home_service_price_from_25000",
     image: "/images/services/mental-health-meds.png",
     alt: "Mental health medication tablets",
+    bg: "#e8ecf5",
   },
   {
     categoryId: "cat-sexual-health",
@@ -58,6 +70,7 @@ const stitchServices: ServiceTile[] = [
     priceKey: "home_service_private_visit",
     image: "/images/services/doctor-note.png",
     alt: "Doctor preparing a confidential visit note",
+    bg: "#eaf1ff",
   },
   {
     categoryId: "cat-dermatology",
@@ -65,6 +78,7 @@ const stitchServices: ServiceTile[] = [
     priceKey: "home_service_photo_review",
     image: "/images/services/weight-loss-meds.png",
     alt: "Clean medical product photography",
+    bg: "#fff4df",
   },
 ];
 
@@ -111,7 +125,8 @@ export function ServicesGrid() {
               key={service.categoryId}
               type="button"
               onClick={() => openCategory(service.categoryId, t(service.labelKey, locale))}
-              className="group relative flex min-h-[96px] items-center overflow-hidden rounded-[1.05rem] bg-[#f7f7f7] px-4 py-3 text-left outline-none transition-all duration-300 hover:bg-[#f0f0f0] hover:shadow-[0_12px_28px_-26px_rgba(8,50,115,0.45)] focus-visible:ring-3 focus-visible:ring-brand-teal/30 sm:min-h-[108px] sm:px-5"
+              style={{ backgroundColor: service.bg }}
+              className="group relative flex min-h-[96px] items-center overflow-hidden rounded-[1.05rem] px-4 py-3 text-left outline-none transition-all duration-300 hover:shadow-[0_12px_28px_-26px_rgba(8,50,115,0.45)] focus-visible:ring-3 focus-visible:ring-brand-teal/30 sm:min-h-[108px] sm:px-5"
             >
               <div className="relative z-10 max-w-[58%]">
                 <h3 className="text-[1rem] font-semibold leading-tight tracking-[-0.015em] text-[#171b20] sm:text-[1.05rem]">

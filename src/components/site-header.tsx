@@ -99,32 +99,30 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex min-w-0 shrink items-center gap-8 lg:gap-10">
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image
-              src="/brand/afya24-logo-header.png"
-              alt="Afya24"
-              width={220}
-              height={70}
-              priority
-              style={{ width: "auto" }}
-              className="h-8"
-            />
-          </Link>
+      <div className="relative mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Image
+            src="/brand/afya24-logo-header.png"
+            alt="Afya24"
+            width={220}
+            height={70}
+            priority
+            style={{ width: "auto" }}
+            className="h-8"
+          />
+        </Link>
 
-          <nav className="hidden items-center gap-6 sm:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={navHref(link.href)}
-                className="rounded-sm text-sm font-semibold text-foreground/80 outline-none transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                {t(link.labelKey, locale)}
-              </Link>
-            ))}
-          </nav>
-        </div>
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 sm:flex">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={navHref(link.href)}
+              className="rounded-sm text-sm font-semibold text-foreground/80 outline-none transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              {t(link.labelKey, locale)}
+            </Link>
+          ))}
+        </nav>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageToggle />

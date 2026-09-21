@@ -60,10 +60,10 @@ export function LanguageToggle() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-foreground/80 outline-none transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="inline-flex h-10 items-center gap-1 rounded-full px-1.5 text-sm font-semibold text-foreground/80 outline-none transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50 sm:gap-1.5 sm:px-2"
       >
         <FlagFor value={locale} />
-        {locale.toUpperCase()}
+        <span className="hidden sm:inline">{locale.toUpperCase()}</span>
         <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 

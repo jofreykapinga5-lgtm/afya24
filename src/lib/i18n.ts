@@ -341,7 +341,6 @@ const dict = {
   nav_health_tips: { en: "Health tips", sw: "Vidokezo vya afya" },
   header_doctor_admin_login: { en: "Staff login", sw: "Kuingia kwa wafanyakazi" },
   header_log_in: { en: "Log in", sw: "Ingia" },
-  header_get_started: { en: "Get started", sw: "Anza sasa" },
   header_my_account: { en: "My account", sw: "Akaunti yangu" },
   header_log_out: { en: "Log out", sw: "Toka" },
   header_open_menu_aria: { en: "Open menu", sw: "Fungua menyu" },

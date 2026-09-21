@@ -102,7 +102,7 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="relative mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
           <Sheet>
             <SheetContent side="left" className="w-72">
               <SheetHeader>
@@ -164,22 +164,22 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <LanguageToggle />
 
           {!patientName ? (
-            // One entry point, not a separate log-in/sign-up choice -- the
-            // phone+OTP form behind /account already handles a first-time
-            // number transparently (see phone-otp-form.tsx). Same pill,
-            // shadow-lift, and hover-arrow treatment as the hero CTA below,
-            // scaled down to nav-bar height, so the two read as one brand
-            // moment rather than two different button styles.
+            // Same words as the hero CTA below ("See a doctor now") and the
+            // same destination -- a header button labelled that way but
+            // pointing at the login/signup gate instead of /doctors would
+            // be a lie. Booking doesn't require an account up front (see
+            // the guest flow at doctors/[providerId]/guest), so /doctors
+            // is the honest destination for this label either way.
             <Link
-              href="/account"
-              className="group inline-flex h-10 items-center gap-1.5 rounded-full bg-primary pl-4 pr-3.5 text-sm font-bold text-primary-foreground shadow-[0_14px_30px_-14px_rgba(47,111,192,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/35"
+              href="/doctors"
+              className="group inline-flex h-10 items-center gap-1 rounded-full bg-primary pl-3 pr-2.5 text-sm font-bold text-primary-foreground shadow-[0_14px_30px_-14px_rgba(47,111,192,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/35 sm:gap-1.5 sm:pl-4 sm:pr-3.5"
             >
-              {t("header_get_started", locale)}
-              <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              {t("hero_get_help_cta", locale)}
+              <ArrowRight className="hidden size-4 transition-transform duration-200 group-hover:translate-x-0.5 sm:inline-flex" />
             </Link>
           ) : (
             <div ref={accountMenuRef} className="relative">

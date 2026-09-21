@@ -56,8 +56,16 @@ export function BookingForm({
     });
   }
 
-  if (hasSession && existingPatientName) {
-    const firstName = existingPatientName.trim().split(/\s+/)[0];
+  // A session alone is enough to book -- existingPatientName is only used
+  // for the friendlier "Continue as {name}" label below. A brand-new
+  // patient who skips the optional name step at /account/welcome (see
+  // BookingForm's comment further down) is fully signed in with no name on
+  // file; requiring the name here too meant they fell straight through to
+  // the phone-entry form again despite already being logged in -- an
+  // effective dead end, since re-verifying just creates the same
+  // nameless, already-logged-in state a second time.
+  if (hasSession) {
+    const firstName = existingPatientName?.trim().split(/\s+/)[0];
     return (
       <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_80px_-55px_rgba(8,50,115,0.55)] ring-1 ring-[#e5eef0] sm:p-7">
         {qualificationResult && (
@@ -87,7 +95,9 @@ export function BookingForm({
             <UserRound className="size-4" />
             {pending
               ? t("doctor_booking_confirm_pending", locale)
-              : `${t("doctor_booking_continuing_as", locale)} ${firstName}`}
+              : firstName
+                ? `${t("doctor_booking_continuing_as", locale)} ${firstName}`
+                : t("doctor_booking_continue_generic", locale)}
             <ArrowRight className="size-4" />
           </Button>
           <Button

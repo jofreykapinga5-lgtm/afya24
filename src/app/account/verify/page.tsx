@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getServerLocale } from "@/lib/locale-cookie";
 import { t } from "@/lib/i18n";
 import { SubmitButton } from "@/components/submit-button";
+import { OtpCodeInput } from "@/components/otp-code-input";
 import { requestPatientOtp, verifyPatientOtp } from "../actions";
 
 export default async function VerifyOtpPage({
@@ -71,20 +72,12 @@ export default async function VerifyOtpPage({
         <form action={verifyPatientOtp} className="mt-6 space-y-3">
           <input type="hidden" name="phone" value={phone} />
           {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
-          <label htmlFor="code" className="sr-only">
+          <p className="sr-only" id="code-label">
             {t("account_verify_code_label", locale)}
-          </label>
-          <input
-            id="code"
-            name="code"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            placeholder={t("account_verify_code_placeholder", locale)}
-            required
-            className="h-14 w-full rounded-2xl border border-[#d8e5e3] bg-[#f8fbfa] px-4 text-center text-2xl font-bold tracking-[0.4em] text-[#071923] outline-none placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-[#a8b4b8] focus-visible:border-[#01b7bb] focus-visible:ring-3 focus-visible:ring-[#01b7bb]/20"
-          />
+          </p>
+          <div aria-labelledby="code-label">
+            <OtpCodeInput name="code" />
+          </div>
           <SubmitButton
             pendingText={t("common_please_wait", locale)}
             className="h-13 w-full rounded-full bg-primary text-base font-bold text-white hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-primary/25"

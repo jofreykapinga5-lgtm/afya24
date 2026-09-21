@@ -309,7 +309,6 @@ const dict = {
     sw: "Tumetuma kodi ya tarakimu 6 kwa",
   },
   account_verify_code_label: { en: "Code", sw: "Kodi" },
-  account_verify_code_placeholder: { en: "6-digit code", sw: "Kodi ya tarakimu 6" },
   account_verify_cta: { en: "Verify and continue", sw: "Thibitisha na uendelee" },
   account_verify_resend: { en: "Didn't get a code? Send again", sw: "Hukupata kodi? Tuma tena" },
   account_verify_change_number: { en: "Change phone number", sw: "Badilisha nambari ya simu" },
@@ -513,6 +512,7 @@ const dict = {
     sw: "Maelezo yako yanaunda faili salama la mgonjwa, linalotumika kwa ushauri huu tu.",
   },
   doctor_booking_continuing_as: { en: "Continue as", sw: "Endelea kama" },
+  doctor_booking_continue_generic: { en: "Continue booking", sw: "Endelea kuweka miadi" },
   guest_booking_title: { en: "Just a few details", sw: "Maelezo machache tu" },
   guest_booking_subtitle: {
     en: "Booking {name} — no account needed",

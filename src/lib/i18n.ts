@@ -134,42 +134,6 @@ const dict = {
     en: "Start now",
     sw: "Muone daktari",
   },
-  trust_section_title: {
-    en: "Built for clinical trust",
-    sw: "Imejengwa kwa uaminifu wa kitabibu",
-  },
-  trust_section_badge: {
-    en: "Your health. In safe hands.",
-    sw: "Afya yako. Mikononi salama.",
-  },
-  trust_section_body: {
-    en: "Afya24 is designed with care, transparency, and safety at its core, so every patient knows what happens before speaking to a doctor.",
-    sw: "Afya24 imeundwa kwa uangalifu, uwazi, na usalama ili kila mgonjwa aelewe kinachofuata kabla ya kuongea na daktari.",
-  },
-  trust_section_footer: {
-    en: "At Afya24, your trust is our foundation. We combine technology with human care to deliver a safe, supportive, and reliable healthcare experience.",
-    sw: "Afya24, uaminifu wako ndio msingi wetu. Tunaunganisha teknolojia na huduma ya kibinadamu ili kutoa uzoefu salama, wenye msaada, na wa kuaminika.",
-  },
-  trust_point1_title: { en: "Licensed doctors", sw: "Madaktari wenye leseni" },
-  trust_point1_body: {
-    en: "Every provider on Afya24 is a licensed, credentialed clinician.",
-    sw: "Kila daktari kwenye Afya24 ana leseni na sifa zinazothibitishwa.",
-  },
-  trust_point2_title: { en: "Afya24 assists, never diagnoses", sw: "Afya24 husaidia, haifanyi uchunguzi" },
-  trust_point2_body: {
-    en: "Afya24 summarizes and routes. Diagnosis and treatment decisions stay with your doctor.",
-    sw: "Afya24 hufupisha na kuelekeza. Maamuzi ya uchunguzi na matibabu hubaki kwa daktari wako.",
-  },
-  trust_point4_title: { en: "Secure patient records", sw: "Rekodi salama za mgonjwa" },
-  trust_point4_body: {
-    en: "Your medical file is private and only visible to doctors involved in your care.",
-    sw: "Faili lako la matibabu ni la faragha na huonekana tu na madaktari wanaohusika na huduma yako.",
-  },
-  trust_point5_title: { en: "Clear emergency boundaries", sw: "Mipaka wazi ya dharura" },
-  trust_point5_body: {
-    en: "We tell you plainly when a symptom needs in-person or emergency care instead of a virtual visit.",
-    sw: "Tunakuambia wazi wakati dalili inahitaji huduma ya ana kwa ana au dharura badala ya ziara ya mtandaoni.",
-  },
   services_title: { en: "Services", sw: "Huduma" },
   services_subtitle: {
     en: "Choose a care type and Afya24 will guide you to the right doctor.",
@@ -219,15 +183,6 @@ const dict = {
     en: "Setting up my account took less than a minute, and I could see my prescription right away.",
     sw: "Kufungua akaunti yangu ilichukua chini ya dakika moja, na niliweza kuona dawa zangu mara moja.",
   },
-  email_capture_badge: { en: "Stay in the loop", sw: "Endelea kufahamu" },
-  email_capture_title: { en: "Get health tips and updates", sw: "Pata vidokezo vya afya na taarifa" },
-  email_capture_body: {
-    en: "Occasional emails about new doctors, services, and ways to get care faster. No spam.",
-    sw: "Barua pepe za mara kwa mara kuhusu madaktari wapya, huduma, na njia za kupata matibabu haraka. Bila taka.",
-  },
-  email_capture_success: { en: "You're on the list.", sw: "Umeongezwa kwenye orodha." },
-  email_capture_joining: { en: "Joining...", sw: "Inaunga..." },
-  email_capture_subscribe: { en: "Subscribe", sw: "Jiunge" },
   health_tip1_title: { en: "When fever needs urgent care", sw: "Wakati homa inahitaji uangalizi wa haraka" },
   health_tip1_teaser: {
     en: "Most fevers settle with rest and fluids, but a few signs mean you shouldn't wait to see a doctor.",
@@ -250,11 +205,6 @@ const dict = {
     en: "Expert guidance. Better everyday health.",
     sw: "Ushauri wa kitaalamu. Maisha bora kila siku.",
   },
-  email_capture_enter_email_error: { en: "Enter an email address.", sw: "Weka anwani ya barua pepe." },
-  email_capture_generic_error: {
-    en: "Something went wrong. Try again.",
-    sw: "Hitilafu imetokea. Jaribu tena.",
-  },
   doctors_preview_title: { en: "Doctors ready to help", sw: "Madaktari tayari kusaidia" },
   doctors_preview_subtitle: {
     en: "Real prices, clear availability, and the language you prefer.",
@@ -262,30 +212,6 @@ const dict = {
   },
   doctors_preview_see_all: { en: "See all doctors", sw: "Ona madaktari wote" },
   doctors_preview_next: { en: "Next doctor", sw: "Daktari anayefuata" },
-  labs_title: { en: "Partner labs near you", sw: "Maabara washirika karibu nawe" },
-  labs_geo_unavailable: {
-    en: "Location isn't available in this browser.",
-    sw: "Huduma ya eneo haipatikani kwenye kivinjari hiki.",
-  },
-  labs_geo_error: {
-    en: "Couldn't get your location. Check your browser's location permission.",
-    sw: "Imeshindwa kupata eneo lako. Angalia ruhusa ya eneo kwenye kivinjari chako.",
-  },
-  labs_find_closest_title: { en: "Find the labs closest to you", sw: "Tafuta maabara zilizo karibu nawe" },
-  labs_find_closest_body: {
-    en: "We only search once you ask. Share your location to see the {n} nearest partner labs, with maps and directions.",
-    sw: "Tunatafuta tu ukiuliza. Shiriki eneo lako kuona maabara washirika {n} zilizo karibu zaidi, pamoja na ramani na maelekezo.",
-  },
-  labs_privacy_note: {
-    en: "Your privacy matters. Your location is only used to find nearby labs and is never stored.",
-    sw: "Faragha yako ni muhimu. Eneo lako hutumika tu kutafuta maabara zilizo karibu na halihifadhiwi.",
-  },
-  labs_finding_you: { en: "Finding you...", sw: "Tunatafuta eneo lako..." },
-  labs_find_near_me: { en: "Find labs near me", sw: "Tafuta maabara karibu nami" },
-  labs_search_again: { en: "Search again", sw: "Tafuta tena" },
-  labs_away_meters: { en: "m away", sw: "m mbali" },
-  labs_away_km: { en: "km away", sw: "km mbali" },
-  labs_open_maps: { en: "Open in Maps", sw: "Fungua kwenye Ramani" },
   pharmacy_cat_all: { en: "All", sw: "Zote" },
   pharmacy_cat_pain_relief: { en: "Pain relief", sw: "Kupunguza maumivu" },
   pharmacy_cat_allergy: { en: "Allergy", sw: "Mzio" },
@@ -1668,10 +1594,6 @@ const dict = {
     sw: "Jiunge na Afya24, weka upatikanaji wako, na upokee wagonjwa waliolinganishwa baada ya ukaguzi wa sifa zako.",
   },
   home_apply_now: { en: "Apply now", sw: "Omba sasa" },
-  home_no_labs_configured: {
-    en: "No active partner labs are configured yet.",
-    sw: "Hakuna maabara mshirika inayotumika kwa sasa.",
-  },
   home_explore_all_services: { en: "Explore all services", sw: "Angalia huduma zote" },
   home_service_categories_aria: { en: "Service categories", sw: "Aina za huduma" },
   home_service_tab_popular: { en: "Popular", sw: "Maarufu" },

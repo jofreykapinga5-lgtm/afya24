@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
+import { ArrowRight, ChevronDown, LayoutDashboard, LogOut, Menu, User } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useAppStore } from "@/lib/store";
 import { t, type TranslationKey } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
 import { signOut } from "@/app/account/actions";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetTrigger } from "@/components/ui/sheet";
 
 const navLinks: { href: string; labelKey: TranslationKey }[] = [
   { href: "#doctors", labelKey: "nav_doctors" },
@@ -100,17 +102,55 @@ export function SiteHeader({ patientName }: { patientName: string | null }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="relative mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image
-            src="/brand/afya24-logo-header.png"
-            alt="Afya24"
-            width={220}
-            height={70}
-            priority
-            style={{ width: "auto" }}
-            className="h-8"
-          />
-        </Link>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <Sheet>
+            <SheetContent side="left" className="w-72">
+              <SheetHeader>
+                <SheetTitle>Afya24</SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 px-4">
+                {navLinks.map((link) => (
+                  <SheetClose
+                    key={link.href}
+                    nativeButton={false}
+                    render={
+                      <Link
+                        href={navHref(link.href)}
+                        className="flex min-h-11 items-center rounded-lg px-2 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50"
+                      />
+                    }
+                  >
+                    {t(link.labelKey, locale)}
+                  </SheetClose>
+                ))}
+              </nav>
+            </SheetContent>
+            <SheetTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("header_open_menu_aria", locale)}
+                  className="size-11 -ml-1 sm:hidden"
+                />
+              }
+            >
+              <Menu className="size-6" strokeWidth={2.25} />
+            </SheetTrigger>
+          </Sheet>
+
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <Image
+              src="/brand/afya24-logo-header.png"
+              alt="Afya24"
+              width={220}
+              height={70}
+              priority
+              style={{ width: "auto" }}
+              className="h-8"
+            />
+          </Link>
+        </div>
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 sm:flex">
           {navLinks.map((link) => (

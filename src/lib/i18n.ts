@@ -344,6 +344,7 @@ const dict = {
   header_get_started: { en: "Get started", sw: "Anza sasa" },
   header_my_account: { en: "My account", sw: "Akaunti yangu" },
   header_log_out: { en: "Log out", sw: "Toka" },
+  header_open_menu_aria: { en: "Open menu", sw: "Fungua menyu" },
   footer_tagline: {
     en: "Direct-pay telehealth. Tell Afya24 what's going on first, then see a licensed doctor by chat, voice, or video.",
     sw: "Matibabu ya mtandaoni ya kulipa moja kwa moja. Mwambie Afya24 kinachoendelea kwanza, kisha uonane na daktari mwenye leseni kwa ujumbe, sauti, au video.",

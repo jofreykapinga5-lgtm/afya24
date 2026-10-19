@@ -7,7 +7,7 @@ export const LEGAL_UPDATED = '2026-10-19';
 // Keep the copy in the afya24 website (src/lib/hedhi-legal.ts) identical when this changes.
 export const DELETE_URL = 'https://afya24.com/hedhi/delete-account';
 // Replace with a mailbox that really exists before publishing.
-export const CONTACT_EMAIL = 'support@afya24.com';
+export const CONTACT_EMAIL = 'justinmsanga2@gmail.com';
 
 export type LegalSection = { title: string; body: string[] };
 export type LegalDoc = { title: string; intro: string; updated: string; sections: LegalSection[] };

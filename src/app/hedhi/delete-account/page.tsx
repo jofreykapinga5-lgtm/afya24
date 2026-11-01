@@ -36,8 +36,8 @@ export default async function HedhiDeleteAccountPage() {
       <h1 className="mt-1 text-3xl font-bold tracking-tight">{sw ? "Futa akaunti yako ya Hedhi" : "Delete your Hedhi account"}</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         {sw
-          ? "Hii inafuta akaunti yako na taarifa zote zilizohifadhiwa kwenye seva zetu: nakala ya shajara na tarehe za hedhi, miadi, malipo, arifa na ushirikiano wa mwenza. Haiwezi kurudishwa."
-          : "This deletes your account and everything stored on our servers: your diary and period backup, appointments, payments, notifications and partner link. It cannot be undone."}
+          ? "Hii inafuta akaunti yako na taarifa zote zilizohifadhiwa kwenye seva zetu: nakala ya shajara na tarehe za hedhi, arifa na ushirikiano wa mwenza. Haiwezi kurudishwa."
+          : "This deletes your account and everything stored on our servers: your diary and period backup, notifications and partner link. It cannot be undone."}
       </p>
 
       <div className="mt-8">
